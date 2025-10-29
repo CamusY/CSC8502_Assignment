@@ -136,6 +136,7 @@
     <ClInclude Include="IInputHandler.h" />
     <ClInclude Include="IWindow.h" />
     <ClInclude Include="MeshData.h" />
+    <ClInclude Include="Shader.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="GLFWWindow.cpp" />
@@ -143,6 +144,7 @@
     <ClCompile Include="includes\glad\glad.c" />
     <ClCompile Include="IWindow.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="Shader.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

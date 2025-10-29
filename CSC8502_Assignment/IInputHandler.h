@@ -1,11 +1,19 @@
 #pragma once
 
+struct MousePos {
+    float x = 0.0f;
+    float y = 0.0f;
+};
+
 class IInputHandler {
 public:
-	IInputHandler() {}
-	virtual ~IInputHandler() {}
-	bool virtual isKeyPressed(int keyCode) = 0;
-	bool virtual isMouseButtonPressed(int button) = 0;
-	void virtual getMousePos(double& x, double& y) = 0;
+    virtual ~IInputHandler() = default;
 
+    virtual bool isKeyPressed(int key) const = 0;
+    virtual bool isKeyHeld(int key) const = 0;
+    virtual bool isKeyReleased(int key) const = 0;
+
+    virtual bool isMousePressed(int button) const = 0;
+
+    virtual MousePos getMousePosition() const = 0;
 };

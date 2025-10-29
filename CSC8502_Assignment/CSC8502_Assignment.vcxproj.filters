@@ -37,6 +37,12 @@
     <Filter Include="头文件\Core\Assets">
       <UniqueIdentifier>{7d63f44d-e9e2-4228-88ca-e14851493c29}</UniqueIdentifier>
     </Filter>
+    <Filter Include="头文件\Renderer">
+      <UniqueIdentifier>{f57e8d09-b3df-4832-9d05-5b466d74f7b4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="源文件\Renderer">
+      <UniqueIdentifier>{c829459e-df8e-46d1-bbc2-f0e2f1de8650}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="IWindow.cpp">
@@ -54,6 +60,9 @@
     <ClCompile Include="IAssetLoader.h">
       <Filter>头文件\Core\Assets</Filter>
     </ClCompile>
+    <ClCompile Include="Shader.cpp">
+      <Filter>源文件\Renderer</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="IWindow.h">
@@ -70,6 +79,9 @@
     </ClInclude>
     <ClInclude Include="AnimationData.h">
       <Filter>头文件\Core\Assets</Filter>
+    </ClInclude>
+    <ClInclude Include="Shader.h">
+      <Filter>头文件\Renderer</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
