@@ -25,6 +25,18 @@
     <Filter Include="includes\glad">
       <UniqueIdentifier>{fe591fd9-5999-41ce-97d9-c9f1646c67e0}</UniqueIdentifier>
     </Filter>
+    <Filter Include="头文件\Core">
+      <UniqueIdentifier>{610d3b4a-acbb-45b7-bc41-61cd81e7a9c1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="源文件\Core">
+      <UniqueIdentifier>{1265b33f-f689-45db-a8f9-6146aa83062e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="源文件\Core\Assets">
+      <UniqueIdentifier>{58345537-fa52-44a2-b5d6-3789c20580ff}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="头文件\Core\Assets">
+      <UniqueIdentifier>{7d63f44d-e9e2-4228-88ca-e14851493c29}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="IWindow.cpp">
@@ -39,6 +51,9 @@
     <ClCompile Include="GLFWWindow.cpp">
       <Filter>源文件\Platform</Filter>
     </ClCompile>
+    <ClCompile Include="IAssetLoader.h">
+      <Filter>头文件\Core\Assets</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="IWindow.h">
@@ -49,6 +64,12 @@
     </ClInclude>
     <ClInclude Include="GLFWWindow.h">
       <Filter>头文件\Platform</Filter>
+    </ClInclude>
+    <ClInclude Include="MeshData.h">
+      <Filter>头文件\Core\Assets</Filter>
+    </ClInclude>
+    <ClInclude Include="AnimationData.h">
+      <Filter>头文件\Core\Assets</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

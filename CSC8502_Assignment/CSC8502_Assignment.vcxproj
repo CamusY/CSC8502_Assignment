@@ -131,12 +131,15 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="AnimationData.h" />
     <ClInclude Include="GLFWWindow.h" />
     <ClInclude Include="IInputHandler.h" />
     <ClInclude Include="IWindow.h" />
+    <ClInclude Include="MeshData.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="GLFWWindow.cpp" />
+    <ClCompile Include="IAssetLoader.h" />
     <ClCompile Include="includes\glad\glad.c" />
     <ClCompile Include="IWindow.cpp" />
     <ClCompile Include="main.cpp" />
