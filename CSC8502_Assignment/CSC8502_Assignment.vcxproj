@@ -72,7 +72,7 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LibraryPath>$(ProjectDir)includes\lib;$(LibraryPath)</LibraryPath>
-    <IncludePath>$(ProjectDir)includes;$(ProjectDir)includes\KHR;$(IncludePath)</IncludePath>
+    <IncludePath>$(ProjectDir)includes;$(ProjectDir)includes\KHR;$(ProjectDir);$(IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -133,6 +133,22 @@
   <ItemGroup>
     <ClCompile Include="includes\glad\glad.c" />
     <ClCompile Include="main.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Engine\Implementations\NCLGL_Impl\" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Engine\IAL\I_AnimatedMesh.h" />
+    <ClInclude Include="Engine\IAL\I_DebugUI.h" />
+    <ClInclude Include="Engine\IAL\I_FrameBuffer.h" />
+    <ClInclude Include="Engine\IAL\I_GameTimer.h" />
+    <ClInclude Include="Engine\IAL\I_Heightmap.h" />
+    <ClInclude Include="Engine\IAL\I_InputDevice.h" />
+    <ClInclude Include="Engine\IAL\I_Mesh.h" />
+    <ClInclude Include="Engine\IAL\I_ResourceFactory.h" />
+    <ClInclude Include="Engine\IAL\I_Shader.h" />
+    <ClInclude Include="Engine\IAL\I_Texture.h" />
+    <ClInclude Include="Engine\IAL\I_WindowSystem.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

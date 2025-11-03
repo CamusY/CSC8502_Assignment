@@ -19,12 +19,6 @@
     <Filter Include="includes\glad">
       <UniqueIdentifier>{fe591fd9-5999-41ce-97d9-c9f1646c67e0}</UniqueIdentifier>
     </Filter>
-    <Filter Include="头文件\Core">
-      <UniqueIdentifier>{610d3b4a-acbb-45b7-bc41-61cd81e7a9c1}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="源文件\Core">
-      <UniqueIdentifier>{1265b33f-f689-45db-a8f9-6146aa83062e}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="includes\glad\glad.c">
@@ -33,5 +27,40 @@
     <ClCompile Include="main.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Engine\IAL\I_AnimatedMesh.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Engine\IAL\I_DebugUI.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Engine\IAL\I_FrameBuffer.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Engine\IAL\I_GameTimer.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Engine\IAL\I_Heightmap.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Engine\IAL\I_InputDevice.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Engine\IAL\I_Mesh.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Engine\IAL\I_ResourceFactory.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Engine\IAL\I_Shader.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Engine\IAL\I_Texture.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Engine\IAL\I_WindowSystem.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
