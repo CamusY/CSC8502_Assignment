@@ -72,7 +72,7 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LibraryPath>$(ProjectDir)includes\lib;$(LibraryPath)</LibraryPath>
-    <IncludePath>$(ProjectDir)includes;$(ProjectDir)includes\KHR;$(ProjectDir);$(IncludePath)</IncludePath>
+    <IncludePath>$(ProjectDir)includes;$(ProjectDir)includes\KHR;$(ProjectDir);$(IncludePath);$(ProjectDir)Engine</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>

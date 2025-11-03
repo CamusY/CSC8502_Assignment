@@ -13,7 +13,7 @@ namespace Engine::IAL {
      * - NFR-1: 此枚举是必须的，用于解耦 Demo 层与 nclgl::KeyboardKeys。
      * - B_Keyboard 适配器 (轨道 B) 的职责就是将 nclgl::KeyboardKeys 映射到此枚举。
      * - C_Keyboard 适配器 (轨道 C) 的职责就是将 GLFW_KEY_... 映射到此枚举。
-     * - 基于 V13 计划 4.1 节 和 nclgl/Keyboard.h。
+     * - 基于 4.1 节 和 nclgl/Keyboard.h。
      */
     enum class KeyCode {
         UNKNOWN,
@@ -47,7 +47,7 @@ namespace Engine::IAL {
 
     /**
      * @brief 平台无关的鼠标按键代码。
-     * @details 基于 V13 计划 4.1 节 和 nclgl/Mouse.h (MouseButtons)。
+     * @details 基于 4.1 节 和 nclgl/Mouse.h (MouseButtons)。
      */
     enum class MouseButton {
         LEFT,
