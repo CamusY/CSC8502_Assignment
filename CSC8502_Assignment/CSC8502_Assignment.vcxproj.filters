@@ -27,6 +27,42 @@
     <ClCompile Include="main.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="Core\Application.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Engine\Implementations\NCLGL_Impl\B_AnimatedMesh.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Engine\Implementations\NCLGL_Impl\B_DebugUI_Null.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Engine\Implementations\NCLGL_Impl\B_Factory.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Engine\Implementations\NCLGL_Impl\B_FrameBuffer.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Engine\Implementations\NCLGL_Impl\B_GameTimer.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Engine\Implementations\NCLGL_Impl\B_Heightmap.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Engine\Implementations\NCLGL_Impl\B_InputDevice.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Engine\Implementations\NCLGL_Impl\B_Mesh.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Engine\Implementations\NCLGL_Impl\B_Shader.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Engine\Implementations\NCLGL_Impl\B_Texture.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Engine\Implementations\NCLGL_Impl\B_WindowSystem.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Engine\IAL\I_AnimatedMesh.h">
@@ -60,6 +96,42 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="Engine\IAL\I_WindowSystem.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Application.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Engine\Implementations\NCLGL_Impl\B_AnimatedMesh.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Engine\Implementations\NCLGL_Impl\B_DebugUI_Null.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Engine\Implementations\NCLGL_Impl\B_Factory.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Engine\Implementations\NCLGL_Impl\B_FrameBuffer.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Engine\Implementations\NCLGL_Impl\B_GameTimer.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Engine\Implementations\NCLGL_Impl\B_Heightmap.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Engine\Implementations\NCLGL_Impl\B_InputDevice.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Engine\Implementations\NCLGL_Impl\B_Mesh.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Engine\Implementations\NCLGL_Impl\B_Shader.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Engine\Implementations\NCLGL_Impl\B_Texture.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Engine\Implementations\NCLGL_Impl\B_WindowSystem.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

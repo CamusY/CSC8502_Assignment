@@ -30,27 +30,27 @@
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v143</PlatformToolset>
-    <CharacterSet>Unicode</CharacterSet>
+    <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>v143</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
-    <CharacterSet>Unicode</CharacterSet>
+    <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v143</PlatformToolset>
-    <CharacterSet>Unicode</CharacterSet>
+    <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>v143</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
-    <CharacterSet>Unicode</CharacterSet>
+    <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
@@ -112,8 +112,8 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(ProjectDir)includes\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>glfw3.lib;opengl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(OutDir);$(ProjectDir)includes\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>SOIL.lib;NCLGL.lib;opengl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -131,13 +131,23 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Core\Application.cpp" />
+    <ClCompile Include="Engine\Implementations\NCLGL_Impl\B_AnimatedMesh.cpp" />
+    <ClCompile Include="Engine\Implementations\NCLGL_Impl\B_DebugUI_Null.cpp" />
+    <ClCompile Include="Engine\Implementations\NCLGL_Impl\B_Factory.cpp" />
+    <ClCompile Include="Engine\Implementations\NCLGL_Impl\B_FrameBuffer.cpp" />
+    <ClCompile Include="Engine\Implementations\NCLGL_Impl\B_GameTimer.cpp" />
+    <ClCompile Include="Engine\Implementations\NCLGL_Impl\B_Heightmap.cpp" />
+    <ClCompile Include="Engine\Implementations\NCLGL_Impl\B_InputDevice.cpp" />
+    <ClCompile Include="Engine\Implementations\NCLGL_Impl\B_Mesh.cpp" />
+    <ClCompile Include="Engine\Implementations\NCLGL_Impl\B_Shader.cpp" />
+    <ClCompile Include="Engine\Implementations\NCLGL_Impl\B_Texture.cpp" />
+    <ClCompile Include="Engine\Implementations\NCLGL_Impl\B_WindowSystem.cpp" />
     <ClCompile Include="includes\glad\glad.c" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="Engine\Implementations\NCLGL_Impl\" />
-  </ItemGroup>
-  <ItemGroup>
+    <ClInclude Include="Core\Application.h" />
     <ClInclude Include="Engine\IAL\I_AnimatedMesh.h" />
     <ClInclude Include="Engine\IAL\I_DebugUI.h" />
     <ClInclude Include="Engine\IAL\I_FrameBuffer.h" />
@@ -149,6 +159,17 @@
     <ClInclude Include="Engine\IAL\I_Shader.h" />
     <ClInclude Include="Engine\IAL\I_Texture.h" />
     <ClInclude Include="Engine\IAL\I_WindowSystem.h" />
+    <ClInclude Include="Engine\Implementations\NCLGL_Impl\B_AnimatedMesh.h" />
+    <ClInclude Include="Engine\Implementations\NCLGL_Impl\B_DebugUI_Null.h" />
+    <ClInclude Include="Engine\Implementations\NCLGL_Impl\B_Factory.h" />
+    <ClInclude Include="Engine\Implementations\NCLGL_Impl\B_FrameBuffer.h" />
+    <ClInclude Include="Engine\Implementations\NCLGL_Impl\B_GameTimer.h" />
+    <ClInclude Include="Engine\Implementations\NCLGL_Impl\B_Heightmap.h" />
+    <ClInclude Include="Engine\Implementations\NCLGL_Impl\B_InputDevice.h" />
+    <ClInclude Include="Engine\Implementations\NCLGL_Impl\B_Mesh.h" />
+    <ClInclude Include="Engine\Implementations\NCLGL_Impl\B_Shader.h" />
+    <ClInclude Include="Engine\Implementations\NCLGL_Impl\B_Texture.h" />
+    <ClInclude Include="Engine\Implementations\NCLGL_Impl\B_WindowSystem.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

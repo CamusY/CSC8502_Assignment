@@ -18,7 +18,7 @@ namespace Engine::IAL {
      * - GetVertex: (可选功能) 允许 Demo 层的物理或交互系统查询地形上某点的世界坐标。
      * NFR-2 规范要求此函数签名必须使用 nclgl::Vector3。
      */
-    class I_Heightmap : public I_Mesh {
+    class I_Heightmap : public virtual I_Mesh {
     public:
         virtual ~I_Heightmap() {}
         

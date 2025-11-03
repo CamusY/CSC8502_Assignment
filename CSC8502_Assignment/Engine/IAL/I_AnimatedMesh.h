@@ -21,7 +21,7 @@ namespace Engine::IAL {
      * B_AnimatedMesh (轨道 B) 的实现将负责调用 nclgl::MeshAnimation::GetJointData
      * 并将其返回的 C-Style 数组 (const Matrix4*) 转换为 std::vector。
      */
-    class I_AnimatedMesh : public I_Mesh {
+    class I_AnimatedMesh : public virtual I_Mesh {
     public:
         virtual ~I_AnimatedMesh() {}
         
