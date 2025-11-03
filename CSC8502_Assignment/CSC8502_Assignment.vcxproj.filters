@@ -13,12 +13,6 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
-    <Filter Include="源文件\Platform">
-      <UniqueIdentifier>{81023300-db3a-4a18-bd14-4fce696863d7}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="头文件\Platform">
-      <UniqueIdentifier>{d13f35b6-b653-4a8c-9801-f17e00545da8}</UniqueIdentifier>
-    </Filter>
     <Filter Include="includes">
       <UniqueIdentifier>{be172add-6831-4328-b8ba-6c9c058694c3}</UniqueIdentifier>
     </Filter>
@@ -31,57 +25,13 @@
     <Filter Include="源文件\Core">
       <UniqueIdentifier>{1265b33f-f689-45db-a8f9-6146aa83062e}</UniqueIdentifier>
     </Filter>
-    <Filter Include="源文件\Core\Assets">
-      <UniqueIdentifier>{58345537-fa52-44a2-b5d6-3789c20580ff}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="头文件\Core\Assets">
-      <UniqueIdentifier>{7d63f44d-e9e2-4228-88ca-e14851493c29}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="头文件\Renderer">
-      <UniqueIdentifier>{f57e8d09-b3df-4832-9d05-5b466d74f7b4}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="源文件\Renderer">
-      <UniqueIdentifier>{c829459e-df8e-46d1-bbc2-f0e2f1de8650}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="IWindow.cpp">
-      <Filter>源文件\Platform</Filter>
-    </ClCompile>
     <ClCompile Include="includes\glad\glad.c">
       <Filter>includes\glad</Filter>
     </ClCompile>
     <ClCompile Include="main.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="GLFWWindow.cpp">
-      <Filter>源文件\Platform</Filter>
-    </ClCompile>
-    <ClCompile Include="IAssetLoader.h">
-      <Filter>头文件\Core\Assets</Filter>
-    </ClCompile>
-    <ClCompile Include="Shader.cpp">
-      <Filter>源文件\Renderer</Filter>
-    </ClCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="IWindow.h">
-      <Filter>头文件\Platform</Filter>
-    </ClInclude>
-    <ClInclude Include="IInputHandler.h">
-      <Filter>头文件\Platform</Filter>
-    </ClInclude>
-    <ClInclude Include="GLFWWindow.h">
-      <Filter>头文件\Platform</Filter>
-    </ClInclude>
-    <ClInclude Include="MeshData.h">
-      <Filter>头文件\Core\Assets</Filter>
-    </ClInclude>
-    <ClInclude Include="AnimationData.h">
-      <Filter>头文件\Core\Assets</Filter>
-    </ClInclude>
-    <ClInclude Include="Shader.h">
-      <Filter>头文件\Renderer</Filter>
-    </ClInclude>
   </ItemGroup>
 </Project>
