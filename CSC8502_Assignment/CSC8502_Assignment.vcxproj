@@ -72,7 +72,7 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LibraryPath>$(ProjectDir)includes\lib;$(OutDir);$(LibraryPath)</LibraryPath>
-    <IncludePath>$(ProjectDir)includes;$(ProjectDir)includes\KHR;$(SolutionDir)\CSC8502_GLTF;$(IncludePath);$(ProjectDir)Engine</IncludePath>
+    <IncludePath>$(SolutionDir)includes;$(SolutionDir)includes\KHR;$(SolutionDir)\CSC8502_GLTF;$(IncludePath);$(ProjectDir)Engine</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -112,7 +112,7 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(OutDir);$(ProjectDir)includes\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(OutDir);$(SolutionDir)includes\lib;$(SolutionDir)CSC8502_GLTF\Third Party\SOIL\x64\Debug;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>SOIL.lib;NCLGL.lib;opengl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
@@ -131,6 +131,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\includes\glad\glad.c" />
     <ClCompile Include="Core\Application.cpp" />
     <ClCompile Include="Engine\Implementations\NCLGL_Impl\B_AnimatedMesh.cpp" />
     <ClCompile Include="Engine\Implementations\NCLGL_Impl\B_DebugUI_Null.cpp" />
@@ -143,7 +144,6 @@
     <ClCompile Include="Engine\Implementations\NCLGL_Impl\B_Shader.cpp" />
     <ClCompile Include="Engine\Implementations\NCLGL_Impl\B_Texture.cpp" />
     <ClCompile Include="Engine\Implementations\NCLGL_Impl\B_WindowSystem.cpp" />
-    <ClCompile Include="includes\glad\glad.c" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -170,6 +170,10 @@
     <ClInclude Include="Engine\Implementations\NCLGL_Impl\B_Shader.h" />
     <ClInclude Include="Engine\Implementations\NCLGL_Impl\B_Texture.h" />
     <ClInclude Include="Engine\Implementations\NCLGL_Impl\B_WindowSystem.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Engine\Custom\" />
+    <Folder Include="Engine\Implementations\Custom_Impl\" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

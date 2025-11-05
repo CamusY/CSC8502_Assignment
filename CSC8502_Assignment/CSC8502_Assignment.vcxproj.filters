@@ -14,16 +14,13 @@
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
     <Filter Include="includes">
-      <UniqueIdentifier>{be172add-6831-4328-b8ba-6c9c058694c3}</UniqueIdentifier>
+      <UniqueIdentifier>{f53dcdaf-5c40-4596-8615-0411c3cd1088}</UniqueIdentifier>
     </Filter>
     <Filter Include="includes\glad">
-      <UniqueIdentifier>{fe591fd9-5999-41ce-97d9-c9f1646c67e0}</UniqueIdentifier>
+      <UniqueIdentifier>{b6a2f0ef-09e9-44d1-a472-bbbca6ab7401}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="includes\glad\glad.c">
-      <Filter>includes\glad</Filter>
-    </ClCompile>
     <ClCompile Include="main.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
@@ -62,6 +59,9 @@
     </ClCompile>
     <ClCompile Include="Engine\Implementations\NCLGL_Impl\B_WindowSystem.cpp">
       <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\includes\glad\glad.c">
+      <Filter>includes\glad</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

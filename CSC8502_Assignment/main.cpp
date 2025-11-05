@@ -1,43 +1,38 @@
 /*
+ * (Day 2)
  * 文件: src/CSC8502_Demo/main.cpp
- * * 规范：
- * - V13 计划 4.5.1 
- * 定义的依赖注入 (DI) 入口点。
- * - NFR-1 / NFR-9: 
- * 这是唯一被授权 #include "Implementations/..." 
- * 具体实现头文件的核心文件。
- * - NFR-4: 
- * 使用 C++ 预处理器宏来切换轨道 B 和轨道 C。
+ * (在你的项目中路径为: CSC8502_Assignment/main.cpp)
+ * * 职责: (NFR-9)
+ * 1. 作为项目唯一的依赖注入 (DI) 入口点。
+ * 2. 根据预处理器宏 (NCL_USE_CUSTOM_IMPL) 切换轨道 B (nclgl) 和轨道 C (Custom)。
+ * 3. 实例化核心系统 (I_WindowSystem) 和服务 (I_ResourceFactory, I_DebugUI)。
+ * 4. 将纯 IAL 接口注入 Application。
  */
 
 #include <memory>
-#include <iostream>
+#include "Core/Application.h" // 纯净的，只依赖 IAL 和 nclgl-math
 
-// 1. (规范) 包含纯净的 Application 类
-#include "Core/Application.h" // (我们刚在上面定义的)
-
-// 2. (规范) 包含纯净的 IAL 接口
+// IAL 接口 (纯净)
+// 这些是 Day 1 创建的纯虚接口
 #include "IAL/I_WindowSystem.h"
 #include "IAL/I_ResourceFactory.h"
 #include "IAL/I_DebugUI.h"
 
 // --- 依赖注入切换 (NFR-4, NFR-9) ---
 // 
-// NFR-14: 
-// 轨道 B (nclgl) 是核心交付物。
-// 保持此行被注释以构建轨道 B。
-// #define NCL_USE_CUSTOM_IMPL 
-//
-// ------------------------------------
+// #define NCL_USE_CUSTOM_IMPL // 取消注释此行以切换到轨道 C (自研)
 
 #ifdef NCL_USE_CUSTOM_IMPL
-    // --- 轨道 C: 自研实现 (V13 交付后目标) ---
-    // #include "Implementations/Custom_Impl/C_WindowSystem.h"
-    // #include "Implementations/Custom_Impl/C_Factory.h"
-    // #include "Implementations/Custom_Impl/C_DebugUI.h"
+    // --- 轨道 C: 自研实现 ---
+    // (Day 2 暂时不需要实现这些，但 main.cpp 必须包含此逻辑)
+    // main.cpp 被授权包含具体实现 (NFR-1)
+    #include "Implementations/Custom_Impl/C_WindowSystem.h"
+    #include "Implementations/Custom_Impl/C_Factory.h"
+    #include "Implementations/Custom_Impl/C_DebugUI.h"
 #else
-    // --- 轨道 B: nclgl 默认实现 (V13 核心交付物) ---
-    // (main.cpp 被授权包含这些 "脏" 的头文件)
+    // --- 轨道 B: nclgl 默认实现 ---
+    // main.cpp 被授权包含具体实现 (NFR-1)
+    // (这些是 Day 2 需要创建的 "空壳实现" Stubs)
     #include "Implementations/NCLGL_Impl/B_WindowSystem.h"
     #include "Implementations/NCLGL_Impl/B_Factory.h"
     #include "Implementations/NCLGL_Impl/B_DebugUI_Null.h"
@@ -47,64 +42,56 @@
 
 int main() {
     
-    // 3. (规范) 声明 IAL 接口指针
+    // 1. 实例化核心系统 (Window, Input, Timer)
+    //    代码根据 NCL_USE_CUSTOM_IMPL 宏在编译时选择
+    
     std::shared_ptr<Engine::IAL::I_WindowSystem> windowSystem;
-    std::shared_ptr<Engine::IAL::I_ResourceFactory> resourceFactory;
-    std::shared_ptr<Engine::IAL::I_DebugUI> debugUI;
-
-    std::cout << "main.cpp: 正在选择轨道..." << std::endl;
 
 #ifdef NCL_USE_CUSTOM_IMPL
-    // --- 实例化轨道 C ---
-    std::cout << "main.cpp: 轨道 C (Custom) 已选择。" << std::endl;
-    // windowSystem    = std::make_shared<Custom_Impl::C_WindowSystem>();
-    // resourceFactory = std::make_shared<Custom_Impl::C_Factory>();
-    // debugUI         = std::make_shared<Custom_Impl::C_DebugUI>();
+    // (轨道 C - 暂不实现)
+    windowSystem = std::make_shared<Custom_Impl::C_WindowSystem>();
 #else
-    // --- 实例化轨道 B ---
-    std::cout << "main.cpp: 轨道 B (NCLGL_Impl) 已选择。" << std::endl;
-    windowSystem    = std::make_shared<NCLGL_Impl::B_WindowSystem>();
-    resourceFactory = std::make_shared<NCLGL_Impl::B_Factory>();
-    debugUI         = std::make_shared<NCLGL_Impl::B_DebugUI_Null>(); // NFR-11.3
+    // 轨道 B (Day 2 使用空壳)
+    windowSystem = std::make_shared<NCLGL_Impl::B_WindowSystem>();
 #endif
 
-    std::cout << "main.cpp: 正在初始化系统..." << std::endl;
-
-    try {
-        // 4. (规范) 初始化核心系统 (创建窗口和 GL 上下文)
-        if (!windowSystem->Init("CSC8502 Demo (V13 Architecture)", 1280, 720, false)) {
-            throw std::runtime_error("I_WindowSystem::Init() 失败！");
-        }
-
-        // 5. (规范) 初始化调试 UI (P-5)
-        //    (在轨道 B 中，这将调用 B_DebugUI_Null::Init()，一个空函数)
-        debugUI->Init(windowSystem->GetHandle());
-
-        // 6. (规范) NFR-9: 
-        //    注入 IAL 纯接口
-        //    Application 对轨道 B 或 C 毫不知情。
-        Application app(windowSystem, resourceFactory, debugUI);
-        
-        // 7. (规范) 运行主循环
-        app.Run();
-
-        // 8. (规范) 清理
-        std::cout << "main.cpp: 正在关闭系统..." << std::endl;
-        debugUI->Shutdown();
-        windowSystem->Shutdown();
-
-    } catch (const std::exception& e) {
-        // 异常处理
-        std::cerr << "\n!!!! 发生严重错误 !!!!\n" << e.what() << std::endl;
-        // (B_WindowSystem 可能会在这里崩溃，因为它没有 HWND)
-        // (在实际项目中，我们会在 B_WindowSystem::Shutdown 中添加 m_isInitialized 检查)
-        
-        // 确保即使 Init 失败，我们也能尝试关闭
-        if (debugUI) debugUI->Shutdown();
-        if (windowSystem) windowSystem->Shutdown();
+    // 2. 初始化核心系统
+    //    (在 Day 2，B_WindowSystem::Init 只是一个空函数，但调用必须存在)
+    if (!windowSystem->Init("CSC8502 Assignment", 1280, 720, false)) { // 使用你的项目名称
         return -1;
     }
 
-    std::cout << "main.cpp: 程序正常退出。" << std::endl;
+    // 3. 实例化依赖的服务 (Factory, UI)
+    std::shared_ptr<Engine::IAL::I_ResourceFactory> resourceFactory;
+    std::shared_ptr<Engine::IAL::I_DebugUI> debugUI;
+
+#ifdef NCL_USE_CUSTOM_IMPL
+    // (轨道 C - 暂不实现)
+    resourceFactory = std::make_shared<Custom_Impl::C_Factory>();
+    debugUI         = std::make_shared<Custom_Impl::C_DebugUI>();
+#else
+    // 轨道 B (Day 2 使用空壳)
+    resourceFactory = std::make_shared<NCLGL_Impl::B_Factory>();
+    debugUI         = std::make_shared<NCLGL_Impl::B_DebugUI_Null>(); // (NFR-11.3)
+#endif
+    
+    // 4. 初始化依赖服务 (UI 需要 Window Handle)
+    //    (在 Day 2，B_DebugUI_Null::Init 只是一个空函数)
+    debugUI->Init(windowSystem->GetHandle()); // GetHandle() 在 Day 2 的空壳中应返回 nullptr
+
+    // 5. 注入 IAL 接口
+    //    Application (Day 2 创建) 对轨道 B 或 C 毫不知情，
+    //    它只接收 Engine::IAL::... 纯接口。
+    Application app(windowSystem, resourceFactory, debugUI);
+    
+    // 6. 运行主循环
+    //    (在 Day 2，Application::Run 只是一个空函数，程序会立即退出)
+    app.Run();
+    
+    // 7. 清理
+    //    (在 Day 2，空壳的 Shutdown 函数不执行任何操作)
+    debugUI->Shutdown();
+    windowSystem->Shutdown();
+    
     return 0;
 }
