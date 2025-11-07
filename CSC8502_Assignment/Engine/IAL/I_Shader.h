@@ -79,21 +79,19 @@
 #include "nclgl/Vector3.h"
 #include "nclgl/Vector4.h"
 
-namespace Engine::IAL
-{
-    class I_Shader
-    {
+namespace Engine::IAL {
+    class I_Shader {
     public:
         virtual ~I_Shader() {}
-        
-        virtual void Bind() = 0;   
+
+        virtual void Bind() = 0;
         virtual void Unbind() = 0;
-        
+
         virtual void SetUniform(const std::string& name, const Matrix4& mat) = 0;
         virtual void SetUniform(const std::string& name, const Vector3& vec) = 0;
         virtual void SetUniform(const std::string& name, const Vector4& vec) = 0;
         virtual void SetUniform(const std::string& name, float f) = 0;
         virtual void SetUniform(const std::string& name, int i) = 0;
     };
-    
+
 }

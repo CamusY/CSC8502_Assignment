@@ -102,10 +102,8 @@
 #include "IAL/I_InputDevice.h"
 #include "IAL/I_GameTimer.h"
 
-namespace Engine::IAL
-{
-    class I_WindowSystem
-    {
+namespace Engine::IAL {
+    class I_WindowSystem {
     public:
         I_WindowSystem(const I_WindowSystem&) = delete;
         I_WindowSystem& operator=(const I_WindowSystem&) = delete;
@@ -116,9 +114,9 @@ namespace Engine::IAL
 
         virtual bool Init(const std::string& title, int sizeX, int sizeY, bool fullScreen) = 0;
         virtual void Shutdown() = 0;
-        
-        virtual bool UpdateWindow() = 0; 
-        
+
+        virtual bool UpdateWindow() = 0;
+
         virtual void SwapBuffers() = 0;
 
         virtual void* GetHandle() = 0;

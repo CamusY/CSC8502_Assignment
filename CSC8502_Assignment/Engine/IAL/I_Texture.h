@@ -40,14 +40,12 @@
 
 #pragma once
 
-namespace Engine::IAL
-{
-    class I_Texture
-    {
+namespace Engine::IAL {
+    class I_Texture {
     public:
         virtual ~I_Texture() {}
         virtual unsigned int GetID() = 0;
         virtual void Bind(int slot = 0) = 0;
     };
-    
+
 }

@@ -26,13 +26,11 @@
 
 #pragma once
 
-namespace Engine::IAL
-{
-    class I_Mesh
-    {
+namespace Engine::IAL {
+    class I_Mesh {
     public:
         virtual ~I_Mesh() {}
         virtual void Draw() = 0;
     };
-    
+
 }

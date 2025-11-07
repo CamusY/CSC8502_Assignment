@@ -155,39 +155,37 @@
 #include "IAL/I_AnimatedMesh.h"
 #include "IAL/I_FrameBuffer.h"
 
-namespace Engine::IAL
-{
-    class I_ResourceFactory
-    {
+namespace Engine::IAL {
+    class I_ResourceFactory {
     public:
         virtual ~I_ResourceFactory() {}
-        
+
         virtual std::shared_ptr<I_Shader> CreateShader(
-            const std::string& vPath, 
-            const std::string& fPath, 
+            const std::string& vPath,
+            const std::string& fPath,
             const std::string& gPath = "") = 0;
-        
+
         virtual std::shared_ptr<I_Mesh> LoadMesh(const std::string& path) = 0;
-        
+
         virtual std::shared_ptr<I_Texture> LoadTexture(
             const std::string& path, bool repeat = false) = 0;
-        
+
         virtual std::shared_ptr<I_Texture> LoadCubemap(
-            const std::string& negx, const std::string& posx, 
-            const std::string& negy, const std::string& posy, 
+            const std::string& negx, const std::string& posx,
+            const std::string& negy, const std::string& posy,
             const std::string& negz, const std::string& posz) = 0;
-            
+
         virtual std::shared_ptr<I_Heightmap> LoadHeightmap(
             const std::string& path, const Vector3& scale) = 0;
-        
+
         virtual std::shared_ptr<I_Mesh> CreateQuad() = 0;
 
         virtual std::shared_ptr<I_FrameBuffer> CreateShadowFBO(int width, int height) = 0;
-        
+
         virtual std::shared_ptr<I_FrameBuffer> CreatePostProcessFBO(int width, int height) = 0;
-        
+
         virtual std::shared_ptr<I_AnimatedMesh> LoadAnimatedMesh(
-            const std::string& path, 
+            const std::string& path,
             const std::string& animPathOrName = "") = 0;
     };
 

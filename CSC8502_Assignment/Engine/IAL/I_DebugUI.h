@@ -99,28 +99,26 @@
 // (NFR-2) 接口直接依赖 nclgl 通用数学库
 #include "nclgl/Vector3.h"
 
-namespace Engine::IAL
-{
-    class I_DebugUI
-    {
+namespace Engine::IAL {
+    class I_DebugUI {
     public:
         virtual ~I_DebugUI() {}
-        
-        virtual void Init(void* windowHandle) = 0; 
+
+        virtual void Init(void* windowHandle) = 0;
         virtual void NewFrame() = 0;
         virtual void Render() = 0;
         virtual void Shutdown() = 0;
 
         virtual bool BeginWindow(const std::string& title) = 0;
         virtual void EndWindow() = 0;
-        
+
         virtual bool SliderFloat(const std::string& label, float* v, float v_min, float v_max) = 0;
         virtual bool SliderFloat3(const std::string& label, Vector3* v, float v_min, float v_max) = 0;
-        
+
         virtual bool Checkbox(const std::string& label, bool* v) = 0;
         virtual bool Button(const std::string& label) = 0;
         virtual void Text(const std::string& text) = 0;
-        
+
         virtual bool ColorEdit3(const std::string& label, Vector3* v) = 0;
     };
 

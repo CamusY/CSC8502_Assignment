@@ -25,13 +25,11 @@
 
 #pragma once
 
-namespace Engine::IAL
-{
-    class I_GameTimer
-    {
+namespace Engine::IAL {
+    class I_GameTimer {
     public:
         virtual ~I_GameTimer() {}
         virtual float GetTimeDeltaSeconds() const = 0;
     };
-    
+
 }

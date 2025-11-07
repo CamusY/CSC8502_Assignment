@@ -66,10 +66,8 @@
 // IAL 依赖 IAL (纯净)
 #include "IAL/I_Texture.h"
 
-namespace Engine::IAL
-{
-    class I_FrameBuffer
-    {
+namespace Engine::IAL {
+    class I_FrameBuffer {
     public:
         virtual ~I_FrameBuffer() {}
         virtual void Bind() = 0;
@@ -77,5 +75,5 @@ namespace Engine::IAL
         virtual std::shared_ptr<I_Texture> GetColorTexture() = 0;
         virtual std::shared_ptr<I_Texture> GetDepthTexture() = 0;
     };
-    
+
 }

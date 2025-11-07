@@ -51,14 +51,12 @@
 // IAL 依赖 IAL (纯净)
 #include "IAL/I_Mesh.h"
 
-namespace Engine::IAL
-{
-    class I_Heightmap : public I_Mesh
-    {
+namespace Engine::IAL {
+    class I_Heightmap : public virtual I_Mesh {
     public:
         virtual ~I_Heightmap() {}
-        
+
         // virtual Vector3 GetVertex(int x, int y) = 0;
     };
-    
+
 }

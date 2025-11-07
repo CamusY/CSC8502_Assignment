@@ -58,16 +58,14 @@
 // IAL 依赖 IAL (纯净)
 #include "IAL/I_Mesh.h"
 
-namespace Engine::IAL
-{
-    class I_AnimatedMesh : public I_Mesh
-    {
+namespace Engine::IAL {
+    class I_AnimatedMesh : public virtual I_Mesh {
     public:
         virtual ~I_AnimatedMesh() {}
-        
+
         virtual void UpdateAnimation(float dt) = 0;
-        
+
         virtual const std::vector<Matrix4>& GetBoneTransforms() const = 0;
     };
-    
+
 }

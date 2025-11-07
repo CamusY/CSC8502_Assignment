@@ -112,10 +112,8 @@
 // (NFR-2) 接口直接依赖 nclgl 通用数学库
 #include "nclgl/Vector2.h"
 
-namespace Engine::IAL
-{
-    enum class KeyCode
-    {
+namespace Engine::IAL {
+    enum class KeyCode {
         UNKNOWN,
         A, B, C, D, E, F, G, H, I, J, K, L, M,
         N, O, P, Q, R, S, T, U, V, W, X, Y, Z,
@@ -135,15 +133,13 @@ namespace Engine::IAL
         UP, DOWN, LEFT, RIGHT
     };
     
-    enum class MouseButton
-    {
+    enum class MouseButton {
         LEFT,
         RIGHT,
         MIDDLE
     };
     
-    class I_Keyboard
-    {
+    class I_Keyboard {
     public:
         virtual ~I_Keyboard() {}
         
@@ -152,8 +148,7 @@ namespace Engine::IAL
         virtual bool KeyTriggered(KeyCode key) = 0;
     };
     
-    class I_Mouse
-    {
+    class I_Mouse {
     public:
         virtual ~I_Mouse() {}
         
