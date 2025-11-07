@@ -1,5 +1,5 @@
 /**
-* @file B_GameTimer.h
+ * @file B_GameTimer.h
  * @brief 轨道 B (NCLGL_Impl) 的游戏计时器接口实现。
  *
  * 本文件定义了 B_GameTimer 类，它是 Engine::IAL::I_GameTimer 接口的具体实现。

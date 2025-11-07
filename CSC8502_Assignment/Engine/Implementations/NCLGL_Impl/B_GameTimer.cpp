@@ -11,7 +11,8 @@
 
 namespace NCLGL_Impl {
 
-    B_GameTimer::B_GameTimer() : m_timer(nullptr) {
+    B_GameTimer::B_GameTimer() {
+        m_timer = new ::GameTimer();
     }
 
     B_GameTimer::~B_GameTimer() {
@@ -19,7 +20,7 @@ namespace NCLGL_Impl {
     }
 
     float B_GameTimer::GetTimeDeltaSeconds() const {
-        return 0.0f;
+        return m_timer->GetTimeDeltaSeconds();
     }
 
 }

@@ -1,5 +1,5 @@
 /**
-* @file B_InputDevice.h
+ * @file B_InputDevice.h
  * @brief 轨道 B (NCLGL_Impl) 的输入设备接口实现。
  *
  * 本文件定义了 B_Keyboard 和 B_Mouse 类，它们分别是 Engine::IAL::I_Keyboard 和 
