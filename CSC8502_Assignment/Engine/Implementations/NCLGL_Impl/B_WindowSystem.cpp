@@ -3,47 +3,90 @@
  * @brief 轨道 B (NCLGL_Impl) 的窗口系统接口实现源文件。
  *
  * 本文件实现了 B_WindowSystem 类。
- * 在 Day 2 阶段，所有函数均为基础的空壳实现 (Stubs)，旨在验证架构的依赖注入能否成功编译链接。
- * Init 函数返回 false，这将导致 main.cpp 中的应用程序在启动后立即正常退出，符合 Day 2 的预期行为。
  */
 #include "B_WindowSystem.h"
+#include "B_GameTimer.h"
+#include "B_InputDevice.h"
+
+#include "nclgl/Window.h"
+#include "nclgl/OGLRenderer.h"
+#include <glad/glad.h>
+
+namespace {
+    class InternalRenderer final : public OGLRenderer {
+    public:
+        explicit InternalRenderer(Window& w) : OGLRenderer(w) { init = true; }
+        void RenderScene() override {
+            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        }
+    };
+} // anonymous
 
 namespace NCLGL_Impl {
 
-    B_WindowSystem::B_WindowSystem() {
-    }
+    B_WindowSystem::B_WindowSystem() = default;
 
     B_WindowSystem::~B_WindowSystem() {
+        B_WindowSystem::Shutdown();
     }
 
     bool B_WindowSystem::Init(const std::string& title, int sizeX, int sizeY, bool fullScreen) {
-        return false;
+        m_window = new ::Window(title, sizeX, sizeY, fullScreen);
+        if (!m_window->HasInitialised()) {
+            delete m_window;
+            m_window = nullptr;
+            return false;
+        }
+
+        m_renderer = new InternalRenderer(*m_window);
+        if (!m_renderer->HasInitialised()) {
+            Shutdown();
+            return false;
+        }
+
+        // 绑定静态键鼠
+        m_keyboard = new B_Keyboard(::Window::GetKeyboard());
+        m_mouse = new B_Mouse(::Window::GetMouse());
+
+        // 包装 Timer
+        m_timer = new B_GameTimer(); // 你的 B_GameTimer 内部 new GameTimer，可以先不改
+
+        return true;
     }
 
     void B_WindowSystem::Shutdown() {
+        delete m_keyboard; m_keyboard = nullptr;
+        delete m_mouse;    m_mouse = nullptr;
+        delete m_timer;    m_timer = nullptr;
+        delete m_renderer; m_renderer = nullptr;
+        delete m_window;   m_window = nullptr;
     }
 
     bool B_WindowSystem::UpdateWindow() {
-        return false;
+        return m_window ? m_window->UpdateWindow() : false;
     }
 
     void B_WindowSystem::SwapBuffers() {
+        if (m_renderer) {
+            m_renderer->SwapBuffers();
+        }
     }
 
     void* B_WindowSystem::GetHandle() {
-        return nullptr;
+        return m_window ? m_window->GetHandle() : nullptr;
     }
 
     Engine::IAL::I_GameTimer* B_WindowSystem::GetTimer() const {
-        return nullptr;
+        return m_timer;
     }
 
     Engine::IAL::I_Keyboard* B_WindowSystem::GetKeyboard() const {
-        return nullptr;
+        return m_keyboard;
     }
 
     Engine::IAL::I_Mouse* B_WindowSystem::GetMouse() const {
-        return nullptr;
+        return m_mouse;
     }
+
 
 }

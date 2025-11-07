@@ -20,12 +20,24 @@
 #pragma once
 #include "IAL/I_WindowSystem.h"
 
+
+class Window;
+class OGLRenderer;
+
 namespace NCLGL_Impl {
+    class B_GameTimer;
+    class B_Keyboard;
+    class B_Mouse;
 
     class B_WindowSystem : public Engine::IAL::I_WindowSystem {
     public:
         B_WindowSystem();
         ~B_WindowSystem() override;
+
+        B_WindowSystem(const B_WindowSystem&) = delete;
+        B_WindowSystem& operator=(const B_WindowSystem&) = delete;
+        B_WindowSystem(B_WindowSystem&&) = delete;
+        B_WindowSystem& operator=(B_WindowSystem&&) = delete;
 
         bool Init(const std::string& title, int sizeX, int sizeY, bool fullScreen) override;
         void Shutdown() override;
@@ -37,6 +49,16 @@ namespace NCLGL_Impl {
         Engine::IAL::I_GameTimer* GetTimer() const override;
         Engine::IAL::I_Keyboard* GetKeyboard() const override;
         Engine::IAL::I_Mouse* GetMouse() const override;
+        
+    private:
+
+        ::Window* m_window = nullptr;
+        ::OGLRenderer* m_renderer = nullptr;
+
+        B_GameTimer* m_timer = nullptr;
+        B_Keyboard* m_keyboard = nullptr;
+        B_Mouse* m_mouse = nullptr;
     };
+    
 
 }
