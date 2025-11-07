@@ -70,10 +70,10 @@
  * @brief (已实现) 委托给 `nclgl::Mouse::ButtonHeld`。
  *
  * @fn NCLGL_Impl::B_Mouse::ButtonTriggered
- * @brief (已实现) 委托给 `nclgl::Mouse::ButtonTriggered`。
+ * @brief (已实现) 通过 `ButtonDown`/`ButtonHeld` 组合判断触发。
  *
  * @fn NCLGL_Impl::B_Mouse::ButtonDoubleClicked
- * @brief (已实现) 委托给 `nclgl::Mouse::ButtonDoubleClicked`。
+ * @brief (已实现) 委托给 `nclgl::Mouse::DoubleClicked`。
  *
  * @fn NCLGL_Impl::B_Mouse::WheelMoved
  * @brief (已实现) 委托给 `nclgl::Mouse::WheelMoved`。

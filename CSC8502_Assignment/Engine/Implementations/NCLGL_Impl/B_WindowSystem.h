@@ -5,9 +5,6 @@
  * 本文件定义了 B_WindowSystem 类，它是 Engine::IAL::I_WindowSystem 接口在 nclgl 框架下的具体实现。
  * 它负责管理 nclgl::Window 的生命周期，并作为 OpenGL 渲染上下文的持有者。
  *
- * 注意：在 Day 2 阶段，此类仅为满足链接需求的空壳实现。
- * 在后续 (Day 3) 实现中，它必须继承 nclgl::OGLRenderer 以正确创建和管理 OpenGL 上下文。
- *
  * B_WindowSystem 类 (NCLGL_Impl::B_WindowSystem):
  * 继承自 Engine::IAL::I_WindowSystem 纯虚接口。
  *
