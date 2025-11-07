@@ -161,7 +161,7 @@ namespace Engine::IAL {
         virtual bool ButtonDoubleClicked(MouseButton button) = 0;
         
         virtual bool WheelMoved() = 0;
-        virtual float GetWheelMovement() = 0;
+        virtual int GetWheelMovement() = 0;
     };
     
 }
