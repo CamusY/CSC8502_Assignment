@@ -8,8 +8,8 @@
  * 2.  实现 `IAL::MouseButton` 到 `nclgl::MouseButtons` 的映射 (MapButton)。
  * 3.  将所有接口调用委托给被包装的 `nclgl` 实例，并在此过程中
  * 使用 `MapKey` 和 `MapButton` 进行转换。
- * 4.  (NFR-11.4)
- * 增加空指针检查，确保在 `nclgl` 实例无效时程序不会崩溃。
+ * 4.  (NFR-1) 明确包含 nclgl 头文件以访问底层键鼠。
+ * 5.  (NFR-11.4) 增加空指针检查，确保在 `nclgl` 实例无效时程序不会崩溃。
  *
  * @fn NCLGL_Impl::MapKey(Engine::IAL::KeyCode ialKey)
  * @brief (Day 3 任务 4)
@@ -26,8 +26,6 @@
 
 #include "B_InputDevice.h"
 
-// (NFR-1) B_ 轨实现被授权包含 nclgl 具体实现
-// (虽然 B_InputDevice.h 已经包含了, 但 cpp 文件也包含以保持显式依赖)
 #include "nclgl/Keyboard.h"
 #include "nclgl/Mouse.h"
 
@@ -169,8 +167,7 @@ namespace NCLGL_Impl {
             case Engine::IAL::KeyCode::UNKNOWN:
                 return (KeyboardKeys)KEYBOARD_MAX;
             }
-
-            // 没有 default，让编译器强制检查未来 KeyCode 新增
+            
         }
 
 
@@ -183,12 +180,9 @@ namespace NCLGL_Impl {
             case Engine::IAL::MouseButton::MIDDLE:
                 return MOUSE_MIDDLE;
             }
-            // 同理：不写 default
         }
 
-    } // end anonymous namespace
-
-    // --- B_Keyboard 实现 ---
+    }
 
 
     bool B_Keyboard::KeyDown(Engine::IAL::KeyCode key) {
@@ -203,8 +197,6 @@ namespace NCLGL_Impl {
         return m_nclKeyboard && m_nclKeyboard->KeyTriggered(MapKey(key));
     }
 
-
-    // --- B_Mouse 实现 ---
 
     ::Vector2 B_Mouse::GetRelativePosition() {
         return m_nclMouse ? m_nclMouse->GetRelativePosition() : ::Vector2(0, 0);
@@ -243,4 +235,4 @@ namespace NCLGL_Impl {
     }
 
 
-} // namespace NCLGL_Impl
+}
