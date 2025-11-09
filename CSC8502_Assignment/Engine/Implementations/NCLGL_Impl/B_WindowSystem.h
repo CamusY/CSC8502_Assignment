@@ -9,13 +9,16 @@
  * 继承自 Engine::IAL::I_WindowSystem 纯虚接口。
  *
  * 成员函数 Init:
- * 初始化窗口系统。在 Day 2 空壳中返回 false 以便让程序立即安全退出。
+ * 创建 nclgl::Window 与内部 OGLRenderer，完成 OpenGL 渲染上下文初始化，并实例化键鼠与计时器包装器。
  *
- * 成员函数 Shutdown, UpdateWindow, SwapBuffers:
- * 窗口生命周期管理函数的空实现。
+ * 成员函数 Shutdown:
+ * 负责释放窗口、渲染器及其包装的输入/计时资源，确保没有资源泄露。
+ *
+ * 成员函数 UpdateWindow, SwapBuffers:
+ * 分别委托 nclgl::Window::UpdateWindow 与 OGLRenderer::SwapBuffers 完成事件轮询与前后缓冲交换。
  *
  * 成员函数 GetHandle, GetTimer, GetKeyboard, GetMouse:
- * 资源获取函数的空实现，Day 2 阶段返回 nullptr。
+ * 返回底层窗口句柄及针对键盘、鼠标、计时器的适配器实例，这些包装器会始终提供有效对象而非空指针。
  */
 #pragma once
 #include "IAL/I_WindowSystem.h"

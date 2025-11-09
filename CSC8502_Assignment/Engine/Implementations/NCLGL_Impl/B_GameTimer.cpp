@@ -17,6 +17,10 @@ namespace NCLGL_Impl {
         delete m_timer;
     }
 
+    void B_GameTimer::tick() {
+        m_timer->Tick();
+    }
+
     float B_GameTimer::GetTimeDeltaSeconds() const {
         return m_timer->GetTimeDeltaSeconds();
     }

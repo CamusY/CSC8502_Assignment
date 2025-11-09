@@ -33,6 +33,7 @@ namespace NCLGL_Impl {
         B_GameTimer();
         ~B_GameTimer() override;
 
+        void tick();
         float GetTimeDeltaSeconds() const override;
 
     private:

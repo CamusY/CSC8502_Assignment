@@ -48,9 +48,8 @@ namespace NCLGL_Impl {
         m_keyboard = new B_Keyboard(::Window::GetKeyboard());
         m_mouse = new B_Mouse(::Window::GetMouse());
 
-        // 包装 Timer
-        m_timer = new B_GameTimer(); // 你的 B_GameTimer 内部 new GameTimer，可以先不改
-
+        // 包装计时器，使窗口系统能够向外提供统一的 I_GameTimer 接口
+        m_timer = new B_GameTimer();
         return true;
     }
 
@@ -63,7 +62,13 @@ namespace NCLGL_Impl {
     }
 
     bool B_WindowSystem::UpdateWindow() {
-        return m_window ? m_window->UpdateWindow() : false;
+        if (!m_window) return false;
+        
+        const bool updated = m_window->UpdateWindow();
+
+        if (updated && m_timer) m_timer -> tick();
+
+        return updated;
     }
 
     void B_WindowSystem::SwapBuffers() {
