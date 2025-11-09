@@ -18,8 +18,9 @@
  * 分别委托 nclgl::Window::UpdateWindow 与 OGLRenderer::SwapBuffers 完成事件轮询与前后缓冲交换。
  *
  * 成员函数 GetHandle, GetTimer, GetKeyboard, GetMouse:
- * 返回底层窗口句柄及针对键盘、鼠标、计时器的适配器实例，这些包装器会始终提供有效对象而非空指针。
- */
+ * 返回底层窗口句柄及针对键盘、鼠标、计时器的适配器实例。
+ * 键盘与鼠标包装器仅会在 Init 成功后提供有效对象；Shutdown 会释放它们并将指针重置为 nullptr。
+*/
 #pragma once
 #include "IAL/I_WindowSystem.h"
 

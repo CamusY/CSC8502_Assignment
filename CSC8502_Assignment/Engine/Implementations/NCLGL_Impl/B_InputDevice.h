@@ -4,7 +4,8 @@
  * @details
  * 本文件提供了 `B_Keyboard` 和 `B_Mouse` 两个类，它们是
  * `nclgl` 库中 `::Keyboard` 和 `::Mouse` 类的 "适配器" 或 "包装器"。
- *
+ * (NFR-1) 轨道 B 的实现允许直接引用 `nclgl` 头文件以访问底层输入对象。
+ * 
  * (NFR-11.4)
  * 这两个适配器类被设计为轻量级的包装器，它们不拥有底层的 `nclgl`
  * 对象实例。相反，它们在构造时接收一个指向由 `nclgl::Window`
@@ -88,7 +89,6 @@
 #pragma once
 #include "IAL/I_InputDevice.h"
 
-// (NFR-1) B_ 轨实现被授权包含 nclgl 具体实现
 #include "nclgl/Keyboard.h"
 #include "nclgl/Mouse.h"
 
@@ -96,7 +96,6 @@ namespace NCLGL_Impl {
 
     class B_Keyboard : public Engine::IAL::I_Keyboard {
     public:
-        // (NFR-11.4) 构造函数必须接收由 nclgl::Window 创建的 static 实例
         B_Keyboard(::Keyboard* nclKeyboard) : m_nclKeyboard(nclKeyboard) {}
         ~B_Keyboard() {}
 
@@ -105,12 +104,11 @@ namespace NCLGL_Impl {
         bool KeyTriggered(Engine::IAL::KeyCode key) override;
 
     private:
-        ::Keyboard* m_nclKeyboard; // (NFR-11.4) 包装 nclgl 实例
+        ::Keyboard* m_nclKeyboard;
     };
 
     class B_Mouse : public Engine::IAL::I_Mouse {
     public:
-        // (NFR-11.4) 构造函数必须接收由 nclgl::Window 创建的 static 实例
         B_Mouse(::Mouse* nclMouse) : m_nclMouse(nclMouse) {}
         ~B_Mouse() {}
 
@@ -126,7 +124,7 @@ namespace NCLGL_Impl {
         int GetWheelMovement() override;
 
     private:
-        ::Mouse* m_nclMouse; // (NFR-11.4) 包装 nclgl 实例
+        ::Mouse* m_nclMouse;
     };
 
-} // namespace NCLGL_Impl
+}

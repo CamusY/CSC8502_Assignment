@@ -1,8 +1,9 @@
 /**
-* @file B_WindowSystem.cpp
+ * @file B_WindowSystem.cpp
  * @brief 轨道 B (NCLGL_Impl) 的窗口系统接口实现源文件。
  *
- * 本文件实现了 B_WindowSystem 类。
+ * 本文件实现了 B_WindowSystem 类，负责创建 nclgl 窗口与渲染器，
+ * 并包装 nclgl 提供的静态键鼠以及轨道 B 的计时器以统一提供 IAL 接口。
  */
 #include "B_WindowSystem.h"
 #include "B_GameTimer.h"
@@ -20,7 +21,7 @@ namespace {
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         }
     };
-} // anonymous
+}
 
 namespace NCLGL_Impl {
 
@@ -44,11 +45,9 @@ namespace NCLGL_Impl {
             return false;
         }
 
-        // 绑定静态键鼠
         m_keyboard = new B_Keyboard(::Window::GetKeyboard());
         m_mouse = new B_Mouse(::Window::GetMouse());
 
-        // 包装计时器，使窗口系统能够向外提供统一的 I_GameTimer 接口
         m_timer = new B_GameTimer();
         return true;
     }
