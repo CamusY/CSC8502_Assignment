@@ -1,6 +1,5 @@
 /*
- * 文件: src/CSC8502_Demo/main.cpp
- * (在你的项目中路径为: CSC8502_Assignment/main.cpp)
+ * 文件: CSC8502_Assignment/main.cpp
  * * 职责: (NFR-9)
  * 1. 作为项目唯一的依赖注入 (DI) 入口点。
  * 2. 根据预处理器宏 (NCL_USE_CUSTOM_IMPL) 切换轨道 B (nclgl) 和轨道 C (Custom)。

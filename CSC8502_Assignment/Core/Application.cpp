@@ -33,13 +33,13 @@ void Application::Run() {
         if (timer) {
             deltaTime = timer->GetTimeDeltaSeconds();
         }
-        m_ui->NewFrame();
         if (m_sceneManager) {
             m_sceneManager->Update(deltaTime);
         }
         if (m_renderer) {
             m_renderer->Render();
         }
+        m_ui->NewFrame();
         m_ui->Render();
         m_window->SwapBuffers();
     }

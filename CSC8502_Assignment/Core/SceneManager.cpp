@@ -1,5 +1,5 @@
 ﻿/**
-* @file SceneManager.cpp
+ * @file SceneManager.cpp
  * @brief 实现场景管理器的核心逻辑。
  * @details
  * 构造函数接收资源工厂接口并创建场景图实例，Update 函数负责驱动场景图的更新。

@@ -1,5 +1,5 @@
 ﻿/**
-* @file Renderer.cpp
+ * @file Renderer.cpp
  * @brief 实现基础渲染器的渲染队列遍历逻辑。
  * @details
  * 当前实现负责从场景图收集所有可渲染节点，并依次调用其网格接口执行 Draw。
