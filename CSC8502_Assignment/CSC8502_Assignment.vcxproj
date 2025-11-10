@@ -73,7 +73,7 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LibraryPath>$(ProjectDir)includes\lib;$(OutDir);$(LibraryPath)</LibraryPath>
-    <IncludePath>$(SolutionDir)includes;$(SolutionDir)includes\KHR;$(SolutionDir)\CSC8502_GLTF;$(IncludePath);$(ProjectDir)Engine</IncludePath>
+    <IncludePath>$(SolutionDir)includes;$(SolutionDir)includes\KHR;$(SolutionDir)\CSC8502_GLTF;$(IncludePath);$(ProjectDir)Engine;$(ProjectDir)Renderer</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -136,6 +136,7 @@
     <ClCompile Include="..\includes\glad\glad.c" />
     <ClCompile Include="Core\Application.cpp" />
     <ClCompile Include="Core\SceneGraph.cpp" />
+    <ClCompile Include="Core\SceneManager.cpp" />
     <ClCompile Include="Engine\Implementations\NCLGL_Impl\B_AnimatedMesh.cpp" />
     <ClCompile Include="Engine\Implementations\NCLGL_Impl\B_DebugUI_Null.cpp" />
     <ClCompile Include="Engine\Implementations\NCLGL_Impl\B_Factory.cpp" />
@@ -148,10 +149,12 @@
     <ClCompile Include="Engine\Implementations\NCLGL_Impl\B_Texture.cpp" />
     <ClCompile Include="Engine\Implementations\NCLGL_Impl\B_WindowSystem.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="Renderer\Renderer.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Core\Application.h" />
     <ClInclude Include="Core\SceneGraph.h" />
+    <ClInclude Include="Core\SceneManager.h" />
     <ClInclude Include="Engine\IAL\I_AnimatedMesh.h" />
     <ClInclude Include="Engine\IAL\I_DebugUI.h" />
     <ClInclude Include="Engine\IAL\I_FrameBuffer.h" />
@@ -174,6 +177,7 @@
     <ClInclude Include="Engine\Implementations\NCLGL_Impl\B_Shader.h" />
     <ClInclude Include="Engine\Implementations\NCLGL_Impl\B_Texture.h" />
     <ClInclude Include="Engine\Implementations\NCLGL_Impl\B_WindowSystem.h" />
+    <ClInclude Include="Renderer\Renderer.h" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Engine\Custom\" />
