@@ -2,11 +2,12 @@
 * @file B_Factory.cpp
  * @brief 轨道 B (NCLGL_Impl) 的资源工厂接口实现源文件。
  *
- * 本文件实现了 B_Factory 类。
- * 在 Day 2 阶段，所有工厂方法均为返回 nullptr 的空壳实现，
- * 旨在满足 main.cpp 中的依赖注入编译需求。
+ * 本文件实现了 B_Factory 类。该类继承自 I_ResourceFactory，
+ * 提供了用于创建和加载各种图形资源（如着色器、网格、纹理、高度图等）的具体方法。
+ * 当前(Day5)实现中，大部分方法返回空指针，只有帧缓冲区创建方法返回了具体的 B_FrameBuffer 实例。
  */
 #include "B_Factory.h"
+#include "B_FrameBuffer.h"
 
 namespace NCLGL_Impl {
 
@@ -50,12 +51,12 @@ namespace NCLGL_Impl {
 
     std::shared_ptr<Engine::IAL::I_FrameBuffer> B_Factory::CreateShadowFBO(
         int width, int height) {
-        return nullptr;
+        return std::make_shared<B_FrameBuffer>(width, height);
     }
 
     std::shared_ptr<Engine::IAL::I_FrameBuffer> B_Factory::CreatePostProcessFBO(
         int width, int height) {
-        return nullptr;
+        return std::make_shared<B_FrameBuffer>(width, height);
     }
 
     std::shared_ptr<Engine::IAL::I_AnimatedMesh> B_Factory::LoadAnimatedMesh(
