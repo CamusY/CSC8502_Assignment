@@ -25,8 +25,7 @@ Application::Application(std::shared_ptr<Engine::IAL::I_WindowSystem> window,
     m_renderer = std::make_shared<Renderer>(m_factory, m_sceneManager->GetSceneGraph(), m_surfaceWidth, m_surfaceHeight);
 }
 
-Application::~Application() {
-}
+Application::~Application() = default;
 
 void Application::Run() {
     while (m_window->UpdateWindow()) {

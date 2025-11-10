@@ -128,7 +128,7 @@ namespace NCLGL_Impl {
 
     std::shared_ptr<Engine::IAL::I_Mesh> B_Factory::CreateQuad() {
         auto quadMesh = new FullscreenQuadMesh();
-        std::cerr << "[B_Factory] Created fullscreen quad mesh" << std::endl;
+        std::cerr << "[B_Factory] Created fullscreen quad mesh" << "\n";
         return std::make_shared<B_Mesh>(quadMesh);
     }
 
@@ -137,7 +137,7 @@ namespace NCLGL_Impl {
         auto fbo = std::make_shared<B_FrameBuffer>(width, height, false);
         std::cerr << "[B_Factory] Shadow FBO layout "
                   << BuildLayoutDescription(fbo) << "; default FBO assumed Color8/Depth24. Size: "
-                  << width << "x" << height << std::endl;
+                  << width << "x" << height << "\n";
         return fbo;
     }
 
@@ -146,7 +146,7 @@ namespace NCLGL_Impl {
         auto fbo = std::make_shared<B_FrameBuffer>(width, height, true);
         std::cerr << "[B_Factory] PostProcess FBO layout "
                   << BuildLayoutDescription(fbo) << "; default FBO assumed Color8/Depth24. Size: "
-                  << width << "x" << height << std::endl;
+                  << width << "x" << height << "\n";
         return fbo;
     }
 

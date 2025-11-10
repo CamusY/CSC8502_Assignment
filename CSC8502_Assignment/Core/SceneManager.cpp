@@ -9,6 +9,15 @@
 
 SceneManager::SceneManager(const std::shared_ptr<Engine::IAL::I_ResourceFactory>& factory)
     : m_factory(factory), m_sceneGraph(std::make_shared<SceneGraph>()), m_accumulatedTime(0.0f) {
+    if (m_sceneGraph && m_factory) {
+        auto root = m_sceneGraph->GetRoot();
+        if (root) {
+            auto cubeNode = std::make_shared<SceneNode>();
+            cubeNode->SetMesh(m_factory->LoadMesh("Meshes/cube.gltf"));
+            cubeNode->SetScale(Vector3(1.0f, 1.0f, 1.0f));
+            root->AddChild(cubeNode);
+        }
+    }
 }
 
 std::shared_ptr<SceneGraph> SceneManager::GetSceneGraph() const {

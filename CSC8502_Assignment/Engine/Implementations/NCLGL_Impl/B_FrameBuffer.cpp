@@ -86,7 +86,7 @@ namespace NCLGL_Impl {
             glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, colorID, 0);
             m_colorTexture = std::make_shared<B_Texture>(colorID, Engine::IAL::TextureType::Texture2D);
             std::cerr << "[B_FrameBuffer] Color attachment type: "
-                      << TextureTypeToString(m_colorTexture->GetType()) << std::endl;
+                      << TextureTypeToString(m_colorTexture->GetType()) << "\n";
             GLint minFilter = 0;
             GLint magFilter = 0;
             GLint wrapS = 0;
@@ -98,7 +98,7 @@ namespace NCLGL_Impl {
             std::cerr << "[B_FrameBuffer] FBO " << m_fboID << " color attachment "
                       << width << "x" << height << " sampler: MIN=" << FilterToString(minFilter)
                       << ", MAG=" << FilterToString(magFilter) << ", WRAP_S=" << WrapToString(wrapS)
-                      << ", WRAP_T=" << WrapToString(wrapT) << std::endl;
+                      << ", WRAP_T=" << WrapToString(wrapT) << "\n";
         }
 
         unsigned int depthID = 0;
@@ -112,7 +112,7 @@ namespace NCLGL_Impl {
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthID, 0);
         m_depthTexture = std::make_shared<B_Texture>(depthID, Engine::IAL::TextureType::DepthStencil);
         std::cerr << "[B_FrameBuffer] Depth attachment type: "
-                  << TextureTypeToString(m_depthTexture->GetType()) << std::endl;
+                  << TextureTypeToString(m_depthTexture->GetType()) << "\n";
         GLint depthMinFilter = 0;
         GLint depthMagFilter = 0;
         GLint depthWrapS = 0;
@@ -124,7 +124,7 @@ namespace NCLGL_Impl {
         std::cerr << "[B_FrameBuffer] FBO " << m_fboID << " depth attachment "
                   << width << "x" << height << " sampler: MIN=" << FilterToString(depthMinFilter)
                   << ", MAG=" << FilterToString(depthMagFilter) << ", WRAP_S=" << WrapToString(depthWrapS)
-                  << ", WRAP_T=" << WrapToString(depthWrapT) << std::endl;
+                  << ", WRAP_T=" << WrapToString(depthWrapT) << "\n";
 
         if (m_hasColorAttachment) {
             const GLenum drawBuffers[] = { GL_COLOR_ATTACHMENT0 };
@@ -140,11 +140,11 @@ namespace NCLGL_Impl {
         if (status != GL_FRAMEBUFFER_COMPLETE) {
             std::cerr << "[B_FrameBuffer] Incomplete GL_FRAMEBUFFER " << layoutDesc << " "
                       << width << "x" << height << ", status: 0x" << std::hex
-                      << status << std::dec << std::endl;
+                      << status << std::dec << "\n";
         } else {
             std::cerr << "[B_FrameBuffer] GL_FRAMEBUFFER complete " << layoutDesc << " "
                       << width << "x" << height << ", status: 0x" << std::hex
-                      << status << std::dec << std::endl;
+                      << status << std::dec << "\n";
         }
         
         glBindTexture(GL_TEXTURE_2D, 0);
