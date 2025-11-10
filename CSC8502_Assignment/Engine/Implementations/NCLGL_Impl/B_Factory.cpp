@@ -9,6 +9,44 @@
 #include "B_Factory.h"
 #include "B_FrameBuffer.h"
 
+#include <iostream>
+#include <string>
+
+namespace {
+    using AttachmentFormat = NCLGL_Impl::AttachmentFormat;
+
+    std::string AttachmentFormatToString(AttachmentFormat format) {
+        switch (format) {
+        case AttachmentFormat::None: return "None";
+        case AttachmentFormat::Color8: return "Color8";
+        case AttachmentFormat::Color16F: return "Color16F";
+        case AttachmentFormat::Depth24: return "Depth24";
+        case AttachmentFormat::Depth32F: return "Depth32F";
+        }
+        return "Unknown";
+    }
+
+    std::string BuildLayoutDescription(const std::shared_ptr<NCLGL_Impl::B_FrameBuffer>& fbo) {
+        const bool hasColor = fbo->GetColorFormat() != AttachmentFormat::None;
+        const AttachmentFormat depthFormat = fbo->GetDepthFormat();
+        const std::string depthStr = AttachmentFormatToString(depthFormat);
+
+        if (!hasColor) {
+            if (depthFormat == AttachmentFormat::None) {
+                return "Empty (None)";
+            }
+            return "Depth-only (" + depthStr + ")";
+        }
+
+        std::string description = "Color+Depth (" + AttachmentFormatToString(fbo->GetColorFormat());
+        if (depthFormat != AttachmentFormat::None) {
+            description += "/" + depthStr;
+        }
+        description += ")";
+        return description;
+    }
+}
+
 namespace NCLGL_Impl {
 
     B_Factory::B_Factory() {
@@ -51,12 +89,20 @@ namespace NCLGL_Impl {
 
     std::shared_ptr<Engine::IAL::I_FrameBuffer> B_Factory::CreateShadowFBO(
         int width, int height) {
-        return std::make_shared<B_FrameBuffer>(width, height, false);
+        auto fbo = std::make_shared<B_FrameBuffer>(width, height, false);
+        std::cerr << "[B_Factory] Shadow FBO layout "
+                  << BuildLayoutDescription(fbo) << "; default FBO assumed Color8/Depth24. Size: "
+                  << width << "x" << height << std::endl;
+        return fbo;
     }
 
     std::shared_ptr<Engine::IAL::I_FrameBuffer> B_Factory::CreatePostProcessFBO(
         int width, int height) {
-        return std::make_shared<B_FrameBuffer>(width, height, true);
+        auto fbo = std::make_shared<B_FrameBuffer>(width, height, true);
+        std::cerr << "[B_Factory] PostProcess FBO layout "
+                  << BuildLayoutDescription(fbo) << "; default FBO assumed Color8/Depth24. Size: "
+                  << width << "x" << height << std::endl;
+        return fbo;
     }
 
     std::shared_ptr<Engine::IAL::I_AnimatedMesh> B_Factory::LoadAnimatedMesh(

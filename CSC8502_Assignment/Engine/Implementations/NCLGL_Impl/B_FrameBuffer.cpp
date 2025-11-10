@@ -10,10 +10,46 @@
 #include <glad/glad.h>
 #include <iostream>
 
+#include <string>
+
+namespace {
+    using AttachmentFormat = NCLGL_Impl::AttachmentFormat;
+
+    std::string AttachmentFormatToString(AttachmentFormat format) {
+        switch (format) {
+        case AttachmentFormat::None: return "None";
+        case AttachmentFormat::Color8: return "Color8";
+        case AttachmentFormat::Color16F: return "Color16F";
+        case AttachmentFormat::Depth24: return "Depth24";
+        case AttachmentFormat::Depth32F: return "Depth32F";
+        }
+        return "Unknown";
+    }
+}
+
+namespace {
+    const char* TextureTypeToString(Engine::IAL::TextureType type) {
+        using Engine::IAL::TextureType;
+        switch (type) {
+        case TextureType::Texture2D: return "Texture2D";
+        case TextureType::CubeMap: return "CubeMap";
+        case TextureType::Array2D: return "Array2D";
+        case TextureType::DepthStencil: return "DepthStencil";
+        case TextureType::External: return "External";
+        default: return "Unknown";
+        }
+    }
+}
+
 namespace NCLGL_Impl {
 
     B_FrameBuffer::B_FrameBuffer(int width, int height, bool enableColorAttachment)
-        : m_fboID(0), m_colorTexture(nullptr), m_depthTexture(nullptr), m_hasColorAttachment(enableColorAttachment) {
+        : m_fboID(0),
+          m_colorTexture(nullptr),
+          m_depthTexture(nullptr),
+          m_hasColorAttachment(enableColorAttachment),
+          m_colorFormat(enableColorAttachment ? AttachmentFormat::Color8 : AttachmentFormat::None),
+          m_depthFormat(AttachmentFormat::Depth24) {
         glGenFramebuffers(1, &m_fboID);
         glBindFramebuffer(GL_FRAMEBUFFER, m_fboID);
 
@@ -27,7 +63,9 @@ namespace NCLGL_Impl {
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
             glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, colorID, 0);
-            m_colorTexture = std::make_shared<B_Texture>(colorID, GL_TEXTURE_2D);
+            m_colorTexture = std::make_shared<B_Texture>(colorID, Engine::IAL::TextureType::Texture2D);
+            std::cerr << "[B_FrameBuffer] Color attachment type: "
+                      << TextureTypeToString(m_colorTexture->GetType()) << std::endl;
         }
 
         unsigned int depthID = 0;
@@ -39,7 +77,9 @@ namespace NCLGL_Impl {
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthID, 0);
-        m_depthTexture = std::make_shared<B_Texture>(depthID, GL_TEXTURE_2D);
+        m_depthTexture = std::make_shared<B_Texture>(depthID, Engine::IAL::TextureType::DepthStencil);
+        std::cerr << "[B_FrameBuffer] Depth attachment type: "
+                  << TextureTypeToString(m_depthTexture->GetType()) << std::endl;
 
         if (m_hasColorAttachment) {
             const GLenum drawBuffers[] = { GL_COLOR_ATTACHMENT0 };
@@ -51,12 +91,13 @@ namespace NCLGL_Impl {
         }
 
         const GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+        const std::string layoutDesc = DescribeLayout();
         if (status != GL_FRAMEBUFFER_COMPLETE) {
-            std::cerr << "[B_FrameBuffer] Incomplete GL_FRAMEBUFFER (Color+Depth) "
+            std::cerr << "[B_FrameBuffer] Incomplete GL_FRAMEBUFFER " << layoutDesc << " "
                       << width << "x" << height << ", status: 0x" << std::hex
                       << status << std::dec << std::endl;
         } else {
-            std::cerr << "[B_FrameBuffer] GL_FRAMEBUFFER complete (Color+Depth) "
+            std::cerr << "[B_FrameBuffer] GL_FRAMEBUFFER complete " << layoutDesc << " "
                       << width << "x" << height << ", status: 0x" << std::hex
                       << status << std::dec << std::endl;
         }
@@ -93,6 +134,33 @@ namespace NCLGL_Impl {
 
     std::shared_ptr<Engine::IAL::I_Texture> B_FrameBuffer::GetDepthTexture() {
         return m_depthTexture;
+    }
+
+    AttachmentFormat B_FrameBuffer::GetColorFormat() const {
+        return m_colorFormat;
+    }
+
+    AttachmentFormat B_FrameBuffer::GetDepthFormat() const {
+        return m_depthFormat;
+    }
+
+    std::string B_FrameBuffer::DescribeLayout() const {
+        const bool hasColor = m_hasColorAttachment && m_colorFormat != AttachmentFormat::None;
+        const std::string depthStr = AttachmentFormatToString(m_depthFormat);
+
+        if (!hasColor) {
+            if (m_depthFormat == AttachmentFormat::None) {
+                return "Empty (None)";
+            }
+            return "Depth-only (" + depthStr + ")";
+        }
+
+        std::string description = "Color+Depth (" + AttachmentFormatToString(m_colorFormat);
+        if (m_depthFormat != AttachmentFormat::None) {
+            description += "/" + depthStr;
+        }
+        description += ")";
+        return description;
     }
 
 }

@@ -35,8 +35,17 @@
 #pragma once
 #include "IAL/I_FrameBuffer.h"
 
-namespace NCLGL_Impl {
+#include <string>
 
+namespace NCLGL_Impl {
+    enum class AttachmentFormat {
+        None,
+        Color8,
+        Color16F,
+        Depth24,
+        Depth32F
+    };
+    
     class B_FrameBuffer : public Engine::IAL::I_FrameBuffer {
     public:
         B_FrameBuffer(int width, int height, bool enableColorAttachment);
@@ -47,12 +56,17 @@ namespace NCLGL_Impl {
 
         std::shared_ptr<Engine::IAL::I_Texture> GetColorTexture() override;
         std::shared_ptr<Engine::IAL::I_Texture> GetDepthTexture() override;
+        AttachmentFormat GetColorFormat() const;
+        AttachmentFormat GetDepthFormat() const;
 
     private:
+        std::string DescribeLayout() const;
         unsigned int m_fboID;
         std::shared_ptr<Engine::IAL::I_Texture> m_colorTexture;
         std::shared_ptr<Engine::IAL::I_Texture> m_depthTexture;
         bool m_hasColorAttachment;
+        AttachmentFormat m_colorFormat;
+        AttachmentFormat m_depthFormat;        
     };
 
 }

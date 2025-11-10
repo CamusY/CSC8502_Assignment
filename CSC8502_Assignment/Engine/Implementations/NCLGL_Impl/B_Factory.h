@@ -1,9 +1,13 @@
 /**
  * @file B_Factory.h
- * @brief 轨道 B (NCLGL_Impl) 的资源工厂接口实现。
+ * @brief 轨道 B (NCLGL_Impl) 的资源工厂接口实现声明。
  *
  * 本文件定义了 B_Factory 类，它是 Engine::IAL::I_ResourceFactory 接口在 nclgl 框架下的具体实现。
  * 作为轨道 B 的核心工厂，它负责创建所有 nclgl 实现的渲染对象（Mesh, Shader, Texture 等）。
+ *
+ * 前(Day5)仅完成帧缓冲区相关接口：
+ * - CreateShadowFBO / CreatePostProcessFBO: 返回配置好的 B_FrameBuffer。
+ * 其余资源接口将在 Day6/Day7 中补全，目前均返回 nullptr，以满足暂存流程：
  *
  * B_Factory 类 (NCLGL_Impl::B_Factory):
  * 继承自 Engine::IAL::I_ResourceFactory 纯虚接口。
