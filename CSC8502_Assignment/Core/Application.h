@@ -16,6 +16,7 @@
  * 参数 window: 窗口系统接口，用于控制窗口更新和缓冲区交换。
  * 参数 factory: 资源工厂接口，用于后续创建渲染资源。
  * 参数 ui: 调试 UI 接口，用于在主循环中驱动 UI 的帧更新和渲染。
+ * 参数 surfaceWidth / surfaceHeight: 与窗口一致的渲染分辨率，用于初始化 Day6 的后期处理 FBO。
  * 在 Day 4 之后，构造函数还会创建 SceneManager 与 Renderer，以驱动场景更新与渲染
  *
  * 成员函数 Run():
@@ -50,7 +51,9 @@ class Application {
 public:
     Application(std::shared_ptr<Engine::IAL::I_WindowSystem> window,
                 std::shared_ptr<Engine::IAL::I_ResourceFactory> factory,
-                std::shared_ptr<Engine::IAL::I_DebugUI> ui);
+                std::shared_ptr<Engine::IAL::I_DebugUI> ui,
+                int surfaceWidth,
+                int surfaceHeight);
     ~Application();
 
     void Run();
@@ -61,4 +64,6 @@ private:
     std::shared_ptr<Engine::IAL::I_DebugUI> m_ui;
     std::shared_ptr<SceneManager> m_sceneManager;
     std::shared_ptr<Renderer> m_renderer;
+    int m_surfaceWidth;
+    int m_surfaceHeight;
 };

@@ -8,9 +8,16 @@
  */
 #include "B_Factory.h"
 #include "B_FrameBuffer.h"
+#include "B_Mesh.h"
+
+#include "nclgl/Mesh.h"
+#include "nclgl/Vector2.h"
+#include "nclgl/Vector3.h"
 
 #include <iostream>
 #include <string>
+
+#include <glad/glad.h>
 
 namespace {
     using AttachmentFormat = NCLGL_Impl::AttachmentFormat;
@@ -45,6 +52,7 @@ namespace {
         description += ")";
         return description;
     }
+    
 }
 
 namespace NCLGL_Impl {
@@ -83,8 +91,45 @@ namespace NCLGL_Impl {
         return nullptr;
     }
 
+    
+    namespace {
+        class FullscreenQuadMesh final : public ::Mesh {
+        public:
+            FullscreenQuadMesh() {
+                numVertices = 4;
+                numIndices = 6;
+                type = GL_TRIANGLES;
+
+                vertices = new Vector3[numVertices];
+                textureCoords = new Vector2[numVertices];
+                indices = new unsigned int[numIndices];
+
+                vertices[0] = Vector3(-1.0f, -1.0f, 0.0f);
+                vertices[1] = Vector3(1.0f, -1.0f, 0.0f);
+                vertices[2] = Vector3(1.0f, 1.0f, 0.0f);
+                vertices[3] = Vector3(-1.0f, 1.0f, 0.0f);
+
+                textureCoords[0] = Vector2(0.0f, 0.0f);
+                textureCoords[1] = Vector2(1.0f, 0.0f);
+                textureCoords[2] = Vector2(1.0f, 1.0f);
+                textureCoords[3] = Vector2(0.0f, 1.0f);
+
+                indices[0] = 0;
+                indices[1] = 1;
+                indices[2] = 2;
+                indices[3] = 0;
+                indices[4] = 2;
+                indices[5] = 3;
+
+                BufferData();
+            }
+        };
+    }
+
     std::shared_ptr<Engine::IAL::I_Mesh> B_Factory::CreateQuad() {
-        return nullptr;
+        auto quadMesh = new FullscreenQuadMesh();
+        std::cerr << "[B_Factory] Created fullscreen quad mesh" << std::endl;
+        return std::make_shared<B_Mesh>(quadMesh);
     }
 
     std::shared_ptr<Engine::IAL::I_FrameBuffer> B_Factory::CreateShadowFBO(

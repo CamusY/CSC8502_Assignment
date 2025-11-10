@@ -19,10 +19,14 @@ namespace Engine::IAL {
     class I_Shader;
 }
 
+class PostProcessing;
+
 class Renderer {
 public:
     Renderer(const std::shared_ptr<Engine::IAL::I_ResourceFactory>& factory,
-             const std::shared_ptr<SceneGraph>& sceneGraph);
+             const std::shared_ptr<SceneGraph>& sceneGraph,
+             int width,
+             int height);
 
     void Render();
 
@@ -30,4 +34,5 @@ private:
     std::shared_ptr<Engine::IAL::I_ResourceFactory> m_factory;
     std::shared_ptr<SceneGraph> m_sceneGraph;
     std::vector<std::shared_ptr<SceneNode>> m_renderQueue;
+    std::shared_ptr<PostProcessing> m_postProcessing;
 };

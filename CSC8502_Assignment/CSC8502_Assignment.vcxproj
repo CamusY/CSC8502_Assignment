@@ -149,6 +149,7 @@
     <ClCompile Include="Engine\Implementations\NCLGL_Impl\B_Texture.cpp" />
     <ClCompile Include="Engine\Implementations\NCLGL_Impl\B_WindowSystem.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="Renderer\PostProcessing.cpp" />
     <ClCompile Include="Renderer\Renderer.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -177,6 +178,7 @@
     <ClInclude Include="Engine\Implementations\NCLGL_Impl\B_Shader.h" />
     <ClInclude Include="Engine\Implementations\NCLGL_Impl\B_Texture.h" />
     <ClInclude Include="Engine\Implementations\NCLGL_Impl\B_WindowSystem.h" />
+    <ClInclude Include="Renderer\PostProcessing.h" />
     <ClInclude Include="Renderer\Renderer.h" />
   </ItemGroup>
   <ItemGroup>

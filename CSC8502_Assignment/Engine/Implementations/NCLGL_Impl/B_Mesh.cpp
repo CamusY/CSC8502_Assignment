@@ -19,6 +19,9 @@ namespace NCLGL_Impl {
     }
 
     void B_Mesh::Draw() {
+        if (m_mesh) {
+            m_mesh->Draw();
+        }
     }
 
 }

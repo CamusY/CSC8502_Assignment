@@ -36,10 +36,13 @@ int main() {
     windowSystem = std::make_shared<NCLGL_Impl::B_WindowSystem>();
 #endif
 
-    if (!windowSystem->Init("CSC8502 Assignment", 1280, 720, false)) {
+    constexpr int kWindowWidth = 1280;
+    constexpr int kWindowHeight = 720;
+
+    if (!windowSystem->Init("CSC8502 Assignment", kWindowWidth, kWindowHeight, false)) {
         return -1;
     }
-
+    
     std::shared_ptr<Engine::IAL::I_ResourceFactory> resourceFactory;
     std::shared_ptr<Engine::IAL::I_DebugUI> debugUI;
 
@@ -53,7 +56,7 @@ int main() {
 
     debugUI->Init(windowSystem->GetHandle());
 
-    Application app(windowSystem, resourceFactory, debugUI);
+    Application app(windowSystem, resourceFactory, debugUI, kWindowWidth, kWindowHeight);
 
     app.Run();
 

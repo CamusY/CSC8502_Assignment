@@ -17,10 +17,12 @@
 
 Application::Application(std::shared_ptr<Engine::IAL::I_WindowSystem> window,
                          std::shared_ptr<Engine::IAL::I_ResourceFactory> factory,
-                         std::shared_ptr<Engine::IAL::I_DebugUI> ui)
-    : m_window(window), m_factory(factory), m_ui(ui) {
+                         std::shared_ptr<Engine::IAL::I_DebugUI> ui,
+                         int surfaceWidth,
+                         int surfaceHeight)
+    : m_window(window), m_factory(factory), m_ui(ui), m_surfaceWidth(surfaceWidth), m_surfaceHeight(surfaceHeight) {
     m_sceneManager = std::make_shared<SceneManager>(m_factory);
-    m_renderer = std::make_shared<Renderer>(m_factory, m_sceneManager->GetSceneGraph());
+    m_renderer = std::make_shared<Renderer>(m_factory, m_sceneManager->GetSceneGraph(), m_surfaceWidth, m_surfaceHeight);
 }
 
 Application::~Application() {
