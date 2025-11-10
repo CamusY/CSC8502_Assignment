@@ -25,9 +25,30 @@ namespace {
         }
         return "Unknown";
     }
-}
 
-namespace {
+    std::string FilterToString(GLint value) {
+        switch (value) {
+        case GL_NEAREST: return "GL_NEAREST";
+        case GL_LINEAR: return "GL_LINEAR";
+        case GL_NEAREST_MIPMAP_NEAREST: return "GL_NEAREST_MIPMAP_NEAREST";
+        case GL_LINEAR_MIPMAP_NEAREST: return "GL_LINEAR_MIPMAP_NEAREST";
+        case GL_NEAREST_MIPMAP_LINEAR: return "GL_NEAREST_MIPMAP_LINEAR";
+        case GL_LINEAR_MIPMAP_LINEAR: return "GL_LINEAR_MIPMAP_LINEAR";
+        default: return "Unknown";
+        }
+    }
+
+    std::string WrapToString(GLint value) {
+        switch (value) {
+        case GL_CLAMP_TO_EDGE: return "GL_CLAMP_TO_EDGE";
+        case GL_CLAMP_TO_BORDER: return "GL_CLAMP_TO_BORDER";
+        case GL_MIRRORED_REPEAT: return "GL_MIRRORED_REPEAT";
+        case GL_REPEAT: return "GL_REPEAT";
+        case GL_MIRROR_CLAMP_TO_EDGE: return "GL_MIRROR_CLAMP_TO_EDGE";
+        default: return "Unknown";
+        }
+    }
+    
     const char* TextureTypeToString(Engine::IAL::TextureType type) {
         using Engine::IAL::TextureType;
         switch (type) {
@@ -66,6 +87,18 @@ namespace NCLGL_Impl {
             m_colorTexture = std::make_shared<B_Texture>(colorID, Engine::IAL::TextureType::Texture2D);
             std::cerr << "[B_FrameBuffer] Color attachment type: "
                       << TextureTypeToString(m_colorTexture->GetType()) << std::endl;
+            GLint minFilter = 0;
+            GLint magFilter = 0;
+            GLint wrapS = 0;
+            GLint wrapT = 0;
+            glGetTexParameteriv(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, &minFilter);
+            glGetTexParameteriv(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, &magFilter);
+            glGetTexParameteriv(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, &wrapS);
+            glGetTexParameteriv(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, &wrapT);
+            std::cerr << "[B_FrameBuffer] FBO " << m_fboID << " color attachment "
+                      << width << "x" << height << " sampler: MIN=" << FilterToString(minFilter)
+                      << ", MAG=" << FilterToString(magFilter) << ", WRAP_S=" << WrapToString(wrapS)
+                      << ", WRAP_T=" << WrapToString(wrapT) << std::endl;
         }
 
         unsigned int depthID = 0;
@@ -80,6 +113,18 @@ namespace NCLGL_Impl {
         m_depthTexture = std::make_shared<B_Texture>(depthID, Engine::IAL::TextureType::DepthStencil);
         std::cerr << "[B_FrameBuffer] Depth attachment type: "
                   << TextureTypeToString(m_depthTexture->GetType()) << std::endl;
+        GLint depthMinFilter = 0;
+        GLint depthMagFilter = 0;
+        GLint depthWrapS = 0;
+        GLint depthWrapT = 0;
+        glGetTexParameteriv(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, &depthMinFilter);
+        glGetTexParameteriv(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, &depthMagFilter);
+        glGetTexParameteriv(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, &depthWrapS);
+        glGetTexParameteriv(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, &depthWrapT);
+        std::cerr << "[B_FrameBuffer] FBO " << m_fboID << " depth attachment "
+                  << width << "x" << height << " sampler: MIN=" << FilterToString(depthMinFilter)
+                  << ", MAG=" << FilterToString(depthMagFilter) << ", WRAP_S=" << WrapToString(depthWrapS)
+                  << ", WRAP_T=" << WrapToString(depthWrapT) << std::endl;
 
         if (m_hasColorAttachment) {
             const GLenum drawBuffers[] = { GL_COLOR_ATTACHMENT0 };
