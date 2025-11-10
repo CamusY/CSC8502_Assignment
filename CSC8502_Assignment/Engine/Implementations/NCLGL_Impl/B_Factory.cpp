@@ -51,12 +51,12 @@ namespace NCLGL_Impl {
 
     std::shared_ptr<Engine::IAL::I_FrameBuffer> B_Factory::CreateShadowFBO(
         int width, int height) {
-        return std::make_shared<B_FrameBuffer>(width, height);
+        return std::make_shared<B_FrameBuffer>(width, height, false);
     }
 
     std::shared_ptr<Engine::IAL::I_FrameBuffer> B_Factory::CreatePostProcessFBO(
         int width, int height) {
-        return std::make_shared<B_FrameBuffer>(width, height);
+        return std::make_shared<B_FrameBuffer>(width, height, true);
     }
 
     std::shared_ptr<Engine::IAL::I_AnimatedMesh> B_Factory::LoadAnimatedMesh(

@@ -8,24 +8,27 @@
 #include "B_Texture.h"
 
 #include <glad/glad.h>
+#include <iostream>
 
 namespace NCLGL_Impl {
 
-    B_FrameBuffer::B_FrameBuffer(int width, int height)
-        : m_fboID(0), m_colorTexture(nullptr), m_depthTexture(nullptr) {
+    B_FrameBuffer::B_FrameBuffer(int width, int height, bool enableColorAttachment)
+        : m_fboID(0), m_colorTexture(nullptr), m_depthTexture(nullptr), m_hasColorAttachment(enableColorAttachment) {
         glGenFramebuffers(1, &m_fboID);
         glBindFramebuffer(GL_FRAMEBUFFER, m_fboID);
 
-        unsigned int colorID = 0;
-        glGenTextures(1, &colorID);
-        glBindTexture(GL_TEXTURE_2D, colorID);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, colorID, 0);
-        m_colorTexture = std::make_shared<B_Texture>(colorID, GL_TEXTURE_2D);
+        if (m_hasColorAttachment) {
+            unsigned int colorID = 0;
+            glGenTextures(1, &colorID);
+            glBindTexture(GL_TEXTURE_2D, colorID);
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+            glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, colorID, 0);
+            m_colorTexture = std::make_shared<B_Texture>(colorID, GL_TEXTURE_2D);
+        }
 
         unsigned int depthID = 0;
         glGenTextures(1, &depthID);
@@ -38,9 +41,26 @@ namespace NCLGL_Impl {
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthID, 0);
         m_depthTexture = std::make_shared<B_Texture>(depthID, GL_TEXTURE_2D);
 
-        const GLenum drawBuffers[] = { GL_COLOR_ATTACHMENT0 };
-        glDrawBuffers(1, drawBuffers);
+        if (m_hasColorAttachment) {
+            const GLenum drawBuffers[] = { GL_COLOR_ATTACHMENT0 };
+            glDrawBuffers(1, drawBuffers);
+        }
+        else {
+            glDrawBuffer(GL_NONE);
+            glReadBuffer(GL_NONE);
+        }
 
+        const GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+        if (status != GL_FRAMEBUFFER_COMPLETE) {
+            std::cerr << "[B_FrameBuffer] Incomplete GL_FRAMEBUFFER (Color+Depth) "
+                      << width << "x" << height << ", status: 0x" << std::hex
+                      << status << std::dec << std::endl;
+        } else {
+            std::cerr << "[B_FrameBuffer] GL_FRAMEBUFFER complete (Color+Depth) "
+                      << width << "x" << height << ", status: 0x" << std::hex
+                      << status << std::dec << std::endl;
+        }
+        
         glBindTexture(GL_TEXTURE_2D, 0);
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
     }

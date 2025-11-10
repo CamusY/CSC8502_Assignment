@@ -15,8 +15,8 @@
  * LoadCubemap: 加载立方体贴图并返回 B_Texture。
  * LoadHeightmap: 加载 RAW 高度图数据并返回 B_Heightmap。
  * CreateQuad: 创建一个用于后处理的全屏四边形 B_Mesh。
- * CreateShadowFBO: 创建用于阴影映射的 B_FrameBuffer。
- * CreatePostProcessFBO: 创建用于后处理的 B_FrameBuffer。
+ * CreateShadowFBO: 创建仅包含深度附件的 B_FrameBuffer（禁用颜色附件，适用于阴影映射）。
+ * CreatePostProcessFBO: 创建同时包含颜色/深度附件的 B_FrameBuffer（适用于后处理）。
  * LoadAnimatedMesh: 加载并返回包装了 Mesh 和 MeshAnimation 的 B_AnimatedMesh。
  */
 #pragma once
