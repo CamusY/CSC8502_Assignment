@@ -34,7 +34,7 @@ void PostProcessing::BeginCapture() {
     if (!m_frameBuffer) {
         return;
     }
-    std::cerr << "[PostProcessing] Bind post-process FBO for scene capture" << std::endl;
+    //std::cerr << "[PostProcessing] Bind post-process FBO for scene capture" << std::endl;
     m_frameBuffer->Bind();
     glViewport(0, 0, m_width, m_height);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -44,7 +44,7 @@ void PostProcessing::EndCapture() {
     if (!m_frameBuffer) {
         return;
     }
-    std::cerr << "[PostProcessing] Unbind FBO after scene capture" << std::endl;
+    //std::cerr << "[PostProcessing] Unbind FBO after scene capture" << std::endl;
     m_frameBuffer->Unbind();
 }
 
@@ -52,7 +52,7 @@ void PostProcessing::Present() {
     if (!m_frameBuffer) {
         return;
     }
-    std::cerr << "[PostProcessing] Present captured texture to default framebuffer" << std::endl;
+    //std::cerr << "[PostProcessing] Present captured texture to default framebuffer" << std::endl;
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glViewport(0, 0, m_width, m_height);
     GLboolean depthEnabled = GL_FALSE;
