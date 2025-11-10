@@ -33,9 +33,11 @@
 #include "IAL/I_Texture.h"
 
 #include <glad/glad.h>
+enum class TextureType { Tex2D, CubeMap, Array, Depth };
 
 namespace NCLGL_Impl {
 
+    
     class B_Texture : public Engine::IAL::I_Texture {
     public:
         B_Texture(unsigned int id, unsigned int target);
