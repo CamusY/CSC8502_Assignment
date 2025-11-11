@@ -142,7 +142,6 @@
     <ClCompile Include="Engine\Implementations\NCLGL_Impl\B_Factory.cpp" />
     <ClCompile Include="Engine\Implementations\NCLGL_Impl\B_FrameBuffer.cpp" />
     <ClCompile Include="Engine\Implementations\NCLGL_Impl\B_GameTimer.cpp" />
-    <ClCompile Include="Engine\Implementations\NCLGL_Impl\B_GLTFMesh.cpp" />
     <ClCompile Include="Engine\Implementations\NCLGL_Impl\B_Heightmap.cpp" />
     <ClCompile Include="Engine\Implementations\NCLGL_Impl\B_InputDevice.cpp" />
     <ClCompile Include="Engine\Implementations\NCLGL_Impl\B_Mesh.cpp" />
@@ -173,7 +172,6 @@
     <ClInclude Include="Engine\Implementations\NCLGL_Impl\B_Factory.h" />
     <ClInclude Include="Engine\Implementations\NCLGL_Impl\B_FrameBuffer.h" />
     <ClInclude Include="Engine\Implementations\NCLGL_Impl\B_GameTimer.h" />
-    <ClInclude Include="Engine\Implementations\NCLGL_Impl\B_GLTFMesh.h" />
     <ClInclude Include="Engine\Implementations\NCLGL_Impl\B_Heightmap.h" />
     <ClInclude Include="Engine\Implementations\NCLGL_Impl\B_InputDevice.h" />
     <ClInclude Include="Engine\Implementations\NCLGL_Impl\B_Mesh.h" />
