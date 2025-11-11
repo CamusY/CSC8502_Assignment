@@ -11,11 +11,15 @@
 
 namespace NCLGL_Impl {
 
-    B_Mesh::B_Mesh(::Mesh* mesh) : m_mesh(mesh) {
+    B_Mesh::B_Mesh(std::shared_ptr<::Mesh> mesh)
+        : m_mesh(std::move(mesh)) {
+    }
+
+    B_Mesh::B_Mesh(::Mesh* mesh)
+        : m_mesh(std::shared_ptr<::Mesh>(mesh)) {
     }
 
     B_Mesh::~B_Mesh() {
-        delete m_mesh;
     }
 
     void B_Mesh::Draw() {

@@ -12,11 +12,13 @@
 #include <vector>
 
 #include "../Core/SceneGraph.h"
-
 #include "../Engine/IAL/I_ResourceFactory.h"
+
+#include "nclgl/Vector3.h"
 
 namespace Engine::IAL {
     class I_Shader;
+    class I_Texture;
 }
 
 class PostProcessing;
@@ -35,4 +37,9 @@ private:
     std::shared_ptr<SceneGraph> m_sceneGraph;
     std::vector<std::shared_ptr<SceneNode>> m_renderQueue;
     std::shared_ptr<PostProcessing> m_postProcessing;
+    std::shared_ptr<Engine::IAL::I_Shader> m_sceneShader;
+    std::shared_ptr<Engine::IAL::I_Shader> m_postShader;
+    Vector3 m_sceneColour;
+    int m_surfaceWidth;
+    int m_surfaceHeight;
 };

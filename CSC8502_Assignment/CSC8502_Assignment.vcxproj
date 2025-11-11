@@ -185,6 +185,12 @@
     <Folder Include="Engine\Custom\" />
     <Folder Include="Engine\Implementations\Custom_Impl\" />
   </ItemGroup>
+  <ItemGroup>
+    <Content Include="..\Shaders\Shared\basic.frag" />
+    <Content Include="..\Shaders\Shared\basic.vert" />
+    <Content Include="..\Shaders\Shared\postprocess.frag" />
+    <Content Include="..\Shaders\Shared\postprocess.vert" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

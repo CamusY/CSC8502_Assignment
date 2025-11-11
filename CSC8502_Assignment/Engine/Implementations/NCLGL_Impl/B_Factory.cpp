@@ -9,15 +9,18 @@
 #include "B_Factory.h"
 #include "B_FrameBuffer.h"
 #include "B_Mesh.h"
+#include "B_Shader.h"
 
 #include "nclgl/Mesh.h"
 #include "nclgl/Vector2.h"
 #include "nclgl/Vector3.h"
+#include "nclgl/Extra/GLTFLoader.h"
 
 #include <iostream>
+#include <algorithm>
+#include <cctype>
+#include <memory>
 #include <string>
-
-#include <glad/glad.h>
 
 namespace {
     using AttachmentFormat = NCLGL_Impl::AttachmentFormat;
@@ -67,11 +70,56 @@ namespace NCLGL_Impl {
         const std::string& vPath,
         const std::string& fPath,
         const std::string& gPath) {
+        auto shader = std::make_unique<::Shader>(vPath, fPath, gPath);
+        if (!shader->LoadSuccess()) {
+            std::cerr << "[B_Factory] Failed to create shader from paths: "
+                      << vPath << ", " << fPath << ", " << gPath << "\n";
+            return nullptr;
+        }
+        std::cerr << "[B_Factory] Created shader from paths: "
+                  << vPath << ", " << fPath << ", " << gPath << "\n";
+        return std::make_shared<B_Shader>(shader.release());
         return nullptr;
     }
 
     std::shared_ptr<Engine::IAL::I_Mesh> B_Factory::LoadMesh(const std::string& path) {
-        return nullptr;
+        if (path.empty()) {
+            return nullptr;
+        }
+
+        std::string extension;
+        const std::size_t dot = path.find_last_of('.');
+        if (dot != std::string::npos) {
+            extension = path.substr(dot);
+            std::transform(extension.begin(), extension.end(), extension.begin(), [](unsigned char ch) {
+                return static_cast<char>(std::tolower(ch));
+            });
+        }
+
+        try {
+            if (extension == ".gltf" || extension == ".glb") {
+                GLTFScene scene;
+                if (!GLTFLoader::Load(path, scene) || scene.meshes.empty()) {
+                    std::cerr << "[B_Factory] GLTF load failed for " << path << std::endl;
+                    return nullptr;
+                }
+                auto mesh = scene.meshes.front();
+                std::cerr << "[B_Factory] GLTF mesh loaded: " << path << std::endl;
+                return std::make_shared<B_Mesh>(mesh);
+            }
+
+            std::shared_ptr<::Mesh> mesh(::Mesh::LoadFromMeshFile(path));
+            if (!mesh) {
+                std::cerr << "[B_Factory] Mesh load failed for " << path << std::endl;
+                return nullptr;
+            }
+            std::cerr << "[B_Factory] Mesh loaded: " << path << std::endl;
+            return std::make_shared<B_Mesh>(mesh);
+        }
+        catch (const std::exception& ex) {
+            std::cerr << "[B_Factory] Exception while loading mesh " << path << ": " << ex.what() << std::endl;
+            return nullptr;
+        }
     }
 
     std::shared_ptr<Engine::IAL::I_Texture> B_Factory::LoadTexture(
@@ -127,7 +175,7 @@ namespace NCLGL_Impl {
     }
 
     std::shared_ptr<Engine::IAL::I_Mesh> B_Factory::CreateQuad() {
-        auto quadMesh = new FullscreenQuadMesh();
+        std::shared_ptr<::Mesh> quadMesh(new FullscreenQuadMesh());
         std::cerr << "[B_Factory] Created fullscreen quad mesh" << "\n";
         return std::make_shared<B_Mesh>(quadMesh);
     }

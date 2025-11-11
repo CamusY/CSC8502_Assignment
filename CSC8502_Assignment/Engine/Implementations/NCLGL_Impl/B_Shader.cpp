@@ -8,6 +8,16 @@
  */
 #include "B_Shader.h"
 #include "nclgl/Shader.h"
+#include <glad/glad.h>
+
+namespace {
+    GLint ResolveLocation(::Shader* shader, const std::string& name) {
+        if (!shader) {
+            return -1;
+        }
+        return glGetUniformLocation(shader->GetProgram(), name.c_str());
+    }
+}
 
 namespace NCLGL_Impl {
 
@@ -19,24 +29,48 @@ namespace NCLGL_Impl {
     }
 
     void B_Shader::Bind() {
+        if (m_shader) {
+            glUseProgram(m_shader->GetProgram());
+        }
     }
 
     void B_Shader::Unbind() {
+        glUseProgram(0);
     }
 
     void B_Shader::SetUniform(const std::string& name, const Matrix4& mat) {
+        const GLint location = ResolveLocation(m_shader, name);
+        if (location >= 0) {
+            glUniformMatrix4fv(location, 1, GL_FALSE, mat.values);
+        }
     }
 
     void B_Shader::SetUniform(const std::string& name, const Vector3& vec) {
+        const GLint location = ResolveLocation(m_shader, name);
+        if (location >= 0) {
+            glUniform3f(location, vec.x, vec.y, vec.z);
+        }
     }
 
     void B_Shader::SetUniform(const std::string& name, const Vector4& vec) {
+        const GLint location = ResolveLocation(m_shader, name);
+        if (location >= 0) {
+            glUniform4f(location, vec.x, vec.y, vec.z, vec.w);
+        }
     }
 
     void B_Shader::SetUniform(const std::string& name, float f) {
+        const GLint location = ResolveLocation(m_shader, name);
+        if (location >= 0) {
+            glUniform1f(location, f);
+        }
     }
 
     void B_Shader::SetUniform(const std::string& name, int i) {
+        const GLint location = ResolveLocation(m_shader, name);
+        if (location >= 0) {
+            glUniform1i(location, i);
+        }
     }
 
 }
