@@ -138,7 +138,6 @@ namespace NCLGL_Impl {
         const std::string& path, const Vector3& scale) {
         return nullptr;
     }
-
     
     namespace {
         class FullscreenQuadMesh final : public ::Mesh {
