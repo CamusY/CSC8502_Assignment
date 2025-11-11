@@ -14,7 +14,7 @@
  *
  * 成员函数 (全部为 I_ResourceFactory 接口的实现):
  * CreateShader: 创建并返回包装了 nclgl::Shader 的 B_Shader。
- * LoadMesh: 加载并返回包装了 nclgl::Mesh 的 B_Mesh。
+ * LoadMesh: 使用 GLTFLoader 加载 glTF 资产并返回 B_GLTFMesh 适配器。
  * LoadTexture: 加载并返回包装了 OpenGL 纹理 ID 的 B_Texture。
  * LoadCubemap: 加载立方体贴图并返回 B_Texture。
  * LoadHeightmap: 加载 RAW 高度图数据并返回 B_Heightmap。

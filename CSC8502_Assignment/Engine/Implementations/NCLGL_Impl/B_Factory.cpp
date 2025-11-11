@@ -8,6 +8,7 @@
  */
 #include "B_Factory.h"
 #include "B_FrameBuffer.h"
+#include "B_GLTFMesh.h"
 #include "B_Mesh.h"
 #include "B_Shader.h"
 
@@ -87,34 +88,15 @@ namespace NCLGL_Impl {
             return nullptr;
         }
 
-        std::string extension;
-        const std::size_t dot = path.find_last_of('.');
-        if (dot != std::string::npos) {
-            extension = path.substr(dot);
-            std::transform(extension.begin(), extension.end(), extension.begin(), [](unsigned char ch) {
-                return static_cast<char>(std::tolower(ch));
-            });
-        }
-
         try {
-            if (extension == ".gltf" || extension == ".glb") {
-                GLTFScene scene;
-                if (!GLTFLoader::Load(path, scene) || scene.meshes.empty()) {
-                    std::cerr << "[B_Factory] GLTF load failed for " << path << std::endl;
-                    return nullptr;
-                }
-                auto mesh = scene.meshes.front();
-                std::cerr << "[B_Factory] GLTF mesh loaded: " << path << std::endl;
-                return std::make_shared<B_Mesh>(mesh);
-            }
-
-            std::shared_ptr<::Mesh> mesh(::Mesh::LoadFromMeshFile(path));
-            if (!mesh) {
-                std::cerr << "[B_Factory] Mesh load failed for " << path << std::endl;
+            auto scene = std::make_shared<GLTFScene>();
+            if (!GLTFLoader::Load(path, *scene) || scene->meshes.empty()) {
+                std::cerr << "[B_Factory] GLTF load failed for " << path << std::endl;
                 return nullptr;
             }
-            std::cerr << "[B_Factory] Mesh loaded: " << path << std::endl;
-            return std::make_shared<B_Mesh>(mesh);
+
+            std::cerr << "[B_Factory] GLTF scene loaded: " << path << std::endl;
+            return std::make_shared<B_GLTFMesh>(scene);
         }
         catch (const std::exception& ex) {
             std::cerr << "[B_Factory] Exception while loading mesh " << path << ": " << ex.what() << std::endl;
