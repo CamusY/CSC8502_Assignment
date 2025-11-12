@@ -20,9 +20,12 @@
 #include <iostream>
 
 
+
+
 Renderer::Renderer(const std::shared_ptr<Engine::IAL::I_ResourceFactory>& factory,
                    const std::shared_ptr<SceneGraph>& sceneGraph,
                    const std::shared_ptr<Camera>& camera,
+                   const std::shared_ptr<Engine::IAL::I_DebugUI>& debugUI,
                    int width,
                    int height) :
     m_factory(factory)
@@ -55,10 +58,13 @@ Renderer::Renderer(const std::shared_ptr<Engine::IAL::I_ResourceFactory>& factor
     m_directionalLight.position = Vector3(200.0f, 400.0f, 200.0f);
     m_directionalLight.color = Vector3(1.0f, 0.95f, 0.85f);
     m_directionalLight.ambient = Vector3(0.25f, 0.25f, 0.3f);
+
+    glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
 }
 
 void Renderer::Render() {
     if (!m_sceneGraph) {
+        RenderDebugUI();
         return;
     }
 
@@ -101,6 +107,7 @@ void Renderer::Render() {
             m_postShader->Unbind();
         }
     }
+    RenderDebugUI();
 }
 
 void Renderer::SetWater(const std::shared_ptr<Water>& water) {
@@ -267,4 +274,31 @@ void Renderer::RenderRefractionPass(const Matrix4& view,
     RenderScenePass(view, projection, cameraPosition, true);
 
     m_waterRefractionFBO->Unbind();
+}
+void Renderer::RenderDebugUI() {
+    if (!m_debugUI) {
+        return;
+    }
+    if (m_debugUI->BeginWindow("Lighting Controls")) {
+        Vector3 lightPosition = m_directionalLight.position;
+        if (m_debugUI->SliderFloat3("Directional Position", &lightPosition, -5000.0f, 5000.0f)) {
+            m_directionalLight.position = lightPosition;
+        }
+
+        Vector3 lightColour = m_directionalLight.color;
+        if (m_debugUI->ColorEdit3("Directional Colour", &lightColour)) {
+            m_directionalLight.color = lightColour;
+        }
+
+        Vector3 ambientColour = m_directionalLight.ambient;
+        if (m_debugUI->ColorEdit3("Ambient Colour", &ambientColour)) {
+            m_directionalLight.ambient = ambientColour;
+        }
+
+        float specular = m_specularPower;
+        if (m_debugUI->SliderFloat("Specular Power", &specular, 1.0f, 256.0f)) {
+            m_specularPower = specular;
+        }
+    }
+    m_debugUI->EndWindow();
 }

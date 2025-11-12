@@ -40,6 +40,7 @@ Application::Application(std::shared_ptr<Engine::IAL::I_WindowSystem> window,
         m_renderer = std::make_shared<Renderer>(m_factory,
                                                 m_sceneManager->GetSceneGraph(),
                                                 m_camera,
+                                                m_ui,
                                                 m_surfaceWidth,
                                                 m_surfaceHeight);
     }
@@ -76,8 +77,14 @@ void Application::Run() {
         if (m_sceneManager) {
             m_sceneManager->Update(deltaTime);
         }
+        if (m_ui) {
+            m_ui->NewFrame();
+        }
         if (m_renderer) {
             m_renderer->Render();
+        }
+        if (m_ui) {
+            m_ui->Render();
         }
         m_ui->NewFrame();
         m_ui->Render();
