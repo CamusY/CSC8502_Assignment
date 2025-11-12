@@ -47,7 +47,7 @@ void Scene_T1_Peace::Init() {
         root->AddChild(m_terrainNode);
     }
 
-    m_water = std::make_shared<Water>(m_factory, 25.0f, Vector2(512.0f, 512.0f));
+    m_water = std::make_shared<Water>(m_factory, 30.0f, Vector2(1024.0f, 1024.0f));
     if (m_water) {
         auto waterNode = m_water->GetNode();
         if (root && waterNode) {

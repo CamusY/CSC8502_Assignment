@@ -64,7 +64,7 @@ void Renderer::Render() {
 
     glEnable(GL_DEPTH_TEST);
 
-    const Vector3 defaultCameraPos(0.0f, 0.0f, 3.5f);
+    const Vector3 defaultCameraPos(0.0f, 0.0f, 10.5f);
     const Vector3 cameraPosition = m_camera ? m_camera->GetPosition() : defaultCameraPos;
     const float cameraYaw = m_camera ? m_camera->GetYaw() : 0.0f;
     const float cameraPitch = m_camera ? m_camera->GetPitch() : 0.0f;
@@ -223,6 +223,7 @@ void Renderer::RenderWaterSurface(const Matrix4& view,
 
     glDepthMask(GL_TRUE);
     glDisable(GL_BLEND);
+    
 }
 
 void Renderer::RenderReflectionPass(const Matrix4& projection,

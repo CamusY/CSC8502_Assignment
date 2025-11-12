@@ -37,12 +37,11 @@ Vector2 Water::GetSize() const {
 }
 
 void Water::ConfigureNode(const Vector2& size) {
-    if (!m_node) {
+    if (!m_node)
         return;
-    }
-    const float halfWidth = size.x * 0.5f;
-    const float halfDepth = size.y * 0.5f;
+    const float halfWidth = size.x;// * 0.5f;
+    const float halfDepth = size.y;// * 0.5f;
     m_node->SetPosition(Vector3(halfWidth, m_height, halfDepth));
-    m_node->SetScale(Vector3(halfWidth, 1.0f, halfDepth));
+    m_node->SetScale(Vector3(halfWidth, halfDepth, 1.0f));
     m_node->SetRotation(Vector3(90.0f, 0.0f, 0.0f));
 }
