@@ -1,9 +1,8 @@
 ﻿/**
-* @file Scene_T1_Peace.h
- * @brief 声明负责构建 Day10 和平场景 (T1) 的封装类。
- *
- * Scene_T1_Peace 负责使用资源工厂加载 Day10 所需的地形高度图与贴图资源，
- * 并将其注入到 SceneGraph 中，提供后续渲染流程遍历的入口。
+* @file Scene_T2_War.h
+ * @brief 声明 Day14 战争场景 (T2) 的封装类。
+ * @details
+ * Scene_T2_War 负责加载废墟环境、夜色天空盒与焚毁地表贴图，并将其注入到 SceneGraph 中。
  */
 #pragma once
 
@@ -15,11 +14,11 @@
 
 class Water;
 
-class Scene_T1_Peace {
+class Scene_T2_War {
 public:
-    Scene_T1_Peace(const std::shared_ptr<Engine::IAL::I_ResourceFactory>& factory,
-                   const std::shared_ptr<SceneGraph>& sceneGraph);
-    ~Scene_T1_Peace();
+    Scene_T2_War(const std::shared_ptr<Engine::IAL::I_ResourceFactory>& factory,
+                 const std::shared_ptr<SceneGraph>& sceneGraph);
+    ~Scene_T2_War();
 
     void Init();
     void Update(float deltaTime);
@@ -32,7 +31,7 @@ private:
     std::shared_ptr<Engine::IAL::I_ResourceFactory> m_factory;
     std::shared_ptr<SceneGraph> m_sceneGraph;
     std::shared_ptr<SceneNode> m_terrainNode;
+    std::shared_ptr<SceneNode> m_ruinsNode;
     std::shared_ptr<Engine::IAL::I_Texture> m_terrainTexture;
-    std::shared_ptr<Water> m_water;
     SceneEnvironment m_environment;
 };

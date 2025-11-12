@@ -14,7 +14,14 @@
 #include "IAL/I_ResourceFactory.h"
 
 class Scene_T1_Peace;
+class Scene_T2_War;
+class Renderer;
 class Water;
+
+enum class SceneType {
+    Peace,
+    War
+};
 
 class SceneManager {
 public:
@@ -26,10 +33,15 @@ public:
     void Update(float deltaTime);
 
     std::shared_ptr<Water> GetWater() const;
+    SceneType GetActiveScene() const;
+    bool SetActiveScene(SceneType type);
+    void ApplyEnvironment(Renderer& renderer);
 
 private:
     std::shared_ptr<Engine::IAL::I_ResourceFactory> m_factory;
     std::shared_ptr<SceneGraph> m_sceneGraph;
     float m_accumulatedTime;
-    std::unique_ptr<Scene_T1_Peace> m_activeScene;
+    std::unique_ptr<Scene_T1_Peace> m_scenePeace;
+    std::unique_ptr<Scene_T2_War> m_sceneWar;
+    SceneType m_activeType;
 };

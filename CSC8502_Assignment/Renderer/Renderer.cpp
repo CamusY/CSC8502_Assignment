@@ -31,8 +31,9 @@ Renderer::Renderer(const std::shared_ptr<Engine::IAL::I_ResourceFactory>& factor
     m_factory(factory)
     , m_sceneGraph(sceneGraph)
     , m_camera(camera)
+    , m_debugUI(debugUI)
     , m_directionalLight{}
-    , m_sceneColour(Vector3(0.8f, 0.45f, 0.25f))
+    , m_sceneColour(Vector3(0.0f, 0.0f, 0.0f))
     , m_specularPower(32.0f)
     , m_nearPlane(0.1f)
     , m_farPlane(5000.0f)
@@ -44,20 +45,10 @@ Renderer::Renderer(const std::shared_ptr<Engine::IAL::I_ResourceFactory>& factor
         m_postShader = m_factory->CreateShader("Shared/postprocess.vert", "Shared/postprocess.frag");
         m_skyboxShader = m_factory->CreateShader("Shared/skybox.vert", "Shared/skybox.frag");
         m_waterShader = m_factory->CreateShader("Shared/water.vert", "Shared/water.frag");
-        m_skyboxTexture = m_factory->LoadCubemap(
-            "../Textures/skybox_peace/negx.png",
-            "../Textures/skybox_peace/posx.png",
-            "../Textures/skybox_peace/negy.png",
-            "../Textures/skybox_peace/posy.png",
-            "../Textures/skybox_peace/negz.png",
-            "../Textures/skybox_peace/posz.png");
         m_skyboxMesh = m_factory->LoadMesh("../Meshes/cube.gltf");
         m_postProcessing = std::make_shared<PostProcessing>(m_factory, width, height);
     }
 
-    m_directionalLight.position = Vector3(200.0f, 400.0f, 200.0f);
-    m_directionalLight.color = Vector3(1.0f, 0.95f, 0.85f);
-    m_directionalLight.ambient = Vector3(0.25f, 0.25f, 0.3f);
 
     glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
 }
@@ -120,6 +111,19 @@ void Renderer::SetWater(const std::shared_ptr<Water>& water) {
     m_waterReflectionFBO = m_factory->CreatePostProcessFBO(m_surfaceWidth, m_surfaceHeight);
     m_waterRefractionFBO = m_factory->CreatePostProcessFBO(m_surfaceWidth, m_surfaceHeight);
 }
+
+void Renderer::SetSkyboxTexture(const std::shared_ptr<Engine::IAL::I_Texture>& texture) {
+    m_skyboxTexture = texture;
+}
+
+void Renderer::SetSceneColour(const Vector3& colour) {
+    m_sceneColour = colour;
+}
+
+void Renderer::SetDirectionalLight(const Light& light) {
+    m_directionalLight = light;
+}
+
 
 void Renderer::RenderSkybox(const Matrix4& view, const Matrix4& projection) {
     if (!m_skyboxShader || !m_skyboxTexture || !m_skyboxMesh) {

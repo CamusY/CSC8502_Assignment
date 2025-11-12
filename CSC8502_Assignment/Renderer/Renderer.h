@@ -43,6 +43,9 @@ public:
 
     void Render();
     void SetWater(const std::shared_ptr<Water>& water);
+    void SetSkyboxTexture(const std::shared_ptr<Engine::IAL::I_Texture>& texture);
+    void SetSceneColour(const Vector3& colour);
+    void SetDirectionalLight(const Light& light);
 
 private:
     void RenderSkybox(const Matrix4& view, const Matrix4& projection);

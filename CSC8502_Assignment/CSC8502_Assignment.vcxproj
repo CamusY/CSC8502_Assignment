@@ -150,7 +150,9 @@
     <ClCompile Include="Engine\Implementations\NCLGL_Impl\B_Shader.cpp" />
     <ClCompile Include="Engine\Implementations\NCLGL_Impl\B_Texture.cpp" />
     <ClCompile Include="Engine\Implementations\NCLGL_Impl\B_WindowSystem.cpp" />
+    <ClCompile Include="Game\SceneEnvironment.cpp" />
     <ClCompile Include="Game\Scenes\Scene_T1_Peace.cpp" />
+    <ClCompile Include="Game\Scenes\Scene_T2_War.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Renderer\PostProcessing.cpp" />
     <ClCompile Include="Renderer\Renderer.cpp" />
@@ -184,7 +186,9 @@
     <ClInclude Include="Engine\Implementations\NCLGL_Impl\B_Shader.h" />
     <ClInclude Include="Engine\Implementations\NCLGL_Impl\B_Texture.h" />
     <ClInclude Include="Engine\Implementations\NCLGL_Impl\B_WindowSystem.h" />
+    <ClInclude Include="Game\SceneEnvironment.h" />
     <ClInclude Include="Game\Scenes\Scene_T1_Peace.h" />
+    <ClInclude Include="Game\Scenes\Scene_T2_War.h" />
     <ClInclude Include="Renderer\PostProcessing.h" />
     <ClInclude Include="Renderer\Renderer.h" />
     <ClInclude Include="Renderer\Water.h" />

@@ -45,6 +45,7 @@ Application::Application(std::shared_ptr<Engine::IAL::I_WindowSystem> window,
                                                 m_surfaceHeight);
     }
     if (m_renderer) {
+        m_sceneManager->ApplyEnvironment(*m_renderer);
         m_renderer->SetWater(m_sceneManager->GetWater());
     }
 }
@@ -52,7 +53,9 @@ Application::Application(std::shared_ptr<Engine::IAL::I_WindowSystem> window,
 Application::~Application() = default;
 
 void Application::Run() {
-    //DisableVSync();
+    if (!m_window) {
+        return;
+    }
     int frameCount = 0;
     float timeAccum = 0.0f;
     while (m_window->UpdateWindow()) {
@@ -76,6 +79,19 @@ void Application::Run() {
         }
         if (m_sceneManager) {
             m_sceneManager->Update(deltaTime);
+        }
+        if (m_sceneManager && m_renderer && m_keyboard) {
+            bool changed = false;
+            if (m_keyboard->KeyTriggered(Engine::IAL::KeyCode::K1)) {
+                changed = m_sceneManager->SetActiveScene(SceneType::Peace);
+            }
+            else if (m_keyboard->KeyTriggered(Engine::IAL::KeyCode::K2)) {
+                changed = m_sceneManager->SetActiveScene(SceneType::War);
+            }
+            if (changed) {
+                m_sceneManager->ApplyEnvironment(*m_renderer);
+                m_renderer->SetWater(m_sceneManager->GetWater());
+            }
         }
         if (m_ui) {
             m_ui->NewFrame();

@@ -15,7 +15,8 @@ Scene_T1_Peace::Scene_T1_Peace(const std::shared_ptr<Engine::IAL::I_ResourceFact
     : m_factory(factory)
     , m_sceneGraph(sceneGraph)
     , m_terrainNode(nullptr)
-    , m_terrainTexture(nullptr) {
+    , m_terrainTexture(nullptr)
+    , m_environment{} {
 }
 
 Scene_T1_Peace::~Scene_T1_Peace() = default;
@@ -54,6 +55,20 @@ void Scene_T1_Peace::Init() {
             root->AddChild(waterNode);
         }
     }
+    
+    if (m_factory) {
+        m_environment.skyboxTexture = m_factory->LoadCubemap(
+            "../Textures/skybox_peace/negx.png",
+            "../Textures/skybox_peace/posx.png",
+            "../Textures/skybox_peace/negy.png",
+            "../Textures/skybox_peace/posy.png",
+            "../Textures/skybox_peace/negz.png",
+            "../Textures/skybox_peace/posz.png");
+    }
+    m_environment.directionalLight.position = Vector3(200.0f, 400.0f, 200.0f);
+    m_environment.directionalLight.color = Vector3(1.0f, 0.95f, 0.85f);
+    m_environment.directionalLight.ambient = Vector3(0.25f, 0.25f, 0.3f);
+    m_environment.sceneColour = Vector3(0.8f, 0.45f, 0.25f);
 }
 
 void Scene_T1_Peace::Update(float deltaTime) {
@@ -62,4 +77,20 @@ void Scene_T1_Peace::Update(float deltaTime) {
 
 std::shared_ptr<Water> Scene_T1_Peace::GetWater() const {
     return m_water;
+}
+
+const SceneEnvironment& Scene_T1_Peace::GetEnvironment() const {
+    return m_environment;
+}
+
+void Scene_T1_Peace::SetActive(bool active) {
+    if (m_terrainNode) {
+        m_terrainNode->SetActive(active);
+    }
+    if (m_water) {
+        auto node = m_water->GetNode();
+        if (node) {
+            node->SetActive(active);
+        }
+    }
 }
