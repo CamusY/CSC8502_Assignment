@@ -1,10 +1,10 @@
 ﻿/**
-* @file Renderer.cpp
+ * @file Renderer.cpp
  * @brief 实现基础渲染器的渲染队列遍历逻辑。
  * @details
  * 当前实现负责从场景图收集所有可渲染节点，并依次调用其网格接口执行 Draw，
- * 并结合 Camera::BuildViewMatrix 生成视图矩阵。后续迭代将基于此骨架扩展材质、
- * 阴影、后处理等高级渲染流程。
+ * 并结合 Camera::BuildViewMatrix 生成视图矩阵。Day11 阶段在此骨架上加入天空盒与
+ * Blinn-Phong 光照，先渲染 cubemap 背景，再对地形节点注入光源与相机参数。
  */
 #include "Renderer.h"
 
@@ -26,15 +26,32 @@ Renderer::Renderer(const std::shared_ptr<Engine::IAL::I_ResourceFactory>& factor
     m_factory(factory)
     , m_sceneGraph(sceneGraph)
     , m_camera(camera)
+    , m_directionalLight{}
     , m_sceneColour(Vector3(0.8f, 0.45f, 0.25f))
+    , m_specularPower(32.0f)
+    , m_nearPlane(0.1f)
+    , m_farPlane(5000.0f)
     , m_surfaceWidth(width)
     , m_surfaceHeight(height) {
     if (m_factory) {
         m_sceneShader = m_factory->CreateShader("Shared/basic.vert", "Shared/basic.frag");
         m_terrainShader = m_factory->CreateShader("Shared/terrain.vert", "Shared/terrain.frag");
         m_postShader = m_factory->CreateShader("Shared/postprocess.vert", "Shared/postprocess.frag");
+        m_skyboxShader = m_factory->CreateShader("Shared/skybox.vert", "Shared/skybox.frag");
+        m_skyboxTexture = m_factory->LoadCubemap(
+            "../Textures/skybox_peace/negx.png",
+            "../Textures/skybox_peace/posx.png",
+            "../Textures/skybox_peace/negy.png",
+            "../Textures/skybox_peace/posy.png",
+            "../Textures/skybox_peace/negz.png",
+            "../Textures/skybox_peace/posz.png");
+        m_skyboxMesh = m_factory->LoadMesh("../Meshes/cube.gltf");
         m_postProcessing = std::make_shared<PostProcessing>(m_factory, width, height);
     }
+
+    m_directionalLight.position = Vector3(200.0f, 400.0f, 200.0f);
+    m_directionalLight.color = Vector3(1.0f, 0.95f, 0.85f);
+    m_directionalLight.ambient = Vector3(0.25f, 0.25f, 0.3f);
 }
 
 void Renderer::Render() {
@@ -56,8 +73,29 @@ void Renderer::Render() {
     const float aspect = m_surfaceHeight > 0
         ? static_cast<float>(m_surfaceWidth) / static_cast<float>(m_surfaceHeight)
         : 1.0f;
-    Matrix4 projection = Matrix4::Perspective(0.1f, 100.0f, aspect, 45.0f);
+    Matrix4 projection = Matrix4::Perspective(m_nearPlane, m_farPlane, aspect, 45.0f);
     Matrix4 viewProj = projection * view;
+
+    if (m_skyboxShader && m_skyboxTexture && m_skyboxMesh) {
+        Matrix4 viewNoTranslation = view;
+        viewNoTranslation.values[12] = 0.0f;
+        viewNoTranslation.values[13] = 0.0f;
+        viewNoTranslation.values[14] = 0.0f;
+        Matrix4 skyboxMatrix = projection * viewNoTranslation;
+
+        glDepthMask(GL_FALSE);
+        glDepthFunc(GL_LEQUAL);
+        m_skyboxShader->Bind();
+        m_skyboxShader->SetUniform("uViewProj", skyboxMatrix);
+        m_skyboxTexture->Bind(0);
+        m_skyboxShader->SetUniform("uSkybox", 0);
+        m_skyboxMesh->Draw();
+        m_skyboxShader->Unbind();
+        glDepthFunc(GL_LESS);
+        glDepthMask(GL_TRUE);
+    }
+
+    const Vector3 cameraPosition = m_camera ? m_camera->GetPosition() : Vector3(0.0f, 0.0f, 3.5f);
 
     for (const auto& node : m_renderQueue) {
         if (!node) {
@@ -78,6 +116,11 @@ void Renderer::Render() {
         if (texture) {
             texture->Bind(0);
             shader->SetUniform("uDiffuse", 0);
+            shader->SetUniform("uLightPosition", m_directionalLight.position);
+            shader->SetUniform("uLightColor", m_directionalLight.color);
+            shader->SetUniform("uAmbientColor", m_directionalLight.ambient);
+            shader->SetUniform("uSpecularPower", m_specularPower);
+            shader->SetUniform("uCameraPos", cameraPosition);
         }
         else {
             shader->SetUniform("uColor", m_sceneColour);

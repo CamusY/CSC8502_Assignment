@@ -28,7 +28,11 @@ void Scene_T1_Peace::Init() {
         return;
     }
 
-    m_terrainTexture = m_factory->LoadTexture("../Textures/terrain_grass.png", false);
+    m_terrainTexture = m_factory->LoadTexture("../Textures/terrain_texture.png", false);
+
+    if (!m_terrainTexture) {
+        m_terrainTexture = m_factory->LoadTexture("../Heightmaps/terrain.png", false);
+    }
 
     m_terrainNode = std::make_shared<SceneNode>();
     m_terrainNode->SetMesh(heightmap);

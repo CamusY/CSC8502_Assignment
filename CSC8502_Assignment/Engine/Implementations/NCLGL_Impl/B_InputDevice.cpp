@@ -167,7 +167,7 @@ namespace NCLGL_Impl {
             case Engine::IAL::KeyCode::UNKNOWN:
                 return (KeyboardKeys)KEYBOARD_MAX;
             }
-            
+            return (KeyboardKeys)KEYBOARD_MAX;
         }
 
 
@@ -180,6 +180,7 @@ namespace NCLGL_Impl {
             case Engine::IAL::MouseButton::MIDDLE:
                 return MOUSE_MIDDLE;
             }
+            return (MouseButtons)MOUSE_MAX;
         }
 
     }

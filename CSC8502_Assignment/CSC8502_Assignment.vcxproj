@@ -136,6 +136,7 @@
     <ClCompile Include="..\includes\glad\glad.c" />
     <ClCompile Include="Core\Application.cpp" />
     <ClCompile Include="Core\Camera.cpp" />
+    <ClCompile Include="Core\Light.cpp" />
     <ClCompile Include="Core\SceneGraph.cpp" />
     <ClCompile Include="Core\SceneManager.cpp" />
     <ClCompile Include="Engine\Implementations\NCLGL_Impl\B_AnimatedMesh.cpp" />
@@ -157,6 +158,7 @@
   <ItemGroup>
     <ClInclude Include="Core\Application.h" />
     <ClInclude Include="Core\Camera.h" />
+    <ClInclude Include="Core\Light.h" />
     <ClInclude Include="Core\SceneGraph.h" />
     <ClInclude Include="Core\SceneManager.h" />
     <ClInclude Include="Engine\IAL\I_AnimatedMesh.h" />
@@ -194,6 +196,8 @@
     <Content Include="..\Shaders\Shared\basic.vert" />
     <Content Include="..\Shaders\Shared\postprocess.frag" />
     <Content Include="..\Shaders\Shared\postprocess.vert" />
+    <Content Include="..\Shaders\Shared\skybox.frag" />
+    <Content Include="..\Shaders\Shared\skybox.vert" />
     <Content Include="..\Shaders\Shared\terrain.frag" />
     <Content Include="..\Shaders\Shared\terrain.vert" />
   </ItemGroup>

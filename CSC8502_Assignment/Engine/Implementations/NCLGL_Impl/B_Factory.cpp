@@ -156,6 +156,43 @@ namespace {
         glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
         return texture;
     }
+    std::shared_ptr<Engine::IAL::I_Texture> CreateFallbackCubemap() {
+        unsigned int cubemapID = 0;
+        glGenTextures(1, &cubemapID);
+        glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapID);
+
+        const std::array<std::array<unsigned char, 3>, 6> colors = {{
+            {128, 178, 255},
+            {128, 178, 255},
+            {255, 200, 140},
+            {255, 200, 140},
+            {110, 160, 220},
+            {110, 160, 220}
+        }};
+
+        for (size_t i = 0; i < colors.size(); ++i) {
+            const auto& color = colors[i];
+            glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + static_cast<GLenum>(i),
+                         0,
+                         GL_RGB,
+                         1,
+                         1,
+                         0,
+                         GL_RGB,
+                         GL_UNSIGNED_BYTE,
+                         color.data());
+        }
+
+        glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+        glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
+
+        std::cerr << "[B_Factory] Generated fallback cubemap texture" << "\n";
+        return std::make_shared<NCLGL_Impl::B_Texture>(cubemapID, Engine::IAL::TextureType::CubeMap, GL_TEXTURE_CUBE_MAP);
+    }
 
     class HeightmapMesh final : public ::Mesh {
     public:
@@ -319,14 +356,14 @@ namespace NCLGL_Impl {
         const std::array<std::string, 6> orderedPaths = { posx, negx, posy, negy, posz, negz };
         std::array<TextureDescriptor, 6> descriptors;
         if (!DecodeCubemap(orderedPaths, descriptors)) {
-            std::cerr << "[B_Factory] Cubemap decode failed or dimensions mismatch" << "\n";
-            return nullptr;
+            std::cerr << "[B_Factory] Cubemap decode failed or dimensions mismatch, using fallback" << "\n";
+            return CreateFallbackCubemap();
         }
 
         auto texture = UploadCubemap(orderedPaths);
         if (!texture) {
-            std::cerr << "[B_Factory] Cubemap upload failed" << "\n";
-            return nullptr;
+            std::cerr << "[B_Factory] Cubemap upload failed, using fallback" << "\n";
+            return CreateFallbackCubemap();
         }
 
         std::cerr << "[B_Factory] Cubemap loaded: "
