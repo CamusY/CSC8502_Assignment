@@ -11,7 +11,7 @@
  *
  * 构造函数 B_Texture(unsigned int id, Engine::IAL::TextureType type, unsigned int overrideTarget):
  * 接收一个 OpenGL 纹理 ID (通常由 SOIL 或自研加载代码创建)。
- * 参数 id: 原生的 OpenGL 纹理句柄。
+* 参数 id: 原生的 OpenGL 纹理句柄。
  * 参数 type: 纹理的语义类型（例如 2D、Cubemap、Depth 等）。
  * 参数 overrideTarget: 可选的 OpenGL 绑定目标，若为 0 则根据 type 推导默认值。
  *
@@ -36,6 +36,8 @@
 #pragma once
 #include "IAL/I_Texture.h"
 
+#include "nclgl/Extra/OGLTexture.h"
+
 #include <glad/glad.h>
 
 namespace NCLGL_Impl {
@@ -44,6 +46,7 @@ namespace NCLGL_Impl {
     class B_Texture : public Engine::IAL::I_Texture {
     public:
         B_Texture(unsigned int id, Engine::IAL::TextureType type, unsigned int overrideTarget = 0);
+        B_Texture(UniqueOGLTexture texture, Engine::IAL::TextureType type, unsigned int overrideTarget = 0);
         ~B_Texture() override;
 
         unsigned int GetID() override;
@@ -54,6 +57,8 @@ namespace NCLGL_Impl {
         unsigned int m_id;
         unsigned int m_glTarget;
         Engine::IAL::TextureType m_type;
+        UniqueOGLTexture m_ownedTexture;
+        bool m_manageRawHandle;
     };
 
 }

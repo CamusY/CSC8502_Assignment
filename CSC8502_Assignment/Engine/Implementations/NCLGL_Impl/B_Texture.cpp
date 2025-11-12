@@ -30,14 +30,30 @@ namespace NCLGL_Impl {
     B_Texture::B_Texture(unsigned int id, Engine::IAL::TextureType type, unsigned int overrideTarget)
         : m_id(id)
         , m_glTarget(overrideTarget)
-        , m_type(type) {
+        , m_type(type)
+        , m_ownedTexture(nullptr)
+        , m_manageRawHandle(true) {
+        if (m_glTarget == 0) {
+            m_glTarget = ResolveDefaultTarget(type);
+        }
+    }
+
+    B_Texture::B_Texture(UniqueOGLTexture texture, Engine::IAL::TextureType type, unsigned int overrideTarget)
+        : m_id(texture ? texture->GetObjectID() : 0)
+        , m_glTarget(overrideTarget)
+        , m_type(type)
+        , m_ownedTexture(std::move(texture))
+        , m_manageRawHandle(false) {
         if (m_glTarget == 0) {
             m_glTarget = ResolveDefaultTarget(type);
         }
     }
 
     B_Texture::~B_Texture() {
-        if (m_id != 0) {
+        if (m_ownedTexture) {
+            return;
+        }
+        if (m_manageRawHandle && m_id != 0) {
             glDeleteTextures(1, &m_id);
             m_id = 0;
         }

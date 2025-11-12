@@ -48,6 +48,15 @@ const Vector3& SceneNode::GetRotation() const {
     return m_rotation;
 }
 
+void SceneNode::SetTexture(const std::shared_ptr<Engine::IAL::I_Texture>& texture) {
+    m_texture = texture;
+}
+
+std::shared_ptr<Engine::IAL::I_Texture> SceneNode::GetTexture() const {
+    return m_texture;
+}
+
+
 void SceneNode::SetActive(bool active) {
     m_active = active;
 }

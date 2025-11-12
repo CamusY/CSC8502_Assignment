@@ -5,17 +5,19 @@
  * 构造函数接收资源工厂接口并创建场景图实例，Update 函数负责驱动场景图的更新。
  * 计时累积字段将在后续迭代中用于驱动动画或时间轴过渡。
  */
+
 #include "SceneManager.h"
+#include "../Game/Scenes/Scene_T1_Peace.h"
 
 SceneManager::SceneManager(const std::shared_ptr<Engine::IAL::I_ResourceFactory>& factory)
-    : m_factory(factory), m_sceneGraph(std::make_shared<SceneGraph>()), m_accumulatedTime(0.0f) {
-    if (m_sceneGraph && m_factory) {
-        auto root = m_sceneGraph->GetRoot();
-        if (root) {
-            auto cubeNode = std::make_shared<SceneNode>();
-            cubeNode->SetMesh(m_factory->LoadMesh("../Meshes/verybigtest.gltf"));
-            cubeNode->SetScale(Vector3(1.0f, 1.0f, 1.0f));
-            root->AddChild(cubeNode);
+    : m_factory(factory)
+    , m_sceneGraph(std::make_shared<SceneGraph>())
+    , m_accumulatedTime(0.0f)
+    , m_activeScene(nullptr) {
+    if (m_factory && m_sceneGraph) {
+        m_activeScene = std::make_unique<Scene_T1_Peace>(m_factory, m_sceneGraph);
+        if (m_activeScene) {
+            m_activeScene->Init();
         }
     }
 }
@@ -26,7 +28,12 @@ std::shared_ptr<SceneGraph> SceneManager::GetSceneGraph() const {
 
 void SceneManager::Update(float deltaTime) {
     m_accumulatedTime += deltaTime;
+    if (m_activeScene) {
+        m_activeScene->Update(deltaTime);
+    }
     if (m_sceneGraph) {
         m_sceneGraph->Update();
     }
 }
+
+SceneManager::~SceneManager() = default;

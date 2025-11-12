@@ -20,10 +20,10 @@
 
 Renderer::Renderer(const std::shared_ptr<Engine::IAL::I_ResourceFactory>& factory,
                    const std::shared_ptr<SceneGraph>& sceneGraph,
-                     const std::shared_ptr<Camera>& camera,
+                   const std::shared_ptr<Camera>& camera,
                    int width,
-                   int height)
-    : m_factory(factory)
+                   int height) :
+    m_factory(factory)
     , m_sceneGraph(sceneGraph)
     , m_camera(camera)
     , m_sceneColour(Vector3(0.8f, 0.45f, 0.25f))
@@ -31,6 +31,7 @@ Renderer::Renderer(const std::shared_ptr<Engine::IAL::I_ResourceFactory>& factor
     , m_surfaceHeight(height) {
     if (m_factory) {
         m_sceneShader = m_factory->CreateShader("Shared/basic.vert", "Shared/basic.frag");
+        m_terrainShader = m_factory->CreateShader("Shared/terrain.vert", "Shared/terrain.frag");
         m_postShader = m_factory->CreateShader("Shared/postprocess.vert", "Shared/postprocess.frag");
         m_postProcessing = std::make_shared<PostProcessing>(m_factory, width, height);
     }
@@ -50,30 +51,39 @@ void Renderer::Render() {
     m_sceneGraph->CollectRenderableNodes(m_renderQueue);
 
     Matrix4 view = m_camera
-    ? m_camera->BuildViewMatrix()
-    : Matrix4::BuildViewMatrix(Vector3(0.0f, 0.0f, 3.5f), Vector3(0.0f, 0.0f, 0.0f));
-    const float aspect = m_surfaceHeight > 0 ? static_cast<float>(m_surfaceWidth) / static_cast<float>(m_surfaceHeight) : 1.0f;
+        ? m_camera->BuildViewMatrix()
+        : Matrix4::BuildViewMatrix(Vector3(0.0f, 0.0f, 3.5f), Vector3(0.0f, 0.0f, 0.0f));
+    const float aspect = m_surfaceHeight > 0
+        ? static_cast<float>(m_surfaceWidth) / static_cast<float>(m_surfaceHeight)
+        : 1.0f;
     Matrix4 projection = Matrix4::Perspective(0.1f, 100.0f, aspect, 45.0f);
     Matrix4 viewProj = projection * view;
 
-    if (m_sceneShader) {
-        m_sceneShader->Bind();
-        m_sceneShader->SetUniform("uViewProj", viewProj);
-        m_sceneShader->SetUniform("uColor", m_sceneColour);
-
-        for (const auto& node : m_renderQueue) {
-            if (!node) {
-                continue;
-            }
-            auto mesh = node->GetMesh();
-            if (!mesh) {
-                continue;
-            }
-            m_sceneShader->SetUniform("uModel", node->GetWorldTransform());
-            mesh->Draw();
+    for (const auto& node : m_renderQueue) {
+        if (!node) {
+            continue;
         }
-
-        m_sceneShader->Unbind();
+        auto mesh = node->GetMesh();
+        if (!mesh) {
+            continue;
+        }
+        auto texture = node->GetTexture();
+        std::shared_ptr<Engine::IAL::I_Shader> shader = texture ? m_terrainShader : m_sceneShader;
+        if (!shader) {
+            continue;
+        }
+        shader->Bind();
+        shader->SetUniform("uViewProj", viewProj);
+        shader->SetUniform("uModel", node->GetWorldTransform());
+        if (texture) {
+            texture->Bind(0);
+            shader->SetUniform("uDiffuse", 0);
+        }
+        else {
+            shader->SetUniform("uColor", m_sceneColour);
+        }
+        mesh->Draw();
+        shader->Unbind();
     }
 
     if (m_postProcessing) {

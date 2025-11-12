@@ -27,6 +27,7 @@
 #include "nclgl/Vector3.h"
 
 #include "IAL/I_Mesh.h"
+#include "IAL/I_Texture.h"
 
 class SceneNode : public std::enable_shared_from_this<SceneNode> {
 public:
@@ -43,7 +44,10 @@ public:
 
     void SetRotation(const Vector3& rotationDegrees);
     const Vector3& GetRotation() const;
-
+    
+    void SetTexture(const std::shared_ptr<Engine::IAL::I_Texture>& texture);
+    std::shared_ptr<Engine::IAL::I_Texture> GetTexture() const;
+    
     void SetActive(bool active);
     bool IsActive() const;
 
@@ -62,6 +66,7 @@ private:
     std::vector<std::shared_ptr<SceneNode>> m_children;
 
     std::shared_ptr<Engine::IAL::I_Mesh> m_mesh;
+    std::shared_ptr<Engine::IAL::I_Texture> m_texture;
 
     Vector3 m_position;
     Vector3 m_scale;

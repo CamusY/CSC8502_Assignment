@@ -48,7 +48,7 @@ Application::Application(std::shared_ptr<Engine::IAL::I_WindowSystem> window,
 Application::~Application() = default;
 
 void Application::Run() {
-    DisableVSync();
+    //DisableVSync();
     int frameCount = 0;
     float timeAccum = 0.0f;
     while (m_window->UpdateWindow()) {
