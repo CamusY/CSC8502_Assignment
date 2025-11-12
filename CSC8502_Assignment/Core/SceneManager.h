@@ -14,6 +14,7 @@
 #include "IAL/I_ResourceFactory.h"
 
 class Scene_T1_Peace;
+class Water;
 
 class SceneManager {
 public:
@@ -23,6 +24,8 @@ public:
     std::shared_ptr<SceneGraph> GetSceneGraph() const;
 
     void Update(float deltaTime);
+
+    std::shared_ptr<Water> GetWater() const;
 
 private:
     std::shared_ptr<Engine::IAL::I_ResourceFactory> m_factory;

@@ -7,6 +7,7 @@
  */
 
 #include "SceneManager.h"
+#include "../Renderer/Water.h"
 #include "../Game/Scenes/Scene_T1_Peace.h"
 
 SceneManager::SceneManager(const std::shared_ptr<Engine::IAL::I_ResourceFactory>& factory)
@@ -37,3 +38,10 @@ void SceneManager::Update(float deltaTime) {
 }
 
 SceneManager::~SceneManager() = default;
+
+std::shared_ptr<Water> SceneManager::GetWater() const {
+    if (!m_activeScene) {
+        return nullptr;
+    }
+    return m_activeScene->GetWater();
+}

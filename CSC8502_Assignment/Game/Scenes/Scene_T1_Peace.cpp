@@ -6,6 +6,8 @@
 
 #include "../../Engine/IAL/I_Heightmap.h"
 #include "../../Engine/IAL/I_Texture.h"
+#include "../../Renderer/Water.h"
+#include "nclgl/Vector2.h"
 #include "nclgl/Vector3.h"
 
 Scene_T1_Peace::Scene_T1_Peace(const std::shared_ptr<Engine::IAL::I_ResourceFactory>& factory,
@@ -44,8 +46,20 @@ void Scene_T1_Peace::Init() {
     if (root) {
         root->AddChild(m_terrainNode);
     }
+
+    m_water = std::make_shared<Water>(m_factory, 25.0f, Vector2(512.0f, 512.0f));
+    if (m_water) {
+        auto waterNode = m_water->GetNode();
+        if (root && waterNode) {
+            root->AddChild(waterNode);
+        }
+    }
 }
 
 void Scene_T1_Peace::Update(float deltaTime) {
     (void)deltaTime;
+}
+
+std::shared_ptr<Water> Scene_T1_Peace::GetWater() const {
+    return m_water;
 }

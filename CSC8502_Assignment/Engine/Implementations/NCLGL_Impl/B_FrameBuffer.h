@@ -36,6 +36,7 @@
 #include "IAL/I_FrameBuffer.h"
 
 #include <string>
+#include <glad/glad.h>
 
 namespace NCLGL_Impl {
     enum class AttachmentFormat {
@@ -69,4 +70,8 @@ namespace NCLGL_Impl {
         AttachmentFormat m_depthFormat;        
     };
 
+    std::string AttachmentFormatToString(AttachmentFormat format);
+    std::string FilterToString(GLint value);
+    std::string WrapToString(GLint value);
+    const char* TextureTypeToString(Engine::IAL::TextureType type);
 }

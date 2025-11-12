@@ -43,6 +43,9 @@ Application::Application(std::shared_ptr<Engine::IAL::I_WindowSystem> window,
                                                 m_surfaceWidth,
                                                 m_surfaceHeight);
     }
+    if (m_renderer) {
+        m_renderer->SetWater(m_sceneManager->GetWater());
+    }
 }
 
 Application::~Application() = default;

@@ -37,38 +37,21 @@
 
 
 namespace {
-    using AttachmentFormat = NCLGL_Impl::AttachmentFormat;
-
-    std::string AttachmentFormatToString(AttachmentFormat format) {
-        switch (format) {
-        case AttachmentFormat::None:
-            return "None";
-        case AttachmentFormat::Color8:
-            return "Color8";
-        case AttachmentFormat::Color16F:
-            return "Color16F";
-        case AttachmentFormat::Depth24:
-            return "Depth24";
-        case AttachmentFormat::Depth32F:
-            return "Depth32F";
-        }
-        return "Unknown";
-    }
 
     std::string BuildLayoutDescription(const std::shared_ptr<NCLGL_Impl::B_FrameBuffer>& fbo) {
-        const bool hasColor = fbo->GetColorFormat() != AttachmentFormat::None;
-        const AttachmentFormat depthFormat = fbo->GetDepthFormat();
-        const std::string depthStr = AttachmentFormatToString(depthFormat);
+        const bool hasColor = fbo->GetColorFormat() != NCLGL_Impl::AttachmentFormat::None;
+        const NCLGL_Impl::AttachmentFormat depthFormat = fbo->GetDepthFormat();
+        const std::string depthStr = NCLGL_Impl::AttachmentFormatToString(depthFormat);
 
         if (!hasColor) {
-            if (depthFormat == AttachmentFormat::None) {
+            if (depthFormat == NCLGL_Impl::AttachmentFormat::None) {
                 return "Empty (None)";
             }
             return "Depth-only (" + depthStr + ")";
         }
 
-        std::string description = "Color+Depth (" + AttachmentFormatToString(fbo->GetColorFormat());
-        if (depthFormat != AttachmentFormat::None) {
+        std::string description = "Color+Depth (" + NCLGL_Impl::AttachmentFormatToString(fbo->GetColorFormat());
+        if (depthFormat != NCLGL_Impl::AttachmentFormat::None) {
             description += "/" + depthStr;
         }
         description += ")";
@@ -80,50 +63,109 @@ namespace {
         uint32_t width = 0;
         uint32_t height = 0;
         uint32_t channels = 0;
+        std::vector<unsigned char> pixels;
     };
 
-    bool DecodeTexture(const std::string& path, TextureDescriptor& out) {
+    bool DecodeTexture(const std::string& path, TextureDescriptor& out, bool flipVertical) {
         if (path.empty()) {
             return false;
         }
-        char* data = nullptr;
-        uint32_t width = 0;
-        uint32_t height = 0;
-        uint32_t channels = 0;
-        uint32_t flags = 0;
-        if (!OGLTexture::LoadTexture(path, data, width, height, channels, flags)) {
+        int width = 0;
+        int height = 0;
+        int channels = 0;
+        stbi_set_flip_vertically_on_load(flipVertical ? 1 : 0);
+        stbi_uc* data = stbi_load(path.c_str(), &width, &height, &channels, 0);
+        if (!data || width <= 0 || height <= 0) {
+            if (data) {
+                stbi_image_free(data);
+            }
+            std::cerr << "[B_Factory] stb_image decode failed for " << path << "\n";
             return false;
         }
-        free(data);
+        const size_t dataSize = static_cast<size_t>(width) * static_cast<size_t>(height) * static_cast<size_t>(
+            channels);
         out.path = path;
-        out.width = width;
-        out.height = height;
-        out.channels = channels;
-        return out.width > 0 && out.height > 0;
+        out.width = static_cast<uint32_t>(width);
+        out.height = static_cast<uint32_t>(height);
+        out.channels = static_cast<uint32_t>(channels);
+        out.pixels.assign(data, data + dataSize);
+        stbi_image_free(data);
+        return true;
     }
 
-    UniqueOGLTexture UploadTexture2D(const TextureDescriptor& source, bool repeat) {
-        if (source.path.empty()) {
+    GLenum ResolveFormat(uint32_t channels) {
+        switch (channels) {
+        case 1:
+            return GL_RED;
+        case 2:
+            return GL_RG;
+        case 3:
+            return GL_RGB;
+        case 4:
+            return GL_RGBA;
+        default:
+            return GL_RGBA;
+        }
+    }
+
+    GLuint ResolveInternalFormat(uint32_t channels) {
+        switch (channels) {
+        case 1:
+            return GL_R8;
+        case 2:
+            return GL_RG8;
+        case 3:
+            return GL_SRGB8;
+        case 4:
+            return GL_SRGB8_ALPHA8;
+        default:
+            return GL_SRGB8_ALPHA8;
+        }
+    }
+
+    std::shared_ptr<Engine::IAL::I_Texture> UploadTexture2D(const TextureDescriptor& source, bool repeat) {
+        if (source.pixels.empty() || source.width == 0 || source.height == 0) {
             return nullptr;
         }
-        UniqueOGLTexture texture = OGLTexture::TextureFromFile(source.path);
-        if (!texture) {
-            return nullptr;
-        }
-        glBindTexture(GL_TEXTURE_2D, texture->GetObjectID());
+        GLuint textureID = 0;
+        glGenTextures(1, &textureID);
+        glBindTexture(GL_TEXTURE_2D, textureID);
+        const GLenum format = ResolveFormat(source.channels);
+        const GLuint internalFormat = ResolveInternalFormat(source.channels);
+        glTexImage2D(GL_TEXTURE_2D,
+                     0,
+                     internalFormat,
+                     static_cast<GLsizei>(source.width),
+                     static_cast<GLsizei>(source.height),
+                     0,
+                     format,
+                     GL_UNSIGNED_BYTE,
+                     source.pixels.data());
+        glGenerateMipmap(GL_TEXTURE_2D);
         const GLint wrapMode = repeat ? GL_REPEAT : GL_CLAMP_TO_EDGE;
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, wrapMode);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, wrapMode);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        GLint minFilter = 0;
+        GLint magFilter = 0;
+        GLint wrapS = 0;
+        GLint wrapT = 0;
+        glGetTexParameteriv(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, &minFilter);
+        glGetTexParameteriv(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, &magFilter);
+        glGetTexParameteriv(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, &wrapS);
+        glGetTexParameteriv(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, &wrapT);
         glBindTexture(GL_TEXTURE_2D, 0);
-        return texture;
+        std::cerr << "[B_Factory] Texture sampler: MIN=" << NCLGL_Impl::FilterToString(minFilter)
+            << ", MAG=" << NCLGL_Impl::FilterToString(magFilter)
+            << ", WRAP_S=" << NCLGL_Impl::WrapToString(wrapS)
+            << ", WRAP_T=" << NCLGL_Impl::WrapToString(wrapT) << "\n";
+        return std::make_shared<NCLGL_Impl::B_Texture>(textureID, Engine::IAL::TextureType::Texture2D);
     }
 
     bool DecodeCubemap(const std::array<std::string, 6>& paths, std::array<TextureDescriptor, 6>& descriptors) {
         for (size_t i = 0; i < paths.size(); ++i) {
-            if (!DecodeTexture(paths[i], descriptors[i])) {
-                std::cerr << "[B_Factory] Cubemap decode failed for " << paths[i] << "\n";
+            if (!DecodeTexture(paths[i], descriptors[i], false)) {
                 return false;
             }
             if (i > 0) {
@@ -137,25 +179,54 @@ namespace {
         return true;
     }
 
-    UniqueOGLTexture UploadCubemap(const std::array<std::string, 6>& orderedPaths) {
-        UniqueOGLTexture texture = OGLTexture::LoadCubemap(orderedPaths[0],
-                                                           orderedPaths[1],
-                                                           orderedPaths[2],
-                                                           orderedPaths[3],
-                                                           orderedPaths[4],
-                                                           orderedPaths[5]);
-        if (!texture) {
-            return nullptr;
+    std::shared_ptr<Engine::IAL::I_Texture> UploadCubemap(const std::array<TextureDescriptor, 6>& descriptors) {
+        GLuint cubemapID = 0;
+        glGenTextures(1, &cubemapID);
+        glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapID);
+        for (size_t i = 0; i < descriptors.size(); ++i) {
+            const auto& face = descriptors[i];
+            if (face.pixels.empty()) {
+                continue;
+            }
+            const GLenum format = ResolveFormat(face.channels);
+            const GLuint internalFormat = face.channels == 4
+                ? GL_SRGB8_ALPHA8
+                : (face.channels == 3 ? GL_SRGB8 : GL_RGBA8);
+            glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + static_cast<GLenum>(i),
+                         0,
+                         internalFormat,
+                         static_cast<GLsizei>(face.width),
+                         static_cast<GLsizei>(face.height),
+                         0,
+                         format,
+                         GL_UNSIGNED_BYTE,
+                         face.pixels.data());
         }
-        glBindTexture(GL_TEXTURE_CUBE_MAP, texture->GetObjectID());
         glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+        GLint minFilter = 0;
+        GLint magFilter = 0;
+        GLint wrapS = 0;
+        GLint wrapT = 0;
+        GLint wrapR = 0;
+        glGetTexParameteriv(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, &minFilter);
+        glGetTexParameteriv(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, &magFilter);
+        glGetTexParameteriv(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, &wrapS);
+        glGetTexParameteriv(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, &wrapT);
+        glGetTexParameteriv(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, &wrapR);
         glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
-        return texture;
+        std::cerr << "[B_Factory] Cubemap sampler: MIN=" << NCLGL_Impl::FilterToString(minFilter)
+            << ", MAG=" << NCLGL_Impl::FilterToString(magFilter)
+            << ", WRAP_S=" << NCLGL_Impl::WrapToString(wrapS)
+            << ", WRAP_T=" << NCLGL_Impl::WrapToString(wrapT)
+            << ", WRAP_R=" << NCLGL_Impl::WrapToString(wrapR) << "\n";
+        return std::make_shared<NCLGL_Impl::B_Texture>(cubemapID, Engine::IAL::TextureType::CubeMap,
+                                                       GL_TEXTURE_CUBE_MAP);
     }
+
     std::shared_ptr<Engine::IAL::I_Texture> CreateFallbackCubemap() {
         unsigned int cubemapID = 0;
         glGenTextures(1, &cubemapID);
@@ -191,7 +262,8 @@ namespace {
         glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
 
         std::cerr << "[B_Factory] Generated fallback cubemap texture" << "\n";
-        return std::make_shared<NCLGL_Impl::B_Texture>(cubemapID, Engine::IAL::TextureType::CubeMap, GL_TEXTURE_CUBE_MAP);
+        return std::make_shared<NCLGL_Impl::B_Texture>(cubemapID, Engine::IAL::TextureType::CubeMap,
+                                                       GL_TEXTURE_CUBE_MAP);
     }
 
     class HeightmapMesh final : public ::Mesh {
@@ -210,7 +282,7 @@ namespace {
                 x = std::clamp(x, 0, static_cast<int>(dimension) - 1);
                 z = std::clamp(z, 0, static_cast<int>(dimension) - 1);
                 const size_t index = static_cast<size_t>(z) * dimension + static_cast<size_t>(x);
-                const float normalised = static_cast<float>(samples[index]) / 255.0f;
+                const float normalised = static_cast<float>(samples[index]);
                 return normalised * scale.y;
             };
 
@@ -330,9 +402,9 @@ namespace NCLGL_Impl {
     }
 
     std::shared_ptr<Engine::IAL::I_Texture> B_Factory::LoadTexture(
-           const std::string& path, bool repeat) {
+        const std::string& path, bool repeat) {
         TextureDescriptor descriptor;
-        if (!DecodeTexture(path, descriptor)) {
+        if (!DecodeTexture(path, descriptor,true)) {
             std::cerr << "[B_Factory] Texture decode failed for " << path << "\n";
             return nullptr;
         }
@@ -344,32 +416,32 @@ namespace NCLGL_Impl {
         }
 
         std::cerr << "[B_Factory] Texture loaded: " << path
-                  << " (" << descriptor.width << "x" << descriptor.height
-                  << ", repeat=" << (repeat ? "true" : "false") << ")\n";
-        return std::make_shared<B_Texture>(std::move(texture), Engine::IAL::TextureType::Texture2D);
+            << " (" << descriptor.width << "x" << descriptor.height
+            << ", repeat=" << (repeat ? "true" : "false") << ")\n";
+        return texture;
     }
 
     std::shared_ptr<Engine::IAL::I_Texture> B_Factory::LoadCubemap(
         const std::string& negx, const std::string& posx,
         const std::string& negy, const std::string& posy,
         const std::string& negz, const std::string& posz) {
-        const std::array<std::string, 6> orderedPaths = { posx, negx, posy, negy, posz, negz };
+        const std::array<std::string, 6> orderedPaths = {posx, negx, posy, negy, posz, negz};
         std::array<TextureDescriptor, 6> descriptors;
         if (!DecodeCubemap(orderedPaths, descriptors)) {
             std::cerr << "[B_Factory] Cubemap decode failed or dimensions mismatch, using fallback" << "\n";
             return CreateFallbackCubemap();
         }
 
-        auto texture = UploadCubemap(orderedPaths);
+        auto texture = UploadCubemap(descriptors);
         if (!texture) {
             std::cerr << "[B_Factory] Cubemap upload failed, using fallback" << "\n";
             return CreateFallbackCubemap();
         }
 
         std::cerr << "[B_Factory] Cubemap loaded: "
-                  << posx << ", " << negx << ", " << posy << ", " << negy << ", " << posz << ", " << negz
-                  << " (" << descriptors[0].width << "x" << descriptors[0].height << ")\n";
-        return std::make_shared<B_Texture>(std::move(texture), Engine::IAL::TextureType::CubeMap);
+            << posx << ", " << negx << ", " << posy << ", " << negy << ", " << posz << ", " << negz
+            << " (" << descriptors[0].width << "x" << descriptors[0].height << ")\n";
+        return texture;
     }
 
     std::shared_ptr<Engine::IAL::I_Heightmap> B_Factory::LoadHeightmap(
@@ -392,8 +464,8 @@ namespace NCLGL_Impl {
         if (width != height || width < 2) {
             std::cerr << "[B_Factory] Heightmap dimensions invalid: " << path
                 << " (dimensions=" << width << "x" << height << ")" << std::endl;
-            
-            free(data); 
+
+            free(data);
             return nullptr;
         }
 

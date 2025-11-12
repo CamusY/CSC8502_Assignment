@@ -154,6 +154,7 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Renderer\PostProcessing.cpp" />
     <ClCompile Include="Renderer\Renderer.cpp" />
+    <ClCompile Include="Renderer\Water.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Core\Application.h" />
@@ -186,6 +187,7 @@
     <ClInclude Include="Game\Scenes\Scene_T1_Peace.h" />
     <ClInclude Include="Renderer\PostProcessing.h" />
     <ClInclude Include="Renderer\Renderer.h" />
+    <ClInclude Include="Renderer\Water.h" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Engine\Custom\" />
@@ -200,6 +202,8 @@
     <Content Include="..\Shaders\Shared\skybox.vert" />
     <Content Include="..\Shaders\Shared\terrain.frag" />
     <Content Include="..\Shaders\Shared\terrain.vert" />
+    <Content Include="..\Shaders\Shared\water.frag" />
+    <Content Include="..\Shaders\Shared\water.vert" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
