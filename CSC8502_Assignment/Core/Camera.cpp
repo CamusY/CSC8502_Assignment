@@ -12,8 +12,8 @@ Camera::Camera()
     : m_position(Vector3(0.0f, 0.0f, 3.5f))
     , m_yaw(0.0f)
     , m_pitch(0.0f)
-    , m_moveSpeed(5.0f)
-    , m_mouseSensitivity(0.1f) {
+    , m_moveSpeed(50.0f)
+    , m_mouseSensitivity(1.1f) {
 }
 
 void Camera::SetPosition(const Vector3& position) {
@@ -73,7 +73,14 @@ void Camera::Update(float deltaTime,
 
     if (movement.Length() > 0.0f) {
         movement.Normalise();
-        m_position += movement * (m_moveSpeed * deltaTime);
+
+        float currentSpeed = m_moveSpeed;
+        if (keyboard->KeyHeld(Engine::IAL::KeyCode::LEFT_SHIFT) ||
+            keyboard->KeyHeld(Engine::IAL::KeyCode::RIGHT_SHIFT)) {
+            currentSpeed *= 10.0f;
+            }
+
+        m_position += movement * (currentSpeed * deltaTime);
     }
 
     if (!mouse) {

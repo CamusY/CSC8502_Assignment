@@ -63,11 +63,11 @@ namespace Engine::IAL {
      * 采样策略或调试输出内容。
      */
     enum class TextureType {
-        Texture2D,      //!< 常规 2D 纹理或颜色附件。
-        CubeMap,        //!< 立方体纹理。
-        Array2D,        //!< 2D 纹理数组。
-        DepthStencil,   //!< 深度或深度/模板附件。
-        External        //!< 其他由实现自定义的纹理类型。
+        Texture2D,
+        CubeMap,
+        Array2D,
+        DepthStencil,
+        External
     };
 
     class I_Texture {
