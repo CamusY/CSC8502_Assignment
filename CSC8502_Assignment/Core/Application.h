@@ -17,7 +17,8 @@
  * 参数 factory: 资源工厂接口，用于后续创建渲染资源。
  * 参数 ui: 调试 UI 接口，用于在主循环中驱动 UI 的帧更新和渲染。
  * 参数 surfaceWidth / surfaceHeight: 与窗口一致的渲染分辨率，用于初始化 Day6 的后期处理 FBO。
- * 在 Day 4 之后，构造函数还会创建 SceneManager 与 Renderer，以驱动场景更新与渲染
+ * 在 Day 4 之后，构造函数还会创建 SceneManager 与 Renderer，以驱动场景更新与渲染。
+ * Day 8 将进一步注入 Camera，利用 IAL 输入接口在主循环中驱动自由相机 (P-5)。
  *
  * 成员函数 Run():
  * 执行应用程序的主循环。
@@ -42,10 +43,13 @@ namespace Engine::IAL {
     class I_WindowSystem;
     class I_ResourceFactory;
     class I_DebugUI;
+    class I_Keyboard;
+    class I_Mouse;
 }
 
 class SceneManager;
 class Renderer;
+class Camera;
 
 class Application {
 public:
@@ -62,8 +66,11 @@ private:
     std::shared_ptr<Engine::IAL::I_WindowSystem> m_window;
     std::shared_ptr<Engine::IAL::I_ResourceFactory> m_factory;
     std::shared_ptr<Engine::IAL::I_DebugUI> m_ui;
+    std::shared_ptr<Camera> m_camera;
     std::shared_ptr<SceneManager> m_sceneManager;
     std::shared_ptr<Renderer> m_renderer;
+    Engine::IAL::I_Keyboard* m_keyboard;
+    Engine::IAL::I_Mouse* m_mouse;
     int m_surfaceWidth;
     int m_surfaceHeight;
 };

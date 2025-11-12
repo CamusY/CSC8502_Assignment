@@ -8,7 +8,6 @@
  */
 #include "B_Factory.h"
 #include "B_FrameBuffer.h"
-#include "B_GLTFMesh.h"
 #include "B_Mesh.h"
 #include "B_Shader.h"
 
@@ -80,7 +79,6 @@ namespace NCLGL_Impl {
         std::cerr << "[B_Factory] Created shader from paths: "
                   << vPath << ", " << fPath << ", " << gPath << "\n";
         return std::make_shared<B_Shader>(shader.release());
-        return nullptr;
     }
 
     std::shared_ptr<Engine::IAL::I_Mesh> B_Factory::LoadMesh(const std::string& path) {

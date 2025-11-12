@@ -2,12 +2,14 @@
 * @file Renderer.cpp
  * @brief 实现基础渲染器的渲染队列遍历逻辑。
  * @details
- * 当前实现负责从场景图收集所有可渲染节点，并依次调用其网格接口执行 Draw。
- * 后续迭代将基于此骨架扩展材质、阴影、后处理等高级渲染流程。
+ * 当前实现负责从场景图收集所有可渲染节点，并依次调用其网格接口执行 Draw，
+ * 并结合 Camera::BuildViewMatrix 生成视图矩阵。后续迭代将基于此骨架扩展材质、
+ * 阴影、后处理等高级渲染流程。
  */
 #include "Renderer.h"
 
 #include "PostProcessing.h"
+#include "../Core/Camera.h"
 #include "../Engine/IAL/I_Mesh.h"
 #include "../Engine/IAL/I_Shader.h"
 #include "../Engine/IAL/I_Texture.h"
@@ -18,10 +20,12 @@
 
 Renderer::Renderer(const std::shared_ptr<Engine::IAL::I_ResourceFactory>& factory,
                    const std::shared_ptr<SceneGraph>& sceneGraph,
+                     const std::shared_ptr<Camera>& camera,
                    int width,
                    int height)
     : m_factory(factory)
     , m_sceneGraph(sceneGraph)
+    , m_camera(camera)
     , m_sceneColour(Vector3(0.8f, 0.45f, 0.25f))
     , m_surfaceWidth(width)
     , m_surfaceHeight(height) {
@@ -45,7 +49,9 @@ void Renderer::Render() {
     m_renderQueue.clear();
     m_sceneGraph->CollectRenderableNodes(m_renderQueue);
 
-    Matrix4 view = Matrix4::BuildViewMatrix(Vector3(0.0f, 0.0f, 3.5f), Vector3(0.0f, 0.0f, 0.0f));
+    Matrix4 view = m_camera
+    ? m_camera->BuildViewMatrix()
+    : Matrix4::BuildViewMatrix(Vector3(0.0f, 0.0f, 3.5f), Vector3(0.0f, 0.0f, 0.0f));
     const float aspect = m_surfaceHeight > 0 ? static_cast<float>(m_surfaceWidth) / static_cast<float>(m_surfaceHeight) : 1.0f;
     Matrix4 projection = Matrix4::Perspective(0.1f, 100.0f, aspect, 45.0f);
     Matrix4 viewProj = projection * view;

@@ -135,6 +135,7 @@
   <ItemGroup>
     <ClCompile Include="..\includes\glad\glad.c" />
     <ClCompile Include="Core\Application.cpp" />
+    <ClCompile Include="Core\Camera.cpp" />
     <ClCompile Include="Core\SceneGraph.cpp" />
     <ClCompile Include="Core\SceneManager.cpp" />
     <ClCompile Include="Engine\Implementations\NCLGL_Impl\B_AnimatedMesh.cpp" />
@@ -154,6 +155,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Core\Application.h" />
+    <ClInclude Include="Core\Camera.h" />
     <ClInclude Include="Core\SceneGraph.h" />
     <ClInclude Include="Core\SceneManager.h" />
     <ClInclude Include="Engine\IAL\I_AnimatedMesh.h" />

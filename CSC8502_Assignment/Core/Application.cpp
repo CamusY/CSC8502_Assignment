@@ -14,15 +14,34 @@
 #include "IAL/I_DebugUI.h"
 #include "SceneManager.h"
 #include "Renderer.h"
+#include "Camera.h"
 
 Application::Application(std::shared_ptr<Engine::IAL::I_WindowSystem> window,
                          std::shared_ptr<Engine::IAL::I_ResourceFactory> factory,
                          std::shared_ptr<Engine::IAL::I_DebugUI> ui,
                          int surfaceWidth,
                          int surfaceHeight)
-    : m_window(window), m_factory(factory), m_ui(ui), m_surfaceWidth(surfaceWidth), m_surfaceHeight(surfaceHeight) {
-    m_sceneManager = std::make_shared<SceneManager>(m_factory);
-    m_renderer = std::make_shared<Renderer>(m_factory, m_sceneManager->GetSceneGraph(), m_surfaceWidth, m_surfaceHeight);
+    : m_window(window)
+    , m_factory(factory)
+    , m_ui(ui)
+    , m_camera(std::make_shared<Camera>())
+    , m_sceneManager(std::make_shared<SceneManager>(factory))
+    , m_renderer(nullptr)
+    , m_keyboard(nullptr)
+    , m_mouse(nullptr)
+    , m_surfaceWidth(surfaceWidth)
+    , m_surfaceHeight(surfaceHeight) {
+    if (m_window) {
+        m_keyboard = m_window->GetKeyboard();
+        m_mouse = m_window->GetMouse();
+    }
+    if (m_sceneManager) {
+        m_renderer = std::make_shared<Renderer>(m_factory,
+                                                m_sceneManager->GetSceneGraph(),
+                                                m_camera,
+                                                m_surfaceWidth,
+                                                m_surfaceHeight);
+    }
 }
 
 Application::~Application() = default;
@@ -33,6 +52,9 @@ void Application::Run() {
         auto timer = m_window->GetTimer();
         if (timer) {
             deltaTime = timer->GetTimeDeltaSeconds();
+        }
+        if (m_camera) {
+            m_camera->Update(deltaTime, m_keyboard, m_mouse);
         }
         if (m_sceneManager) {
             m_sceneManager->Update(deltaTime);
