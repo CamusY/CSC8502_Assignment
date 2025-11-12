@@ -13,7 +13,7 @@ SceneManager::SceneManager(const std::shared_ptr<Engine::IAL::I_ResourceFactory>
         auto root = m_sceneGraph->GetRoot();
         if (root) {
             auto cubeNode = std::make_shared<SceneNode>();
-            cubeNode->SetMesh(m_factory->LoadMesh("../Meshes/cube.gltf"));
+            cubeNode->SetMesh(m_factory->LoadMesh("../Meshes/verybigtest.gltf"));
             cubeNode->SetScale(Vector3(1.0f, 1.0f, 1.0f));
             root->AddChild(cubeNode);
         }

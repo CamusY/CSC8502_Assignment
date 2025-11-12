@@ -18,6 +18,9 @@ namespace NCLGL_Impl {
     }
 
     void B_Heightmap::Draw() {
+        if (m_mesh) {
+            m_mesh->Draw();
+        }
     }
 
 }

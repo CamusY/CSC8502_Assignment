@@ -16,6 +16,7 @@
 #include "Renderer.h"
 #include "Camera.h"
 
+
 Application::Application(std::shared_ptr<Engine::IAL::I_WindowSystem> window,
                          std::shared_ptr<Engine::IAL::I_ResourceFactory> factory,
                          std::shared_ptr<Engine::IAL::I_DebugUI> ui,
@@ -47,12 +48,25 @@ Application::Application(std::shared_ptr<Engine::IAL::I_WindowSystem> window,
 Application::~Application() = default;
 
 void Application::Run() {
+    DisableVSync();
+    int frameCount = 0;
+    float timeAccum = 0.0f;
     while (m_window->UpdateWindow()) {
         float deltaTime = 0.0f;
         auto timer = m_window->GetTimer();
         if (timer) {
             deltaTime = timer->GetTimeDeltaSeconds();
         }
+
+        frameCount++;
+        timeAccum += deltaTime;
+
+        if (timeAccum >= 1.0f) {
+            std::cout << "FPS: " << static_cast<float>(frameCount) / timeAccum << '\n';
+            frameCount = 0;
+            timeAccum = 0.0f;
+        }
+        
         if (m_camera) {
             m_camera->Update(deltaTime, m_keyboard, m_mouse);
         }
@@ -65,5 +79,7 @@ void Application::Run() {
         m_ui->NewFrame();
         m_ui->Render();
         m_window->SwapBuffers();
+        if (m_keyboard && m_keyboard->KeyTriggered(Engine::IAL::KeyCode::ESCAPE)) { break; }
+        
     }
 }

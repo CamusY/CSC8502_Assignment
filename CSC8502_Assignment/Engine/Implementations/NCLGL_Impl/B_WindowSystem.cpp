@@ -47,12 +47,19 @@ namespace NCLGL_Impl {
 
         m_keyboard = new B_Keyboard(::Window::GetKeyboard());
         m_mouse = new B_Mouse(::Window::GetMouse());
-
+        
+        m_window->LockMouseToWindow(true);
+        m_window->ShowOSPointer(false);
+        
         m_timer = new B_GameTimer();
         return true;
     }
 
     void B_WindowSystem::Shutdown() {
+        if (m_window) {
+            m_window->LockMouseToWindow(false);
+            m_window->ShowOSPointer(true);
+        }
         delete m_keyboard; m_keyboard = nullptr;
         delete m_mouse;    m_mouse = nullptr;
         delete m_timer;    m_timer = nullptr;
@@ -91,6 +98,7 @@ namespace NCLGL_Impl {
     Engine::IAL::I_Mouse* B_WindowSystem::GetMouse() const {
         return m_mouse;
     }
+    
 
 
 }

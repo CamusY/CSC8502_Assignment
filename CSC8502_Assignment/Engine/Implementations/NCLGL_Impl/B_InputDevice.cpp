@@ -140,9 +140,9 @@ namespace NCLGL_Impl {
             case Engine::IAL::KeyCode::RIGHT_SHIFT:
                 return KEYBOARD_RSHIFT;
             case Engine::IAL::KeyCode::LEFT_CTRL:
-                return KEYBOARD_LCONTROL;
+                return KEYBOARD_CONTROL;
             case Engine::IAL::KeyCode::RIGHT_CTRL:
-                return KEYBOARD_RCONTROL;
+                return KEYBOARD_CONTROL;
             case Engine::IAL::KeyCode::LEFT_ALT:
                 return KEYBOARD_MENU;
             case Engine::IAL::KeyCode::RIGHT_ALT:
