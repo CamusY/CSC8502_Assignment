@@ -18,6 +18,7 @@
 #include "../Core/Light.h"
 #include "../Engine/IAL/I_ResourceFactory.h"
 #include "../Engine/IAL/I_DebugUI.h"
+#include "ShadowMap.h"
 
 #include "nclgl/Vector3.h"
 
@@ -49,6 +50,8 @@ public:
     void SetTransitionState(bool enabled, float progress);
 
 private:
+    void RenderSceneForShadowMap(const Matrix4& lightViewProjection,
+                                 bool skipWaterNode);
     void RenderSkybox(const Matrix4& view, const Matrix4& projection);
     void RenderScenePass(const Matrix4& view,
                          const Matrix4& projection,
@@ -77,10 +80,12 @@ private:
     std::shared_ptr<Engine::IAL::I_Shader> m_terrainShader;
     std::shared_ptr<Engine::IAL::I_Shader> m_skyboxShader;
     std::shared_ptr<Engine::IAL::I_Shader> m_waterShader;
+    std::shared_ptr<Engine::IAL::I_Shader> m_shadowShader;
     std::shared_ptr<Engine::IAL::I_Texture> m_skyboxTexture;
     std::shared_ptr<Engine::IAL::I_Mesh> m_skyboxMesh;
     std::shared_ptr<Engine::IAL::I_FrameBuffer> m_waterReflectionFBO;
     std::shared_ptr<Engine::IAL::I_FrameBuffer> m_waterRefractionFBO;
+    std::shared_ptr<ShadowMap> m_shadowMap;
     std::shared_ptr<Water> m_water;
     Light m_directionalLight;
     Vector3 m_sceneColour;
@@ -91,4 +96,6 @@ private:
     int m_surfaceHeight;
     bool m_transitionEnabled;
     float m_transitionProgress;
+    Matrix4 m_shadowMatrix;
+    float m_shadowStrength;
 };

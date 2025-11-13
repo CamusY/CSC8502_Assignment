@@ -156,6 +156,7 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Renderer\PostProcessing.cpp" />
     <ClCompile Include="Renderer\Renderer.cpp" />
+    <ClCompile Include="Renderer\ShadowMap.cpp" />
     <ClCompile Include="Renderer\Water.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -191,6 +192,7 @@
     <ClInclude Include="Game\Scenes\Scene_T2_War.h" />
     <ClInclude Include="Renderer\PostProcessing.h" />
     <ClInclude Include="Renderer\Renderer.h" />
+    <ClInclude Include="Renderer\ShadowMap.h" />
     <ClInclude Include="Renderer\Water.h" />
   </ItemGroup>
   <ItemGroup>
@@ -203,6 +205,8 @@
     <Content Include="..\Shaders\Shared\postprocess.frag" />
     <Content Include="..\Shaders\Shared\postprocess.vert" />
     <Content Include="..\Shaders\Shared\post_transition.frag" />
+    <Content Include="..\Shaders\Shared\shadow.frag" />
+    <Content Include="..\Shaders\Shared\shadow.vert" />
     <Content Include="..\Shaders\Shared\skybox.frag" />
     <Content Include="..\Shaders\Shared\skybox.vert" />
     <Content Include="..\Shaders\Shared\terrain.frag" />

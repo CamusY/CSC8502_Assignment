@@ -57,6 +57,10 @@ void SceneManager::Update(float deltaTime,Engine::IAL::I_Keyboard* keyboard) {
     m_accumulatedTime += deltaTime;
 
     if (keyboard && !m_transitionActive) {
+        if (keyboard->KeyTriggered(Engine::IAL::KeyCode::T)) {
+            SceneType target = m_activeType == SceneType::Peace ? SceneType::War : SceneType::Peace;
+            BeginTransition(target);
+        }
         if (keyboard->KeyTriggered(Engine::IAL::KeyCode::K1)) {
             BeginTransition(SceneType::Peace);
         }

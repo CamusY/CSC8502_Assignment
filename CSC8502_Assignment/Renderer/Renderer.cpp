@@ -37,10 +37,12 @@ Renderer::Renderer(const std::shared_ptr<Engine::IAL::I_ResourceFactory>& factor
     , m_terrainShader(nullptr)
     , m_skyboxShader(nullptr)
     , m_waterShader(nullptr)
+    , m_shadowShader(nullptr)
     , m_skyboxTexture(nullptr)
     , m_skyboxMesh(nullptr)
     , m_waterReflectionFBO(nullptr)
     , m_waterRefractionFBO(nullptr)
+    , m_shadowMap(nullptr)
     , m_water(nullptr)
     , m_directionalLight{}
     , m_sceneColour(Vector3(0.0f, 0.0f, 0.0f))
@@ -50,17 +52,21 @@ Renderer::Renderer(const std::shared_ptr<Engine::IAL::I_ResourceFactory>& factor
     , m_surfaceWidth(width)
     , m_surfaceHeight(height)
     , m_transitionEnabled(false)
-    , m_transitionProgress(0.0f) {
+    , m_transitionProgress(0.0f)
+    , m_shadowMatrix()
+    , m_shadowStrength(0.65f) {
     if (m_factory) {
         m_sceneShader = m_factory->CreateShader("Shared/basic.vert", "Shared/basic.frag");
         m_terrainShader = m_factory->CreateShader("Shared/terrain.vert", "Shared/terrain.frag");
         m_skyboxShader = m_factory->CreateShader("Shared/skybox.vert", "Shared/skybox.frag");
         m_waterShader = m_factory->CreateShader("Shared/water.vert", "Shared/water.frag");
+        m_shadowShader = m_factory->CreateShader("Shared/shadow.vert", "Shared/shadow.frag");
         m_skyboxMesh = m_factory->LoadMesh("../Meshes/cube.gltf");
         m_postProcessing = std::make_shared<PostProcessing>(m_factory, width, height);
+        m_shadowMap = std::make_shared<ShadowMap>(m_factory, 2048, 2048);
     }
 
-
+    m_shadowMatrix.ToIdentity();
     glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
 }
 
@@ -85,6 +91,38 @@ void Renderer::Render() {
         : 1.0f;
     Matrix4 projection = Matrix4::Perspective(m_nearPlane, m_farPlane, aspect, 45.0f);
 
+    Matrix4 lightMatrix;
+    lightMatrix.ToIdentity();
+    if (m_shadowMap && m_shadowShader) {
+        const Vector3 focusPoint(512.0f, 0.0f, 512.0f);
+        const float shadowNear = 1.0f;
+        const float shadowFar = 2500.0f;
+        const float orthoSize = 800.0f;
+        m_shadowMap->UpdateLight(m_directionalLight.position,
+                                 focusPoint,
+                                 shadowNear,
+                                 shadowFar,
+                                 orthoSize);
+        m_shadowMap->BeginCapture();
+        GLboolean cullEnabled = glIsEnabled(GL_CULL_FACE);
+        GLint previousCull = GL_BACK;
+        if (cullEnabled) {
+            glGetIntegerv(GL_CULL_FACE_MODE, &previousCull);
+        }
+        glEnable(GL_CULL_FACE);
+        glCullFace(GL_FRONT);
+        RenderSceneForShadowMap(m_shadowMap->GetLightViewProjection(), true);
+        if (cullEnabled) {
+            glCullFace(previousCull);
+        } else {
+            glDisable(GL_CULL_FACE);
+        }
+        m_shadowMap->EndCapture();
+        glViewport(0, 0, m_surfaceWidth, m_surfaceHeight);
+        lightMatrix = m_shadowMap->GetLightViewProjection();
+    }
+    m_shadowMatrix = lightMatrix;
+    
     if (m_water && m_waterReflectionFBO && m_waterRefractionFBO) {
         RenderReflectionPass(projection, cameraPosition, cameraYaw, cameraPitch);
         RenderRefractionPass(view, projection, cameraPosition);
@@ -133,7 +171,31 @@ void Renderer::SetTransitionState(bool enabled, float progress) {
     m_transitionProgress = std::clamp(progress, 0.0f, 1.0f);
 }
 
-
+void Renderer::RenderSceneForShadowMap(const Matrix4& lightViewProjection,
+                                       bool skipWaterNode) {
+    if (!m_sceneGraph || !m_shadowShader) {
+        return;
+    }
+    m_renderQueue.clear();
+    m_sceneGraph->CollectRenderableNodes(m_renderQueue);
+    m_shadowShader->Bind();
+    m_shadowShader->SetUniform("uLightViewProj", lightViewProjection);
+    for (const auto& node : m_renderQueue) {
+        if (!node) {
+            continue;
+        }
+        if (skipWaterNode && m_water && node == m_water->GetNode()) {
+            continue;
+        }
+        auto mesh = node->GetMesh();
+        if (!mesh) {
+            continue;
+        }
+        m_shadowShader->SetUniform("uModel", node->GetWorldTransform());
+        mesh->Draw();
+    }
+    m_shadowShader->Unbind();
+}
 
 void Renderer::RenderSkybox(const Matrix4& view, const Matrix4& projection) {
     if (!m_skyboxShader || !m_skyboxTexture || !m_skyboxMesh) {
@@ -187,6 +249,14 @@ void Renderer::RenderScenePass(const Matrix4& view,
         shader->Bind();
         shader->SetUniform("uViewProj", viewProj);
         shader->SetUniform("uModel", node->GetWorldTransform());
+        auto shadowTexture = m_shadowMap ? m_shadowMap->GetDepthTexture() : nullptr;
+        const bool hasShadow = static_cast<bool>(shadowTexture);
+        shader->SetUniform("uShadowMatrix", m_shadowMatrix);
+        shader->SetUniform("uShadowStrength", hasShadow ? m_shadowStrength : 0.0f);
+        if (hasShadow) {
+            shadowTexture->Bind(2);
+            shader->SetUniform("uShadowMap", 2);
+        }
         if (texture) {
             texture->Bind(0);
             shader->SetUniform("uDiffuse", 0);
@@ -198,6 +268,9 @@ void Renderer::RenderScenePass(const Matrix4& view,
         }
         else {
             shader->SetUniform("uColor", m_sceneColour);
+            shader->SetUniform("uLightPosition", m_directionalLight.position);
+            shader->SetUniform("uLightColor", m_directionalLight.color);
+            shader->SetUniform("uAmbientColor", m_directionalLight.ambient);
         }
         mesh->Draw();
         shader->Unbind();
@@ -235,6 +308,14 @@ void Renderer::RenderWaterSurface(const Matrix4& view,
     m_waterShader->SetUniform("uCameraPos", cameraPosition);
     m_waterShader->SetUniform("uLightColor", m_directionalLight.color);
     m_waterShader->SetUniform("uAmbientColor", m_directionalLight.ambient);
+    auto shadowTexture = m_shadowMap ? m_shadowMap->GetDepthTexture() : nullptr;
+    const bool hasShadow = static_cast<bool>(shadowTexture);
+    m_waterShader->SetUniform("uShadowMatrix", m_shadowMatrix);
+    m_waterShader->SetUniform("uShadowStrength", hasShadow ? m_shadowStrength : 0.0f);
+    if (hasShadow) {
+        shadowTexture->Bind(2);
+        m_waterShader->SetUniform("uShadowMap", 2);
+    }
     reflectionTexture->Bind(0);
     m_waterShader->SetUniform("uReflectionTex", 0);
     refractionTexture->Bind(1);
