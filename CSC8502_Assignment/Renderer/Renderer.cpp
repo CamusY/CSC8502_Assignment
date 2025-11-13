@@ -55,7 +55,7 @@ Renderer::Renderer(const std::shared_ptr<Engine::IAL::I_ResourceFactory>& factor
     , m_sceneColour(Vector3(0.0f, 0.0f, 0.0f))
     , m_specularPower(32.0f)
     , m_nearPlane(0.1f)
-    , m_farPlane(5000.0f)
+    , m_farPlane(900.0f)
     , m_surfaceWidth(width)
     , m_surfaceHeight(height)
     , m_transitionEnabled(false)
@@ -102,15 +102,15 @@ void Renderer::Render(float deltaTime) {
     const float aspect = m_surfaceHeight > 0
         ? static_cast<float>(m_surfaceWidth) / static_cast<float>(m_surfaceHeight)
         : 1.0f;
-    Matrix4 projection = Matrix4::Perspective(m_nearPlane, m_farPlane, aspect, 45.0f);
+    Matrix4 projection = Matrix4::Perspective(m_nearPlane, m_farPlane, aspect, 35.0f);
 
     Matrix4 lightMatrix;
     lightMatrix.ToIdentity();
     if (m_shadowMap && m_shadowShader) {
         const Vector3 focusPoint(512.0f, 0.0f, 512.0f);
         const float shadowNear = 1.0f;
-        const float shadowFar = 2500.0f;
-        const float orthoSize = 800.0f;
+        const float shadowFar = 1000.0f;
+        const float orthoSize = 512.0f;
         m_shadowMap->UpdateLight(m_directionalLight.position,
                                  focusPoint,
                                  shadowNear,
@@ -274,6 +274,10 @@ void Renderer::RenderScenePass(const Matrix4& view,
     }
     m_renderQueue.clear();
     m_sceneGraph->CollectRenderableNodes(m_renderQueue);
+    
+    const float fogDensity = 0.0018f;
+    Vector3 fogColor = m_directionalLight.ambient * 0.4f + Vector3(0.25f, 0.30f, 0.40f) * 0.6f;
+    
     Matrix4 viewProj = projection * view;
     Vector4 clip(0.0f, 0.0f, 0.0f, 0.0f);
     if (clipPlane) {
@@ -345,6 +349,10 @@ void Renderer::RenderScenePass(const Matrix4& view,
         shader->SetUniform("uClipPlane", clip);
         shader->SetUniform("uLightPosition", m_directionalLight.position);
         shader->SetUniform("uLightColor", m_directionalLight.color);
+        
+        shader->SetUniform("uFogColor", fogColor);
+        shader->SetUniform("uFogDensity", fogDensity);
+        
         shader->SetUniform("uAmbientColor", m_directionalLight.ambient);
         shader->SetUniform("uShadowMatrix", m_shadowMatrix);
         shader->SetUniform("uShadowStrength", hasShadow ? m_shadowStrength : 0.0f);

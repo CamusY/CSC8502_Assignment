@@ -1,60 +1,114 @@
 ﻿#version 460 core
-in vec2 vTexCoord;
+in vec2 vTexCoord;     // 只是从 mesh 传进来，不用于 refraction
 in vec3 vWorldPos;
 
-uniform sampler2D uReflectionTex;
-uniform sampler2D uRefractionTex;
-uniform vec3 uCameraPos;
-uniform vec3 uLightColor;
-uniform vec3 uAmbientColor;
-uniform mat4 uReflectionViewProj;
-uniform mat4 uShadowMatrix;
+uniform sampler2D      uReflectionTex;
+uniform sampler2D      uRefractionTex;
+
+uniform vec3           uCameraPos;
+uniform vec3           uLightColor;
+uniform vec3           uAmbientColor;
+
+uniform mat4           uReflectionViewProj;
+
+uniform mat4           uShadowMatrix;
 uniform sampler2DShadow uShadowMap;
-uniform float uShadowStrength;
+uniform float          uShadowStrength;
+
+uniform vec3  uFogColor;
+uniform float uFogDensity;
 
 out vec4 fragColor;
 
+
+// =============== 影子计算 ===============
 float EvaluateShadow(vec3 worldPos) {
-    if (uShadowStrength <= 0.0) {
-        return 1.0;
-    }
+    if (uShadowStrength <= 0.0) return 1.0;
+
     vec4 shadowCoord = uShadowMatrix * vec4(worldPos, 1.0);
-    if (shadowCoord.w <= 0.0) {
-        return 1.0;
-    }
+    if (shadowCoord.w <= 0.0) return 1.0;
+
     vec3 projCoords = shadowCoord.xyz / shadowCoord.w;
     projCoords = projCoords * 0.5 + 0.5;
-    if (projCoords.x < 0.0 || projCoords.x > 1.0 || projCoords.y < 0.0 || projCoords.y > 1.0) {
-        return 1.0;
-    }
+
+    // 超界不采样影子
+    if (projCoords.x < 0.0 || projCoords.x > 1.0 ||
+    projCoords.y < 0.0 || projCoords.y > 1.0)
+    return 1.0;
+
     float bias = 0.0015;
-    float sample1 = texture(uShadowMap, vec3(projCoords.xy, projCoords.z - bias));
-    return mix(1.0, sample1, clamp(uShadowStrength, 0.0, 1.0));
+    float shadow = texture(uShadowMap, vec3(projCoords.xy, projCoords.z - bias));
+    return mix(1.0, shadow, clamp(uShadowStrength, 0.0, 1.0));
 }
 
+
+// =============== 主渲染 ===============
 void main() {
-    vec3 normal = normalize(vec3(0.0, 1.0, 0.0));
+
+    // ----------------------
+    // Fresnel
+    // ----------------------
+    vec3 normal = normalize(vec3(0,1,0));
     vec3 viewDir = normalize(uCameraPos - vWorldPos);
-    float fresnel = clamp(1.0 - max(dot(viewDir, normal), 0.0), 0.0, 1.0);
-    vec4 reflectionClip = uReflectionViewProj * vec4(vWorldPos, 1.0);
+    float fresnel = pow(1.0 - max(dot(viewDir, normal), 0.0), 3.0);
+
+    // ----------------------
+    // 反射 UV —— 用 reflectionViewProj 投影
+    // ----------------------
+    vec4 clip = uReflectionViewProj * vec4(vWorldPos, 1.0);
+
     vec2 reflectionUV = vec2(0.5);
-    if (abs(reflectionClip.w) > 0.00001) {
-        vec2 ndc = reflectionClip.xy / reflectionClip.w;
-        reflectionUV = ndc * 0.5 + 0.5;
+    bool outOfBounds = true;
+
+    if (abs(clip.w) > 0.00001) {
+        vec2 ndc = clip.xy / clip.w;       // NDC -1~1
+        reflectionUV = ndc * 0.5 + 0.5;    // 转 0~1
+
+        // 不再强制翻转 Y（你原来的 bug 就在这里）
+        outOfBounds = (
+        reflectionUV.x < 0.0 || reflectionUV.x > 1.0 ||
+        reflectionUV.y < 0.0 || reflectionUV.y > 1.0
+        );
     }
-    reflectionUV.y = 1.0 - reflectionUV.y;
-    bool reflectionOutOfBounds = reflectionClip.w <= 0.0
-    || reflectionUV.x < 0.0 || reflectionUV.x > 1.0
-    || reflectionUV.y < 0.0 || reflectionUV.y > 1.0;
-    vec2 clampedReflectionUV = clamp(reflectionUV, vec2(0.0), vec2(1.0));
-    vec3 reflection = reflectionOutOfBounds
-    ? texture(uReflectionTex, clampedReflectionUV).rgb
-    : texture(uReflectionTex, reflectionUV).rgb;
-    vec3 refraction = texture(uRefractionTex, vTexCoord).rgb;
+
+    // ----------------------
+    // 反射采样（超界则 clamp 防止重复天空盒）
+    // ----------------------
+    vec2 uvClamped = clamp(reflectionUV, 0.0, 1.0);
+    vec3 reflection = texture(uReflectionTex, outOfBounds ? uvClamped : reflectionUV).rgb;
+
+    // ----------------------
+    // 折射 UV —— 必须用屏幕 UV，而不是 mesh UV
+    // 原 water.frag 里用 vTexCoord 是完全错误的！
+    // ----------------------
+    vec2 screenUV = gl_FragCoord.xy / textureSize(uRefractionTex, 0);
+    vec3 refraction = texture(uRefractionTex, screenUV).rgb;
+
+    // ----------------------
+    // 光照
+    // ----------------------
     vec3 lighting = uAmbientColor + uLightColor * 0.2;
+
+    // ----------------------
+    // Fresnel 混合反射/折射
+    // ----------------------
     vec3 color = mix(refraction, reflection, fresnel * 0.7 + 0.2);
+
+    // ----------------------
+    // 影子
+    // ----------------------
     float shadow = EvaluateShadow(vWorldPos);
     color = mix(color * 0.6, color, shadow);
+
+    // ----------------------
+    // 最终输出
+    // ----------------------
     color += lighting * 0.1;
-    fragColor = vec4(color, 0.75);
+
+    float d   = length(uCameraPos - vWorldPos);
+    float dNorm = clamp(length(uCameraPos - vWorldPos) / 600.0, 0.0, 1.0);
+    float reflectBoost = 0.5 * dNorm;
+    float k = clamp(fresnel * 0.7 + 0.2 + reflectBoost, 0.0, 1.0);
+    vec3  outCol = mix(uFogColor, color, k);
+    fragColor = vec4(outCol,0.75);
 }

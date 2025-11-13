@@ -2,6 +2,7 @@
 layout(location = 0) in vec3 position;
 layout(location = 3) in vec3 normal;
 
+
 uniform mat4 uModel;
 uniform mat4 uViewProj;
 uniform vec4 uClipPlane;

@@ -13,6 +13,8 @@ uniform float uSpecularPower;
 uniform mat4 uShadowMatrix;
 uniform sampler2DShadow uShadowMap;
 uniform float uShadowStrength;
+uniform vec3  uFogColor;
+uniform float uFogDensity;
 
 float EvaluateShadow(vec3 worldPos, vec3 normal) {
     if (uShadowStrength <= 0.0) {
@@ -48,5 +50,10 @@ void main() {
 
     float shadow = EvaluateShadow(vWorldPos, N);
     vec3 color = ambient + shadow * (diffuse + specular);
-    fragColor = vec4(color, 1.0);
+
+    float d   = length(uCameraPos - vWorldPos);
+    float k   = clamp(exp(-pow(d * uFogDensity, 2.0)), 0.0, 1.0);
+    vec3  outCol = mix(uFogColor, color, k);
+    fragColor = vec4(outCol,1.0);
+
 }
