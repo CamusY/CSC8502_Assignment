@@ -1,12 +1,13 @@
 /**
- * @file Application.cpp
+* @file Application.cpp
  * @brief 应用程序核心类实现源文件。
  *
  * 本文件实现了 Application 类的构造函数和主循环。
  * 它依赖于 IAL 接口的具体定义来调用核心系统功能。
  *
- * 在 Day 4 阶段，Run() 函数建立了完整的系统调用顺序：
- * 先更新窗口事件，再依据计时器驱动场景管理与渲染管线，最后刷新调试 UI 并交换缓冲区。
+ * Day19 起，Run() 在循环开始阶段响应 F 键切换相机模式：
+ * 默认以轨迹模式启动，按下 F 后转为自由模式，再次按下则回到轨迹模式。
+ * 主循环仍按“窗口事件 → 场景更新 → 渲染 → UI → 交换缓冲区”的顺序执行。
  */
 #include "Application.h"
 #include "IAL/I_WindowSystem.h"
@@ -36,6 +37,9 @@ Application::Application(std::shared_ptr<Engine::IAL::I_WindowSystem> window,
         m_keyboard = m_window->GetKeyboard();
         m_mouse = m_window->GetMouse();
     }
+    if (m_camera) {
+        m_camera->SetMode(Camera::Mode::Track);
+    }
     if (m_sceneManager) {
         m_renderer = std::make_shared<Renderer>(m_factory,
                                                 m_sceneManager->GetSceneGraph(),
@@ -63,7 +67,6 @@ void Application::Run() {
         if (timer) {
             deltaTime = timer->GetTimeDeltaSeconds();
         }
-
         frameCount++;
         timeAccum += deltaTime;
 
@@ -72,7 +75,14 @@ void Application::Run() {
             frameCount = 0;
             timeAccum = 0.0f;
         }
-
+        if (m_camera && m_keyboard && m_keyboard->KeyTriggered(Engine::IAL::KeyCode::F)) {
+            const auto currentMode = m_camera->GetMode();
+            if (currentMode == Camera::Mode::Track) {
+                m_camera->SetMode(Camera::Mode::Free);
+            } else {
+                m_camera->SetMode(Camera::Mode::Track);
+            }
+        }
         if (m_camera) {
             m_camera->Update(deltaTime, m_keyboard, m_mouse);
         }
