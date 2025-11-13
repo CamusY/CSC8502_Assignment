@@ -72,6 +72,7 @@ private:
                                const Vector3& cameraPosition);
     void RenderDebugUI();
     void UpdateAnimatedMeshes(float deltaTime);
+    float GetTerrainExtent() const;
 
     std::shared_ptr<Engine::IAL::I_ResourceFactory> m_factory;
     std::shared_ptr<SceneGraph> m_sceneGraph;
