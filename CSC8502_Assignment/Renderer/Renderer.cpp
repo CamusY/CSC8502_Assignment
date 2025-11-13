@@ -61,6 +61,7 @@ Renderer::Renderer(const std::shared_ptr<Engine::IAL::I_ResourceFactory>& factor
     , m_transitionEnabled(false)
     , m_transitionProgress(0.0f)
     , m_shadowMatrix()
+    , m_reflectionViewProj()
     , m_shadowStrength(0.65f) {
     if (m_factory) {
         m_sceneShader = m_factory->CreateShader("Shared/basic.vert", "Shared/basic.frag");
@@ -75,6 +76,7 @@ Renderer::Renderer(const std::shared_ptr<Engine::IAL::I_ResourceFactory>& factor
     }
 
     m_shadowMatrix.ToIdentity();
+    m_reflectionViewProj.ToIdentity();
     glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
 }
 
@@ -125,7 +127,8 @@ void Renderer::Render(float deltaTime) {
         RenderSceneForShadowMap(m_shadowMap->GetLightViewProjection(), true);
         if (cullEnabled) {
             glCullFace(previousCull);
-        } else {
+        }
+        else {
             glDisable(GL_CULL_FACE);
         }
         m_shadowMap->EndCapture();
@@ -133,7 +136,7 @@ void Renderer::Render(float deltaTime) {
         lightMatrix = m_shadowMap->GetLightViewProjection();
     }
     m_shadowMatrix = lightMatrix;
-    
+
     if (m_water && m_waterReflectionFBO && m_waterRefractionFBO) {
         RenderReflectionPass(projection, cameraPosition, cameraYaw, cameraPitch);
         RenderRefractionPass(view, projection, cameraPosition);
@@ -276,10 +279,11 @@ void Renderer::RenderScenePass(const Matrix4& view,
     if (clipPlane) {
         clip = *clipPlane;
         glEnable(GL_CLIP_DISTANCE0);
-    } else {
+    }
+    else {
         glDisable(GL_CLIP_DISTANCE0);
     }
-    
+
     for (const auto& node : m_renderQueue) {
         if (!node) {
             continue;
@@ -321,7 +325,8 @@ void Renderer::RenderScenePass(const Matrix4& view,
                 texture->Bind(0);
                 m_skinnedShader->SetUniform("uDiffuse", 0);
                 m_skinnedShader->SetUniform("uHasTexture", 1);
-            } else {
+            }
+            else {
                 m_skinnedShader->SetUniform("uHasTexture", 0);
                 m_skinnedShader->SetUniform("uBaseColor", m_sceneColour);
             }
@@ -352,7 +357,8 @@ void Renderer::RenderScenePass(const Matrix4& view,
             shader->SetUniform("uDiffuse", 0);
             shader->SetUniform("uSpecularPower", m_specularPower);
             shader->SetUniform("uCameraPos", cameraPosition);
-        } else {
+        }
+        else {
             shader->SetUniform("uColor", m_sceneColour);
             shader->SetUniform("uSpecularPower", m_specularPower);
             shader->SetUniform("uCameraPos", cameraPosition);
@@ -389,6 +395,7 @@ void Renderer::RenderWaterSurface(const Matrix4& view,
     glDepthMask(GL_FALSE);
 
     m_waterShader->Bind();
+    m_waterShader->SetUniform("uReflectionViewProj", m_reflectionViewProj);
     m_waterShader->SetUniform("uViewProj", viewProj);
     m_waterShader->SetUniform("uModel", waterNode->GetWorldTransform());
     m_waterShader->SetUniform("uCameraPos", cameraPosition);
@@ -435,6 +442,7 @@ void Renderer::RenderReflectionPass(const Matrix4& projection,
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     Matrix4 reflectionView = reflectionCamera.BuildViewMatrix();
+    m_reflectionViewProj = projection * reflectionView;
     RenderSkybox(reflectionView, projection);
     const float waterHeight = m_water->GetHeight();
     constexpr float clipBias = 0.5f;
@@ -459,7 +467,7 @@ void Renderer::RenderRefractionPass(const Matrix4& view,
     constexpr float clipBias = 0.5f;
     Vector4 refractionClip(0.0f, -1.0f, 0.0f, waterHeight + clipBias);
     RenderScenePass(view, projection, cameraPosition, true, &refractionClip);
-    
+
     m_waterRefractionFBO->Unbind();
 }
 

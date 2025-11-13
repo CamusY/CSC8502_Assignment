@@ -102,5 +102,6 @@ private:
     bool m_transitionEnabled;
     float m_transitionProgress;
     Matrix4 m_shadowMatrix;
+    Matrix4 m_reflectionViewProj;
     float m_shadowStrength;
 };
