@@ -3,6 +3,7 @@
  * @brief 实现轨迹与自由双模式相机的输入驱动与视图矩阵逻辑。
  */
 #include "Camera.h"
+#include "TerrainConfig.h"
 
 #include "nclgl/Vector2.h"
 
@@ -11,6 +12,8 @@
 
 namespace {
     constexpr float kRadToDeg = 57.29577951308232f;
+    constexpr float kBaseTerrainScale = 2.0f;
+    const float kTrackScaleMultiplier = kTerrainScale.x / kBaseTerrainScale;
 
     Vector3 CatmullRom(const Vector3& p0,
                        const Vector3& p1,
@@ -54,22 +57,22 @@ namespace {
 }
 
 Camera::Camera() :
-    m_position(Vector3(0.0f, 180.0f, 50.0f))
+    m_position(Vector3(0.0f, 180.0f, 50.0f * kTrackScaleMultiplier))
     , m_yaw(-150.0f)
     , m_pitch(-35.0f)
-    , m_moveSpeed(50.0f)
+    , m_moveSpeed(50.0f * kTrackScaleMultiplier)
     , m_mouseSensitivity(1.1f)
     , m_mode(Mode::Track)
     , m_trackPoints()
     , m_trackProgress(0.0f)
     , m_trackSpeed(0.18f) {
     m_trackPoints = {
-        Vector3(180.0f, 200.0f, 180.0f),
-        Vector3(840.0f, 240.0f, 180.0f),
-        Vector3(860.0f, 220.0f, 860.0f),
-        Vector3(200.0f, 210.0f, 860.0f),
-        Vector3(512.0f, 260.0f, 540.0f),
-        Vector3(320.0f, 230.0f, 480.0f)
+        Vector3(180.0f * kTrackScaleMultiplier, 200.0f, 180.0f * kTrackScaleMultiplier),
+        Vector3(840.0f * kTrackScaleMultiplier, 240.0f, 180.0f * kTrackScaleMultiplier),
+        Vector3(860.0f * kTrackScaleMultiplier, 220.0f, 860.0f * kTrackScaleMultiplier),
+        Vector3(200.0f * kTrackScaleMultiplier, 210.0f, 860.0f * kTrackScaleMultiplier),
+        Vector3(512.0f * kTrackScaleMultiplier, 260.0f, 540.0f * kTrackScaleMultiplier),
+        Vector3(320.0f * kTrackScaleMultiplier, 230.0f, 480.0f * kTrackScaleMultiplier)
     };
     ResetTrack();
 }

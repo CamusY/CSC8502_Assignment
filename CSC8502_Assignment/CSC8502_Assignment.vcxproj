@@ -165,6 +165,7 @@
     <ClInclude Include="Core\Light.h" />
     <ClInclude Include="Core\SceneGraph.h" />
     <ClInclude Include="Core\SceneManager.h" />
+    <ClInclude Include="Core\TerrainConfig.h" />
     <ClInclude Include="Engine\IAL\I_AnimatedMesh.h" />
     <ClInclude Include="Engine\IAL\I_DebugUI.h" />
     <ClInclude Include="Engine\IAL\I_FrameBuffer.h" />

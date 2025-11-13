@@ -6,6 +6,7 @@
 
 #include "../../Engine/IAL/I_Heightmap.h"
 #include "../../Engine/IAL/I_Texture.h"
+#include "../../Core/TerrainConfig.h"
 #include "nclgl/Vector3.h"
 
 Scene_T2_War::Scene_T2_War(const std::shared_ptr<Engine::IAL::I_ResourceFactory>& factory,
@@ -25,7 +26,7 @@ void Scene_T2_War::Init() {
         return;
     }
 
-    auto heightmap = m_factory->LoadHeightmap("../Heightmaps/terrain.png", Vector3(2.0f, 0.4f, 2.0f));
+    auto heightmap = m_factory->LoadHeightmap("../Heightmaps/terrain.png", kTerrainScale);
     if (!heightmap) {
         return;
     }
@@ -47,8 +48,8 @@ void Scene_T2_War::Init() {
     if (ruinsMesh) {
         m_ruinsNode = std::make_shared<SceneNode>();
         m_ruinsNode->SetMesh(ruinsMesh);
-        m_ruinsNode->SetScale(Vector3(50.0f, 50.0f, 50.0f));
-        m_ruinsNode->SetPosition(Vector3(512.0f, 15.0f, 512.0f));
+        m_ruinsNode->SetScale(Vector3(100.0f, 100.0f, 100.0f));
+        m_ruinsNode->SetPosition(Vector3(1024.0f, 15.0f, 1024.0f));
         if (root) {
             root->AddChild(m_ruinsNode);
         }

@@ -12,6 +12,7 @@
 #include "PostProcessing.h"
 #include "Water.h"
 #include "../Core/Camera.h"
+#include "../Core/TerrainConfig.h"
 #include "../Engine/IAL/I_FrameBuffer.h"
 #include "../Engine/IAL/I_Mesh.h"
 #include "../Engine/IAL/I_Shader.h"
@@ -55,7 +56,7 @@ Renderer::Renderer(const std::shared_ptr<Engine::IAL::I_ResourceFactory>& factor
     , m_sceneColour(Vector3(0.0f, 0.0f, 0.0f))
     , m_specularPower(32.0f)
     , m_nearPlane(0.1f)
-    , m_farPlane(5000.0f)
+    , m_farPlane(10000.0f)
     , m_surfaceWidth(width)
     , m_surfaceHeight(height)
     , m_transitionEnabled(false)
@@ -107,10 +108,12 @@ void Renderer::Render(float deltaTime) {
     Matrix4 lightMatrix;
     lightMatrix.ToIdentity();
     if (m_shadowMap && m_shadowShader) {
-        const Vector3 focusPoint(512.0f, 0.0f, 512.0f);
+        const float terrainExtent = GetTerrainExtent();
+        const float halfExtent = terrainExtent * 0.5f;
+        const Vector3 focusPoint(halfExtent, 0.0f, halfExtent);
         const float shadowNear = 1.0f;
-        const float shadowFar = 2500.0f;
-        const float orthoSize = 800.0f;
+        const float shadowFar = std::max(terrainExtent * 1.25f, 2500.0f);
+        const float orthoSize = std::max(terrainExtent * 0.4f, 800.0f);
         m_shadowMap->UpdateLight(m_directionalLight.position,
                                  focusPoint,
                                  shadowNear,
@@ -265,10 +268,10 @@ void Renderer::RenderSkybox(const Matrix4& view, const Matrix4& projection) {
 }
 
 void Renderer::RenderScenePass(const Matrix4& view,
-                               const Matrix4& projection,
-                               const Vector3& cameraPosition,
-                               bool skipWaterNode,
-                               const Vector4* clipPlane) {
+                         const Matrix4& projection,
+                         const Vector3& cameraPosition,
+                         bool skipWaterNode,
+                         const Vector4* clipPlane) {
     if (!m_sceneGraph) {
         return;
     }
@@ -357,6 +360,14 @@ void Renderer::RenderScenePass(const Matrix4& view,
             shader->SetUniform("uDiffuse", 0);
             shader->SetUniform("uSpecularPower", m_specularPower);
             shader->SetUniform("uCameraPos", cameraPosition);
+            if (shader == m_terrainShader) {
+                const float terrainExtent = GetTerrainExtent();
+                const float fogStart = terrainExtent * 0.35f;
+                const float fogEnd = terrainExtent * 0.9f;
+                shader->SetUniform("uFogColor", m_sceneColour);
+                shader->SetUniform("uFogStart", fogStart);
+                shader->SetUniform("uFogEnd", fogEnd);
+            }
         }
         else {
             shader->SetUniform("uColor", m_sceneColour);
@@ -367,6 +378,16 @@ void Renderer::RenderScenePass(const Matrix4& view,
         shader->Unbind();
     }
     glDisable(GL_CLIP_DISTANCE0);
+}
+
+float Renderer::GetTerrainExtent() const {
+    if (m_water) {
+        const Vector2 size = m_water->GetSize();
+        if (size.x > 0.0f) {
+            return size.x;
+        }
+    }
+    return kTerrainExtent;
 }
 
 void Renderer::RenderWaterSurface(const Matrix4& view,

@@ -8,6 +8,7 @@
 #include "../../Engine/IAL/I_Texture.h"
 #include "../../Engine/IAL/I_AnimatedMesh.h"
 #include "../../Renderer/Water.h"
+#include "../../Core/TerrainConfig.h"
 #include "nclgl/Vector2.h"
 #include "nclgl/Vector3.h"
 
@@ -29,7 +30,7 @@ void Scene_T1_Peace::Init() {
         return;
     }
 
-    auto heightmap = m_factory->LoadHeightmap("../Heightmaps/terrain.png", Vector3(2.0f, 0.4f, 2.0f));
+    auto heightmap = m_factory->LoadHeightmap("../Heightmaps/terrain.png", kTerrainScale);
     if (!heightmap) {
         return;
     }
@@ -51,7 +52,8 @@ void Scene_T1_Peace::Init() {
         root->AddChild(m_terrainNode);
     }
 
-    m_water = std::make_shared<Water>(m_factory, 30.0f, Vector2(1024.0f, 1024.0f));
+    const Vector2 waterSize(kTerrainExtent, kTerrainExtent);
+    m_water = std::make_shared<Water>(m_factory, 30.0f, waterSize);
     if (m_water) {
         auto waterNode = m_water->GetNode();
         if (root && waterNode) {
@@ -72,8 +74,8 @@ void Scene_T1_Peace::Init() {
         if (m_characterMesh) {
             m_characterNode = std::make_shared<SceneNode>();
             m_characterNode->SetMesh(m_characterMesh);
-            m_characterNode->SetScale(Vector3(40.0f, 40.0f, 40.0f));
-            m_characterNode->SetPosition(Vector3(520.0f, 15.0f, 500.0f));
+            m_characterNode->SetScale(Vector3(80.0f, 80.0f, 80.0f));
+            m_characterNode->SetPosition(Vector3(1040.0f, 15.0f, 1000.0f));
             if (root) {
                 root->AddChild(m_characterNode);
             }
