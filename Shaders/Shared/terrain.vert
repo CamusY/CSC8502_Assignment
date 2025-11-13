@@ -5,6 +5,7 @@ layout(location = 2) in vec2 texCoord;
 
 uniform mat4 uModel;
 uniform mat4 uViewProj;
+uniform vec4 uClipPlane;
 
 out vec2 vTexCoord;
 out vec3 vWorldPos;
@@ -17,4 +18,5 @@ void main() {
     vWorldPos = worldPosition.xyz;
     vNormal = normalize(normalMatrix * normal);
     gl_Position = uViewProj * worldPosition;
+    gl_ClipDistance[0] = dot(worldPosition, uClipPlane);
 }

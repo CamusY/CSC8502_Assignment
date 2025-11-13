@@ -18,9 +18,11 @@
 #include "../Core/Light.h"
 #include "../Engine/IAL/I_ResourceFactory.h"
 #include "../Engine/IAL/I_DebugUI.h"
+#include "../Engine/IAL/I_AnimatedMesh.h"
 #include "ShadowMap.h"
 
 #include "nclgl/Vector3.h"
+#include "nclgl/Vector4.h"
 
 namespace Engine::IAL {
     class I_Shader;
@@ -42,7 +44,7 @@ public:
              int width,
              int height);
 
-    void Render();
+    void Render(float deltaTime);
     void SetWater(const std::shared_ptr<Water>& water);
     void SetSkyboxTexture(const std::shared_ptr<Engine::IAL::I_Texture>& texture);
     void SetSceneColour(const Vector3& colour);
@@ -56,7 +58,8 @@ private:
     void RenderScenePass(const Matrix4& view,
                          const Matrix4& projection,
                          const Vector3& cameraPosition,
-                         bool skipWaterNode);
+                         bool skipWaterNode,
+                         const Vector4* clipPlane = nullptr);
     void RenderWaterSurface(const Matrix4& view,
                              const Matrix4& projection,
                              const Vector3& cameraPosition);
@@ -68,6 +71,7 @@ private:
                                const Matrix4& projection,
                                const Vector3& cameraPosition);
     void RenderDebugUI();
+    void UpdateAnimatedMeshes(float deltaTime);
 
     std::shared_ptr<Engine::IAL::I_ResourceFactory> m_factory;
     std::shared_ptr<SceneGraph> m_sceneGraph;
@@ -81,6 +85,7 @@ private:
     std::shared_ptr<Engine::IAL::I_Shader> m_skyboxShader;
     std::shared_ptr<Engine::IAL::I_Shader> m_waterShader;
     std::shared_ptr<Engine::IAL::I_Shader> m_shadowShader;
+    std::shared_ptr<Engine::IAL::I_Shader> m_skinnedShader;
     std::shared_ptr<Engine::IAL::I_Texture> m_skyboxTexture;
     std::shared_ptr<Engine::IAL::I_Mesh> m_skyboxMesh;
     std::shared_ptr<Engine::IAL::I_FrameBuffer> m_waterReflectionFBO;

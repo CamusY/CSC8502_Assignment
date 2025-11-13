@@ -96,7 +96,6 @@
 
 #include <string>
 
-// (NFR-2) 接口直接依赖 nclgl 通用数学库
 #include "nclgl/Vector3.h"
 
 namespace Engine::IAL {

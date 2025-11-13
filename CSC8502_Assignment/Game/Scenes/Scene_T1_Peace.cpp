@@ -6,16 +6,19 @@
 
 #include "../../Engine/IAL/I_Heightmap.h"
 #include "../../Engine/IAL/I_Texture.h"
+#include "../../Engine/IAL/I_AnimatedMesh.h"
 #include "../../Renderer/Water.h"
 #include "nclgl/Vector2.h"
 #include "nclgl/Vector3.h"
 
 Scene_T1_Peace::Scene_T1_Peace(const std::shared_ptr<Engine::IAL::I_ResourceFactory>& factory,
-                               const std::shared_ptr<SceneGraph>& sceneGraph)
-    : m_factory(factory)
+                               const std::shared_ptr<SceneGraph>& sceneGraph) :
+    m_factory(factory)
     , m_sceneGraph(sceneGraph)
     , m_terrainNode(nullptr)
     , m_terrainTexture(nullptr)
+    , m_characterNode(nullptr)
+    , m_characterMesh(nullptr)
     , m_environment{} {
 }
 
@@ -55,7 +58,7 @@ void Scene_T1_Peace::Init() {
             root->AddChild(waterNode);
         }
     }
-    
+
     if (m_factory) {
         m_environment.skyboxTexture = m_factory->LoadCubemap(
             "../Textures/skybox_peace/negx.png",
@@ -64,6 +67,17 @@ void Scene_T1_Peace::Init() {
             "../Textures/skybox_peace/posy.png",
             "../Textures/skybox_peace/negz.png",
             "../Textures/skybox_peace/posz.png");
+
+        m_characterMesh = m_factory->LoadAnimatedMesh("../Meshes/CesiumMan/CesiumMan.gltf");
+        if (m_characterMesh) {
+            m_characterNode = std::make_shared<SceneNode>();
+            m_characterNode->SetMesh(m_characterMesh);
+            m_characterNode->SetScale(Vector3(40.0f, 40.0f, 40.0f));
+            m_characterNode->SetPosition(Vector3(520.0f, 15.0f, 500.0f));
+            if (root) {
+                root->AddChild(m_characterNode);
+            }
+        }
     }
     m_environment.directionalLight.position = Vector3(200.0f, 400.0f, 200.0f);
     m_environment.directionalLight.color = Vector3(1.0f, 0.95f, 0.85f);
@@ -92,5 +106,8 @@ void Scene_T1_Peace::SetActive(bool active) {
         if (node) {
             node->SetActive(active);
         }
+    }
+    if (m_characterNode) {
+        m_characterNode->SetActive(active);
     }
 }

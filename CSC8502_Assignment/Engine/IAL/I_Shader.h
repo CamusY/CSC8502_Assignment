@@ -73,8 +73,8 @@
 #pragma once
 
 #include <string>
+#include <cstddef>
 
-// (NFR-2) 接口直接依赖 nclgl 通用数学库
 #include "nclgl/Matrix4.h"
 #include "nclgl/Vector3.h"
 #include "nclgl/Vector4.h"
@@ -92,6 +92,7 @@ namespace Engine::IAL {
         virtual void SetUniform(const std::string& name, const Vector4& vec) = 0;
         virtual void SetUniform(const std::string& name, float f) = 0;
         virtual void SetUniform(const std::string& name, int i) = 0;
+        virtual void SetUniformMatrix4Array(const std::string& name, const Matrix4* data, std::size_t count) = 0;
     };
 
 }

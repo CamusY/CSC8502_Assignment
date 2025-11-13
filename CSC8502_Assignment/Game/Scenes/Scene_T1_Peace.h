@@ -11,6 +11,7 @@
 
 #include "../../Core/SceneGraph.h"
 #include "../../Engine/IAL/I_ResourceFactory.h"
+#include "../../Engine/IAL/I_AnimatedMesh.h"
 #include "../SceneEnvironment.h"
 
 class Water;
@@ -33,6 +34,8 @@ private:
     std::shared_ptr<SceneGraph> m_sceneGraph;
     std::shared_ptr<SceneNode> m_terrainNode;
     std::shared_ptr<Engine::IAL::I_Texture> m_terrainTexture;
+    std::shared_ptr<SceneNode> m_characterNode;
+    std::shared_ptr<Engine::IAL::I_AnimatedMesh> m_characterMesh;
     std::shared_ptr<Water> m_water;
     SceneEnvironment m_environment;
 };

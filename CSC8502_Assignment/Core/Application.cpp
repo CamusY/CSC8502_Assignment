@@ -83,7 +83,7 @@ void Application::Run() {
             m_ui->NewFrame();
         }
         if (m_renderer) {
-            m_renderer->Render();
+            m_renderer->Render(deltaTime);
         }
         if (m_ui) {
             m_ui->Render();

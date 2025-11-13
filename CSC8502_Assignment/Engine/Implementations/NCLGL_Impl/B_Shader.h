@@ -29,6 +29,8 @@
  */
 #pragma once
 #include "IAL/I_Shader.h"
+#include <cstddef>
+
 
 class Shader;
 
@@ -47,6 +49,7 @@ namespace NCLGL_Impl {
         void SetUniform(const std::string& name, const Vector4& vec) override;
         void SetUniform(const std::string& name, float f) override;
         void SetUniform(const std::string& name, int i) override;
+        void SetUniformMatrix4Array(const std::string& name, const Matrix4* data, std::size_t count) override;
 
     private:
         ::Shader* m_shader;

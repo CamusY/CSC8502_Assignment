@@ -30,12 +30,14 @@
 #include <cctype>
 #include <cmath>
 #include <cstdlib>
+#include <cstring>
 #include <fstream>
 #include <iterator>
 #include <memory>
 #include <string>
 #include <vector>
 #include <utility>
+#include <vector>
 #include <nclgl/Extra/stb/stb_image.h>
 
 
@@ -60,7 +62,7 @@ namespace {
         description += ")";
         return description;
     }
-    
+
     std::string ToLowerCopy(const std::string& value) {
         std::string result = value;
         std::transform(result.begin(), result.end(), result.begin(), [](unsigned char ch) {
@@ -99,26 +101,31 @@ namespace {
         if (path.empty()) {
             return false;
         }
-        int width = 0;
-        int height = 0;
-        int channels = 0;
         stbi_set_flip_vertically_on_load(flipVertical ? 1 : 0);
-        stbi_uc* data = stbi_load(path.c_str(), &width, &height, &channels, 0);
-        if (!data || width <= 0 || height <= 0) {
-            if (data) {
-                stbi_image_free(data);
+        char* rawData = nullptr;
+        uint32_t width = 0;
+        uint32_t height = 0;
+        uint32_t channels = 0;
+        uint32_t flags = 0;
+        if (!OGLTexture::LoadTexture(path, rawData, width, height, channels, flags) || !rawData || width == 0 || height
+            == 0) {
+            if (rawData) {
+                stbi_image_free(rawData);
             }
+            stbi_set_flip_vertically_on_load(0);
             std::cerr << "[B_Factory] stb_image decode failed for " << path << "\n";
             return false;
         }
         const size_t dataSize = static_cast<size_t>(width) * static_cast<size_t>(height) * static_cast<size_t>(
             channels);
         out.path = path;
-        out.width = static_cast<uint32_t>(width);
-        out.height = static_cast<uint32_t>(height);
-        out.channels = static_cast<uint32_t>(channels);
-        out.pixels.assign(data, data + dataSize);
-        stbi_image_free(data);
+        out.width = width;
+        out.height = height;
+        out.channels = channels;
+        out.pixels.resize(dataSize);
+        std::memcpy(out.pixels.data(), rawData, dataSize);
+        stbi_image_free(rawData);
+        stbi_set_flip_vertically_on_load(0);
         return true;
     }
 
@@ -371,9 +378,11 @@ namespace {
 
 namespace NCLGL_Impl {
 
-    B_Factory::B_Factory() {}
+    B_Factory::B_Factory() {
+    }
 
-    B_Factory::~B_Factory() {}
+    B_Factory::~B_Factory() {
+    }
 
     std::shared_ptr<Engine::IAL::I_Shader> B_Factory::CreateShader(
         const std::string& vPath,
@@ -426,7 +435,7 @@ namespace NCLGL_Impl {
     std::shared_ptr<Engine::IAL::I_Texture> B_Factory::LoadTexture(
         const std::string& path, bool repeat) {
         TextureDescriptor descriptor;
-        if (!DecodeTexture(path, descriptor,true)) {
+        if (!DecodeTexture(path, descriptor, true)) {
             std::cerr << "[B_Factory] Texture decode failed for " << path << "\n";
             return nullptr;
         }
@@ -468,41 +477,25 @@ namespace NCLGL_Impl {
 
     std::shared_ptr<Engine::IAL::I_Heightmap> B_Factory::LoadHeightmap(
         const std::string& path, const Vector3& scale) {
-
         int width = 0;
         int height = 0;
-        int channels = 0; // 这个变量不会被使用，但 stbi_load 需要它
-
-        // 关键：使用 stbi_load 加载图像。
-        // 我们强制只加载 1 个通道 (grayscale)，因为这是高度图。
+        int channels = 0;
         stbi_uc* data = stbi_load(path.c_str(), &width, &height, &channels, 1);
-
         if (!data) {
             std::cerr << "[B_Factory] STB_Image Failed to open heightmap: " << path << std::endl;
             return nullptr;
         }
-
-        // 你的 HeightmapMesh 构造函数 期望一个正方形的维度。
         if (width != height || width < 2) {
             std::cerr << "[B_Factory] Heightmap dimensions invalid: " << path
                 << " (dimensions=" << width << "x" << height << ")" << std::endl;
-
-            free(data);
+            stbi_image_free(data);
             return nullptr;
         }
-
         const size_t dimension = static_cast<size_t>(width);
         const size_t pixelCount = dimension * dimension;
-
-        // 将 stbi_load 返回的 C-style 数组 (stbi_uc*) 
-        // 复制到 HeightmapMesh 构造函数所需的 std::vector<unsigned char> 中。
-        std::vector<unsigned char> samples;
-        samples.assign(data, data + pixelCount);
-
-        // 修正：使用 free() 而不是 stbi_free()
-        free(data);
-
-        // --- 从这里开始，代码和你原来的版本 完全相同 ---
+        std::vector<unsigned char> samples(pixelCount);
+        std::memcpy(samples.data(), data, pixelCount);
+        stbi_image_free(data);
         try {
             auto* mesh = new HeightmapMesh(samples, dimension, scale);
             std::cerr << "[B_Factory] Heightmap loaded: " << path
@@ -579,7 +572,7 @@ namespace NCLGL_Impl {
     std::shared_ptr<Engine::IAL::I_AnimatedMesh> B_Factory::LoadAnimatedMesh(
         const std::string& path,
         const std::string& animPathOrName) {
-                if (path.empty()) {
+        if (path.empty()) {
             return nullptr;
         }
 

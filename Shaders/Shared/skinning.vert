@@ -1,12 +1,19 @@
 ﻿#version 460 core
 layout(location = 0) in vec3 position;
+layout(location = 2) in vec2 texCoord;
+layout(location = 3) in vec3 normal;
 layout(location = 5) in vec4 weights;
 layout(location = 6) in ivec4 joints;
 
 uniform mat4 uModel;
-uniform mat4 uLightViewProj;
+uniform mat4 uViewProj;
+uniform vec4 uClipPlane;
 uniform mat4 uBoneMatrices[128];
 uniform int uBoneCount;
+
+out vec2 vTexCoord;
+out vec3 vWorldPos;
+out vec3 vNormal;
 
 mat4 ComputeSkinMatrix() {
     if (uBoneCount <= 0) {
@@ -29,5 +36,13 @@ mat4 ComputeSkinMatrix() {
 void main() {
     mat4 skinMatrix = ComputeSkinMatrix();
     mat4 modelSkin = uModel * skinMatrix;
-    gl_Position = uLightViewProj * modelSkin * vec4(position, 1.0);
+    vec4 worldPosition = modelSkin * vec4(position, 1.0);
+    mat3 normalMatrix = transpose(inverse(mat3(modelSkin)));
+
+    vTexCoord = texCoord;
+    vWorldPos = worldPosition.xyz;
+    vNormal = normalize(normalMatrix * normal);
+
+    gl_Position = uViewProj * worldPosition;
+    gl_ClipDistance[0] = dot(worldPosition, uClipPlane);
 }

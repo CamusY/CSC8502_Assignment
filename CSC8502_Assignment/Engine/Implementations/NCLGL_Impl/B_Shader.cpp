@@ -72,5 +72,14 @@ namespace NCLGL_Impl {
             glUniform1i(location, i);
         }
     }
+    void B_Shader::SetUniformMatrix4Array(const std::string& name, const Matrix4* data, std::size_t count) {
+        if (!data || count == 0) {
+            return;
+        }
+        const GLint location = ResolveLocation(m_shader, name);
+        if (location >= 0) {
+            glUniformMatrix4fv(location, static_cast<GLsizei>(count), GL_FALSE, reinterpret_cast<const GLfloat*>(data));
+        }
+    }
 
 }

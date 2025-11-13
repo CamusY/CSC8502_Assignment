@@ -16,10 +16,16 @@
 #include "../Engine/IAL/I_Mesh.h"
 #include "../Engine/IAL/I_Shader.h"
 #include "../Engine/IAL/I_Texture.h"
+#include "../Engine/IAL/I_AnimatedMesh.h"
 
 #include <glad/glad.h>
 #include <algorithm>
 #include <iostream>
+#include <vector>
+
+namespace {
+    constexpr int kMaxBones = 128;
+}
 
 
 Renderer::Renderer(const std::shared_ptr<Engine::IAL::I_ResourceFactory>& factory,
@@ -38,6 +44,7 @@ Renderer::Renderer(const std::shared_ptr<Engine::IAL::I_ResourceFactory>& factor
     , m_skyboxShader(nullptr)
     , m_waterShader(nullptr)
     , m_shadowShader(nullptr)
+    , m_skinnedShader(nullptr)
     , m_skyboxTexture(nullptr)
     , m_skyboxMesh(nullptr)
     , m_waterReflectionFBO(nullptr)
@@ -61,6 +68,7 @@ Renderer::Renderer(const std::shared_ptr<Engine::IAL::I_ResourceFactory>& factor
         m_skyboxShader = m_factory->CreateShader("Shared/skybox.vert", "Shared/skybox.frag");
         m_waterShader = m_factory->CreateShader("Shared/water.vert", "Shared/water.frag");
         m_shadowShader = m_factory->CreateShader("Shared/shadow.vert", "Shared/shadow.frag");
+        m_skinnedShader = m_factory->CreateShader("Shared/skinning.vert", "Shared/skinning.frag");
         m_skyboxMesh = m_factory->LoadMesh("../Meshes/cube.gltf");
         m_postProcessing = std::make_shared<PostProcessing>(m_factory, width, height);
         m_shadowMap = std::make_shared<ShadowMap>(m_factory, 2048, 2048);
@@ -70,13 +78,16 @@ Renderer::Renderer(const std::shared_ptr<Engine::IAL::I_ResourceFactory>& factor
     glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
 }
 
-void Renderer::Render() {
+void Renderer::Render(float deltaTime) {
     if (!m_sceneGraph) {
         RenderDebugUI();
         return;
     }
 
     glEnable(GL_DEPTH_TEST);
+    glDisable(GL_CLIP_DISTANCE0);
+
+    UpdateAnimatedMeshes(deltaTime);
 
     const Vector3 defaultCameraPos(0.0f, 0.0f, 10.5f);
     const Vector3 cameraPosition = m_camera ? m_camera->GetPosition() : defaultCameraPos;
@@ -171,6 +182,27 @@ void Renderer::SetTransitionState(bool enabled, float progress) {
     m_transitionProgress = std::clamp(progress, 0.0f, 1.0f);
 }
 
+void Renderer::UpdateAnimatedMeshes(float deltaTime) {
+    if (!m_sceneGraph) {
+        return;
+    }
+    std::vector<std::shared_ptr<SceneNode>> nodes;
+    m_sceneGraph->CollectRenderableNodes(nodes);
+    for (const auto& node : nodes) {
+        if (!node) {
+            continue;
+        }
+        auto mesh = node->GetMesh();
+        if (!mesh) {
+            continue;
+        }
+        auto animated = std::dynamic_pointer_cast<Engine::IAL::I_AnimatedMesh>(mesh);
+        if (animated) {
+            animated->UpdateAnimation(deltaTime);
+        }
+    }
+}
+
 void Renderer::RenderSceneForShadowMap(const Matrix4& lightViewProjection,
                                        bool skipWaterNode) {
     if (!m_sceneGraph || !m_shadowShader) {
@@ -191,6 +223,16 @@ void Renderer::RenderSceneForShadowMap(const Matrix4& lightViewProjection,
         if (!mesh) {
             continue;
         }
+        auto animatedMesh = std::dynamic_pointer_cast<Engine::IAL::I_AnimatedMesh>(mesh);
+        int boneCount = 0;
+        if (animatedMesh) {
+            const auto& bones = animatedMesh->GetBoneTransforms();
+            boneCount = static_cast<int>(std::min<size_t>(bones.size(), static_cast<size_t>(kMaxBones)));
+            if (boneCount > 0) {
+                m_shadowShader->SetUniformMatrix4Array("uBoneMatrices", bones.data(), static_cast<size_t>(boneCount));
+            }
+        }
+        m_shadowShader->SetUniform("uBoneCount", boneCount);
         m_shadowShader->SetUniform("uModel", node->GetWorldTransform());
         mesh->Draw();
     }
@@ -222,14 +264,22 @@ void Renderer::RenderSkybox(const Matrix4& view, const Matrix4& projection) {
 void Renderer::RenderScenePass(const Matrix4& view,
                                const Matrix4& projection,
                                const Vector3& cameraPosition,
-                               bool skipWaterNode) {
+                               bool skipWaterNode,
+                               const Vector4* clipPlane) {
     if (!m_sceneGraph) {
         return;
     }
     m_renderQueue.clear();
     m_sceneGraph->CollectRenderableNodes(m_renderQueue);
     Matrix4 viewProj = projection * view;
-
+    Vector4 clip(0.0f, 0.0f, 0.0f, 0.0f);
+    if (clipPlane) {
+        clip = *clipPlane;
+        glEnable(GL_CLIP_DISTANCE0);
+    } else {
+        glDisable(GL_CLIP_DISTANCE0);
+    }
+    
     for (const auto& node : m_renderQueue) {
         if (!node) {
             continue;
@@ -241,6 +291,44 @@ void Renderer::RenderScenePass(const Matrix4& view,
         if (!mesh) {
             continue;
         }
+        auto animatedMesh = std::dynamic_pointer_cast<Engine::IAL::I_AnimatedMesh>(mesh);
+        auto shadowTexture = m_shadowMap ? m_shadowMap->GetDepthTexture() : nullptr;
+        const bool hasShadow = static_cast<bool>(shadowTexture);
+        if (animatedMesh && m_skinnedShader) {
+            const auto& bones = animatedMesh->GetBoneTransforms();
+            const int boneCount = static_cast<int>(std::min<size_t>(bones.size(), static_cast<size_t>(kMaxBones)));
+            m_skinnedShader->Bind();
+            m_skinnedShader->SetUniform("uViewProj", viewProj);
+            m_skinnedShader->SetUniform("uModel", node->GetWorldTransform());
+            m_skinnedShader->SetUniform("uClipPlane", clip);
+            m_skinnedShader->SetUniform("uLightPosition", m_directionalLight.position);
+            m_skinnedShader->SetUniform("uLightColor", m_directionalLight.color);
+            m_skinnedShader->SetUniform("uAmbientColor", m_directionalLight.ambient);
+            m_skinnedShader->SetUniform("uCameraPos", cameraPosition);
+            m_skinnedShader->SetUniform("uSpecularPower", m_specularPower);
+            m_skinnedShader->SetUniform("uShadowMatrix", m_shadowMatrix);
+            m_skinnedShader->SetUniform("uShadowStrength", hasShadow ? m_shadowStrength : 0.0f);
+            m_skinnedShader->SetUniform("uBoneCount", boneCount);
+            if (boneCount > 0) {
+                m_skinnedShader->SetUniformMatrix4Array("uBoneMatrices", bones.data(), static_cast<size_t>(boneCount));
+            }
+            if (hasShadow) {
+                shadowTexture->Bind(2);
+                m_skinnedShader->SetUniform("uShadowMap", 2);
+            }
+            auto texture = node->GetTexture();
+            if (texture) {
+                texture->Bind(0);
+                m_skinnedShader->SetUniform("uDiffuse", 0);
+                m_skinnedShader->SetUniform("uHasTexture", 1);
+            } else {
+                m_skinnedShader->SetUniform("uHasTexture", 0);
+                m_skinnedShader->SetUniform("uBaseColor", m_sceneColour);
+            }
+            mesh->Draw();
+            m_skinnedShader->Unbind();
+            continue;
+        }
         auto texture = node->GetTexture();
         std::shared_ptr<Engine::IAL::I_Shader> shader = texture ? m_terrainShader : m_sceneShader;
         if (!shader) {
@@ -249,8 +337,10 @@ void Renderer::RenderScenePass(const Matrix4& view,
         shader->Bind();
         shader->SetUniform("uViewProj", viewProj);
         shader->SetUniform("uModel", node->GetWorldTransform());
-        auto shadowTexture = m_shadowMap ? m_shadowMap->GetDepthTexture() : nullptr;
-        const bool hasShadow = static_cast<bool>(shadowTexture);
+        shader->SetUniform("uClipPlane", clip);
+        shader->SetUniform("uLightPosition", m_directionalLight.position);
+        shader->SetUniform("uLightColor", m_directionalLight.color);
+        shader->SetUniform("uAmbientColor", m_directionalLight.ambient);
         shader->SetUniform("uShadowMatrix", m_shadowMatrix);
         shader->SetUniform("uShadowStrength", hasShadow ? m_shadowStrength : 0.0f);
         if (hasShadow) {
@@ -260,21 +350,17 @@ void Renderer::RenderScenePass(const Matrix4& view,
         if (texture) {
             texture->Bind(0);
             shader->SetUniform("uDiffuse", 0);
-            shader->SetUniform("uLightPosition", m_directionalLight.position);
-            shader->SetUniform("uLightColor", m_directionalLight.color);
-            shader->SetUniform("uAmbientColor", m_directionalLight.ambient);
             shader->SetUniform("uSpecularPower", m_specularPower);
             shader->SetUniform("uCameraPos", cameraPosition);
-        }
-        else {
+        } else {
             shader->SetUniform("uColor", m_sceneColour);
-            shader->SetUniform("uLightPosition", m_directionalLight.position);
-            shader->SetUniform("uLightColor", m_directionalLight.color);
-            shader->SetUniform("uAmbientColor", m_directionalLight.ambient);
+            shader->SetUniform("uSpecularPower", m_specularPower);
+            shader->SetUniform("uCameraPos", cameraPosition);
         }
         mesh->Draw();
         shader->Unbind();
     }
+    glDisable(GL_CLIP_DISTANCE0);
 }
 
 void Renderer::RenderWaterSurface(const Matrix4& view,
@@ -350,7 +436,10 @@ void Renderer::RenderReflectionPass(const Matrix4& projection,
 
     Matrix4 reflectionView = reflectionCamera.BuildViewMatrix();
     RenderSkybox(reflectionView, projection);
-    RenderScenePass(reflectionView, projection, reflectionCamera.GetPosition(), true);
+    const float waterHeight = m_water->GetHeight();
+    constexpr float clipBias = 0.5f;
+    Vector4 reflectionClip(0.0f, 1.0f, 0.0f, -(waterHeight - clipBias));
+    RenderScenePass(reflectionView, projection, reflectionCamera.GetPosition(), true, &reflectionClip);
 
     m_waterReflectionFBO->Unbind();
 }
@@ -366,8 +455,11 @@ void Renderer::RenderRefractionPass(const Matrix4& view,
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     RenderSkybox(view, projection);
-    RenderScenePass(view, projection, cameraPosition, true);
-
+    const float waterHeight = m_water->GetHeight();
+    constexpr float clipBias = 0.5f;
+    Vector4 refractionClip(0.0f, -1.0f, 0.0f, waterHeight + clipBias);
+    RenderScenePass(view, projection, cameraPosition, true, &refractionClip);
+    
     m_waterRefractionFBO->Unbind();
 }
 

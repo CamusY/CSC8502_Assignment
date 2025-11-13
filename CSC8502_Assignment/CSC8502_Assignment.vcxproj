@@ -207,6 +207,8 @@
     <Content Include="..\Shaders\Shared\post_transition.frag" />
     <Content Include="..\Shaders\Shared\shadow.frag" />
     <Content Include="..\Shaders\Shared\shadow.vert" />
+    <Content Include="..\Shaders\Shared\skinning.frag" />
+    <Content Include="..\Shaders\Shared\skinning.vert" />
     <Content Include="..\Shaders\Shared\skybox.frag" />
     <Content Include="..\Shaders\Shared\skybox.vert" />
     <Content Include="..\Shaders\Shared\terrain.frag" />

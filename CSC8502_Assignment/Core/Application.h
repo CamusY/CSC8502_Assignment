@@ -25,7 +25,7 @@
  * 顺序：
  * 1. 调用窗口的 UpdateWindow() 处理操作系统事件。
  * 2. 通过计时器获取 Delta Time 并驱动 SceneManager::Update()。
- * 3. 调用 Renderer::Render() 遍历场景图并提交 Draw 调用。
+ * 3. 调用 Renderer::Render(deltaTime) 遍历场景图并提交 Draw 调用。
  * 4. 调用 DebugUI::NewFrame/Render 驱动调试界面。
  * 5. 调用 SwapBuffers() 呈现最终图像。
  * 当 I_WindowSystem::UpdateWindow() 返回 false 时，循环结束，程序退出。

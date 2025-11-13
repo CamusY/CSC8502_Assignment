@@ -1,10 +1,11 @@
 ﻿#version 460 core
-in vec3 vColor;
+in vec2 vTexCoord;
 in vec3 vWorldPos;
 in vec3 vNormal;
 
-out vec4 fragColor;
-
+uniform sampler2D uDiffuse;
+uniform int uHasTexture;
+uniform vec3 uBaseColor;
 uniform vec3 uLightPosition;
 uniform vec3 uLightColor;
 uniform vec3 uAmbientColor;
@@ -13,6 +14,15 @@ uniform float uSpecularPower;
 uniform mat4 uShadowMatrix;
 uniform sampler2DShadow uShadowMap;
 uniform float uShadowStrength;
+
+out vec4 fragColor;
+
+vec3 ResolveAlbedo() {
+    if (uHasTexture == 1) {
+        return texture(uDiffuse, vTexCoord).rgb;
+    }
+    return uBaseColor;
+}
 
 float EvaluateShadow(vec3 worldPos, vec3 normal) {
     if (uShadowStrength <= 0.0) {
@@ -34,6 +44,7 @@ float EvaluateShadow(vec3 worldPos, vec3 normal) {
 }
 
 void main() {
+    vec3 albedo = ResolveAlbedo();
     vec3 N = normalize(vNormal);
     vec3 L = normalize(uLightPosition - vWorldPos);
     vec3 V = normalize(uCameraPos - vWorldPos);
@@ -42,8 +53,8 @@ void main() {
     float diff = max(dot(N, L), 0.0);
     float spec = diff > 0.0 ? pow(max(dot(N, H), 0.0), uSpecularPower) : 0.0;
 
-    vec3 ambient = uAmbientColor * vColor;
-    vec3 diffuse = diff * uLightColor * vColor;
+    vec3 ambient = uAmbientColor * albedo;
+    vec3 diffuse = diff * uLightColor * albedo;
     vec3 specular = spec * uLightColor;
 
     float shadow = EvaluateShadow(vWorldPos, N);

@@ -144,10 +144,8 @@
 #include <string>
 #include <memory>
 
-// (NFR-2) 接口直接依赖 nclgl 通用数学库
 #include "nclgl/Vector3.h"
 
-// IAL 依赖 IAL (纯净)
 #include "IAL/I_Shader.h"
 #include "IAL/I_Mesh.h"
 #include "IAL/I_Texture.h"

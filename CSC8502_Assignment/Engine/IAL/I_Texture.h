@@ -23,6 +23,12 @@
  * @see I_ResourceFactory::LoadTexture
  * @see I_ResourceFactory::LoadCubemap
  * @see I_FrameBuffer::GetColorTexture
+ * 
+ * @enum TextureType
+ * @brief 描述纹理对象的语义类别。
+ * @details
+ * 渲染器或资源工厂可以依据此枚举决定默认的图形 API 绑定目标、
+ * 采样策略或调试输出内容。
  *
  * @class Engine::IAL::I_Texture
  * @brief 纹理对象的纯虚接口。
@@ -55,13 +61,6 @@
 #pragma once
 
 namespace Engine::IAL {
-    /**
-     * @enum TextureType
-     * @brief 描述纹理对象的语义类别。
-     * @details
-     * 渲染器或资源工厂可以依据此枚举决定默认的图形 API 绑定目标、
-     * 采样策略或调试输出内容。
-     */
     enum class TextureType {
         Texture2D,
         CubeMap,

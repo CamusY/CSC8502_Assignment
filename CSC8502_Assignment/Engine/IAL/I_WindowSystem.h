@@ -98,7 +98,6 @@
 #include <string>
 #include <memory>
 
-// IAL 依赖 IAL (纯净)
 #include "IAL/I_InputDevice.h"
 #include "IAL/I_GameTimer.h"
 
