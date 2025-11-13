@@ -9,9 +9,9 @@
 #include <algorithm>
 
 Camera::Camera()
-    : m_position(Vector3(0.0f, 0.0f, 3.5f))
-    , m_yaw(0.0f)
-    , m_pitch(0.0f)
+    : m_position(Vector3(0.0f, 150.0f, 3.5f))
+    , m_yaw(-150.0f)
+    , m_pitch(-50.0f)
     , m_moveSpeed(50.0f)
     , m_mouseSensitivity(1.1f) {
 }

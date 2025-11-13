@@ -1,6 +1,7 @@
 ﻿/**
- * @file Renderer.cpp
- * @brief 实现基础渲染器的渲染队列遍历逻辑。
+* @file Renderer.cpp
+ * @brief 实现负责遍历场景图并提交绘制命令的 Renderer 类。
+ *
  * @details
  * 当前实现负责从场景图收集所有可渲染节点，并依次调用其网格接口执行 Draw，
  * 并结合 Camera::BuildViewMatrix 生成视图矩阵。Day11 阶段在此骨架上加入天空盒与
@@ -17,9 +18,8 @@
 #include "../Engine/IAL/I_Texture.h"
 
 #include <glad/glad.h>
+#include <algorithm>
 #include <iostream>
-
-
 
 
 Renderer::Renderer(const std::shared_ptr<Engine::IAL::I_ResourceFactory>& factory,
@@ -32,17 +32,28 @@ Renderer::Renderer(const std::shared_ptr<Engine::IAL::I_ResourceFactory>& factor
     , m_sceneGraph(sceneGraph)
     , m_camera(camera)
     , m_debugUI(debugUI)
+    , m_postProcessing(nullptr)
+    , m_sceneShader(nullptr)
+    , m_terrainShader(nullptr)
+    , m_skyboxShader(nullptr)
+    , m_waterShader(nullptr)
+    , m_skyboxTexture(nullptr)
+    , m_skyboxMesh(nullptr)
+    , m_waterReflectionFBO(nullptr)
+    , m_waterRefractionFBO(nullptr)
+    , m_water(nullptr)
     , m_directionalLight{}
     , m_sceneColour(Vector3(0.0f, 0.0f, 0.0f))
     , m_specularPower(32.0f)
     , m_nearPlane(0.1f)
     , m_farPlane(5000.0f)
     , m_surfaceWidth(width)
-    , m_surfaceHeight(height) {
+    , m_surfaceHeight(height)
+    , m_transitionEnabled(false)
+    , m_transitionProgress(0.0f) {
     if (m_factory) {
         m_sceneShader = m_factory->CreateShader("Shared/basic.vert", "Shared/basic.frag");
         m_terrainShader = m_factory->CreateShader("Shared/terrain.vert", "Shared/terrain.frag");
-        m_postShader = m_factory->CreateShader("Shared/postprocess.vert", "Shared/postprocess.frag");
         m_skyboxShader = m_factory->CreateShader("Shared/skybox.vert", "Shared/skybox.frag");
         m_waterShader = m_factory->CreateShader("Shared/water.vert", "Shared/water.frag");
         m_skyboxMesh = m_factory->LoadMesh("../Meshes/cube.gltf");
@@ -89,14 +100,7 @@ void Renderer::Render() {
 
     if (m_postProcessing) {
         m_postProcessing->EndCapture();
-        auto texture = m_postProcessing->GetSceneTexture();
-        if (texture && m_postShader) {
-            m_postShader->Bind();
-            texture->Bind(0);
-            m_postShader->SetUniform("uScene", 0);
-            m_postProcessing->Present();
-            m_postShader->Unbind();
-        }
+        m_postProcessing->Present(m_transitionEnabled, m_transitionProgress);
     }
     RenderDebugUI();
 }
@@ -123,6 +127,12 @@ void Renderer::SetSceneColour(const Vector3& colour) {
 void Renderer::SetDirectionalLight(const Light& light) {
     m_directionalLight = light;
 }
+
+void Renderer::SetTransitionState(bool enabled, float progress) {
+    m_transitionEnabled = enabled;
+    m_transitionProgress = std::clamp(progress, 0.0f, 1.0f);
+}
+
 
 
 void Renderer::RenderSkybox(const Matrix4& view, const Matrix4& projection) {
@@ -234,7 +244,7 @@ void Renderer::RenderWaterSurface(const Matrix4& view,
 
     glDepthMask(GL_TRUE);
     glDisable(GL_BLEND);
-    
+
 }
 
 void Renderer::RenderReflectionPass(const Matrix4& projection,
@@ -279,6 +289,7 @@ void Renderer::RenderRefractionPass(const Matrix4& view,
 
     m_waterRefractionFBO->Unbind();
 }
+
 void Renderer::RenderDebugUI() {
     if (!m_debugUI) {
         return;

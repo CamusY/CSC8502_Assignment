@@ -1,13 +1,13 @@
 ﻿/**
-* @file Renderer.h
+ * @file Renderer.h
  * @brief 声明负责遍历场景图并提交绘制命令的 Renderer 类。
  * @details
  * Renderer 持有资源工厂引用、场景图指针与相机实例，通过 CollectRenderableNodes 收集节点，
  * 在 Render 函数中遍历并调用 I_Mesh::Draw()。Day11 阶段增加了天空盒与光照支持：
  * 在渲染场景几何之前绘制 cubemap 天空盒，并在地形着色器中注入 Blinn-Phong 光照所需的光源与相机参数。
  * Day12 进一步扩展了渲染流程，引入水体节点的递归渲染：在主场景绘制前先渲染反射与折射帧缓冲，
- * 随后使用专用水面着色器将两个纹理组合成最终的水体效果。Day13 则结合 I_DebugUI 提供的控制面板，
- * 允许在运行时调整方向光的颜色、位置与镜面强度，从而满足 UI 可调参需求。
+ * 随后使用专用水面着色器将两个纹理组合成最终的水体效果。Day15 则在后期处理中加入过渡着色器，
+ * Renderer 可通过 SetTransitionState 将计时进度传递给 PostProcessing，驱动全屏过渡动画。
  */
 #pragma once
 
@@ -37,7 +37,7 @@ public:
     Renderer(const std::shared_ptr<Engine::IAL::I_ResourceFactory>& factory,
              const std::shared_ptr<SceneGraph>& sceneGraph,
              const std::shared_ptr<Camera>& camera,
-                const std::shared_ptr<Engine::IAL::I_DebugUI>& debugUI,
+             const std::shared_ptr<Engine::IAL::I_DebugUI>& debugUI,
              int width,
              int height);
 
@@ -46,6 +46,7 @@ public:
     void SetSkyboxTexture(const std::shared_ptr<Engine::IAL::I_Texture>& texture);
     void SetSceneColour(const Vector3& colour);
     void SetDirectionalLight(const Light& light);
+    void SetTransitionState(bool enabled, float progress);
 
 private:
     void RenderSkybox(const Matrix4& view, const Matrix4& projection);
@@ -54,15 +55,15 @@ private:
                          const Vector3& cameraPosition,
                          bool skipWaterNode);
     void RenderWaterSurface(const Matrix4& view,
-                            const Matrix4& projection,
-                            const Vector3& cameraPosition);
+                             const Matrix4& projection,
+                             const Vector3& cameraPosition);
     void RenderReflectionPass(const Matrix4& projection,
-                              const Vector3& cameraPosition,
-                              float cameraYaw,
-                              float cameraPitch);
+                               const Vector3& cameraPosition,
+                               float cameraYaw,
+                               float cameraPitch);
     void RenderRefractionPass(const Matrix4& view,
-                              const Matrix4& projection,
-                              const Vector3& cameraPosition);
+                               const Matrix4& projection,
+                               const Vector3& cameraPosition);
     void RenderDebugUI();
 
     std::shared_ptr<Engine::IAL::I_ResourceFactory> m_factory;
@@ -88,4 +89,6 @@ private:
     float m_farPlane;
     int m_surfaceWidth;
     int m_surfaceHeight;
+    bool m_transitionEnabled;
+    float m_transitionProgress;
 };
