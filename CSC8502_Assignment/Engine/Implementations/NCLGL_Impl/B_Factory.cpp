@@ -7,13 +7,16 @@
  * 当前(Day5)实现中，大部分方法返回空指针，只有帧缓冲区创建方法返回了具体的 B_FrameBuffer 实例。
  */
 #include "B_Factory.h"
+#include "B_AnimatedMesh.h"
 #include "B_FrameBuffer.h"
 #include "B_Heightmap.h"
 #include "B_Mesh.h"
 #include "B_Shader.h"
 #include "B_Texture.h"
 
+
 #include "nclgl/Mesh.h"
+#include "nclgl/MeshAnimation.h"
 #include "nclgl/Vector2.h"
 #include "nclgl/Vector3.h"
 #include "nclgl/Extra/GLTFLoader.h"
@@ -57,6 +60,32 @@ namespace {
         description += ")";
         return description;
     }
+    
+    std::string ToLowerCopy(const std::string& value) {
+        std::string result = value;
+        std::transform(result.begin(), result.end(), result.begin(), [](unsigned char ch) {
+            return static_cast<char>(std::tolower(ch));
+        });
+        return result;
+    }
+
+    std::string ExtractExtension(const std::string& path) {
+        const std::size_t dot = path.find_last_of('.');
+        if (dot == std::string::npos) {
+            return std::string();
+        }
+        return ToLowerCopy(path.substr(dot));
+    }
+
+    bool IsDigits(const std::string& value) {
+        if (value.empty()) {
+            return false;
+        }
+        return std::all_of(value.begin(), value.end(), [](unsigned char ch) {
+            return std::isdigit(ch) != 0;
+        });
+    }
+
 
     struct TextureDescriptor {
         std::string path;
@@ -366,14 +395,7 @@ namespace NCLGL_Impl {
             return nullptr;
         }
 
-        std::string extension;
-        const std::size_t dot = path.find_last_of('.');
-        if (dot != std::string::npos) {
-            extension = path.substr(dot);
-            std::transform(extension.begin(), extension.end(), extension.begin(), [](unsigned char ch) {
-                return static_cast<char>(std::tolower(ch));
-            });
-        }
+        const std::string extension = ExtractExtension(path);
 
         try {
             if (extension == ".gltf" || extension == ".glb") {
@@ -557,6 +579,99 @@ namespace NCLGL_Impl {
     std::shared_ptr<Engine::IAL::I_AnimatedMesh> B_Factory::LoadAnimatedMesh(
         const std::string& path,
         const std::string& animPathOrName) {
+                if (path.empty()) {
+            return nullptr;
+        }
+
+        const std::string modelExtension = ExtractExtension(path);
+
+        auto logAnimatedMesh = [](const std::string& source,
+                                  const std::shared_ptr<::MeshAnimation>& animation) {
+            if (animation) {
+                std::cerr << "[B_Factory] Animated mesh loaded: " << source
+                    << " (frames=" << animation->GetFrameCount()
+                    << ", joints=" << animation->GetJointCount() << ")\n";
+            }
+        };
+
+        try {
+            if (modelExtension == ".gltf" || modelExtension == ".glb") {
+                GLTFScene scene;
+                if (!GLTFLoader::Load(path, scene) || scene.meshes.empty()) {
+                    std::cerr << "[B_Factory] GLTF animated mesh load failed for " << path << "\n";
+                    return nullptr;
+                }
+
+                SharedMesh mesh = scene.meshes.front();
+                if (!mesh) {
+                    std::cerr << "[B_Factory] GLTF animated mesh missing mesh data: " << path << "\n";
+                    return nullptr;
+                }
+
+                std::shared_ptr<::MeshAnimation> selectedAnimation;
+                if (!scene.animations.empty()) {
+                    selectedAnimation = scene.animations.front();
+                    if (!animPathOrName.empty()) {
+                        const std::string animExtension = ExtractExtension(animPathOrName);
+                        if (animExtension == ".anm") {
+                            auto fallback = std::make_shared<::MeshAnimation>(animPathOrName);
+                            if (fallback && fallback->GetJointCount() > 0 && fallback->GetFrameCount() > 0) {
+                                selectedAnimation = fallback;
+                            }
+                            else {
+                                std::cerr << "[B_Factory] Fallback animation load failed for "
+                                    << animPathOrName << "\n";
+                            }
+                        }
+                        else if (IsDigits(animPathOrName)) {
+                            try {
+                                const std::size_t index = std::stoul(animPathOrName);
+                                if (index < scene.animations.size() && scene.animations[index]) {
+                                    selectedAnimation = scene.animations[index];
+                                }
+                            }
+                            catch (const std::exception&) {
+                            }
+                        }
+                    }
+                }
+
+                if (!selectedAnimation) {
+                    std::cerr << "[B_Factory] GLTF animated mesh missing animation clip: " << path << "\n";
+                    return nullptr;
+                }
+
+                logAnimatedMesh(path, selectedAnimation);
+                return std::make_shared<B_AnimatedMesh>(mesh, selectedAnimation);
+            }
+
+            std::shared_ptr<::Mesh> mesh(::Mesh::LoadFromMeshFile(path));
+            if (!mesh) {
+                std::cerr << "[B_Factory] Animated mesh load failed for " << path << "\n";
+                return nullptr;
+            }
+
+            std::shared_ptr<::MeshAnimation> animation;
+            if (!animPathOrName.empty()) {
+                animation = std::make_shared<::MeshAnimation>(animPathOrName);
+                if (!animation || animation->GetJointCount() == 0 || animation->GetFrameCount() == 0) {
+                    std::cerr << "[B_Factory] Animation clip load failed: " << animPathOrName << "\n";
+                    animation.reset();
+                }
+            }
+
+            if (!animation) {
+                std::cerr << "[B_Factory] Animated mesh requires a valid animation clip: " << path << "\n";
+                return nullptr;
+            }
+
+            logAnimatedMesh(path, animation);
+            return std::make_shared<B_AnimatedMesh>(mesh, animation);
+        }
+        catch (const std::exception& ex) {
+            std::cerr << "[B_Factory] Exception while loading animated mesh " << path << ": "
+                << ex.what() << "\n";
+        }
         return nullptr;
     }
 
