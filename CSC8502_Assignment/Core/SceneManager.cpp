@@ -16,8 +16,8 @@
 #include <algorithm>
 
 
-SceneManager::SceneManager(const std::shared_ptr<Engine::IAL::I_ResourceFactory>& factory)
-    : m_factory(factory)
+SceneManager::SceneManager(const std::shared_ptr<Engine::IAL::I_ResourceFactory>& factory) :
+    m_factory(factory)
     , m_sceneGraph(std::make_shared<SceneGraph>())
     , m_renderer()
     , m_accumulatedTime(0.0f)
@@ -26,7 +26,8 @@ SceneManager::SceneManager(const std::shared_ptr<Engine::IAL::I_ResourceFactory>
     , m_activeType(SceneType::Peace)
     , m_transitionActive(false)
     , m_transitionElapsed(0.0f)
-    , m_transitionDuration(1.0f) {
+    , m_transitionDuration(1.0f)
+    , m_rainEnabled(false) {
     if (m_factory && m_sceneGraph) {
         m_scenePeace = std::make_unique<Scene_T1_Peace>(m_factory, m_sceneGraph);
         if (m_scenePeace) {
@@ -51,12 +52,20 @@ void SceneManager::BindRenderer(const std::shared_ptr<Renderer>& renderer) {
         ApplyEnvironment(*renderer);
         renderer->SetWater(GetWater());
         renderer->SetTerrainHeightmap(GetActiveHeightmap());
+        renderer->SetRainEnabled(m_rainEnabled);
     }
 }
 
-void SceneManager::Update(float deltaTime,Engine::IAL::I_Keyboard* keyboard) {
+void SceneManager::Update(float deltaTime, Engine::IAL::I_Keyboard* keyboard) {
     m_accumulatedTime += deltaTime;
-
+    if (keyboard) {
+        if (keyboard->KeyTriggered(Engine::IAL::KeyCode::R)) {
+            m_rainEnabled = !m_rainEnabled;
+            if (auto renderer = m_renderer.lock()) {
+                renderer->SetRainEnabled(m_rainEnabled);
+            }
+        }
+    }
     if (keyboard && !m_transitionActive) {
         if (keyboard->KeyTriggered(Engine::IAL::KeyCode::T)) {
             SceneType target = m_activeType == SceneType::Peace ? SceneType::War : SceneType::Peace;
@@ -165,12 +174,18 @@ void SceneManager::ApplyEnvironment(Renderer& renderer) {
         renderer.SetSkyboxTexture(nullptr);
         renderer.SetDirectionalLight(fallback);
         renderer.SetSceneColour(Vector3(0.0f, 0.0f, 0.0f));
+        renderer.SetGrassEnabled(false);
+        renderer.SetGrassBaseTexture(nullptr);
+        renderer.SetRainEnabled(m_rainEnabled);
         return;
     }
 
     renderer.SetSkyboxTexture(environment->skyboxTexture);
     renderer.SetDirectionalLight(environment->directionalLight);
     renderer.SetSceneColour(environment->sceneColour);
+    renderer.SetGrassBaseTexture(environment->grassBaseColorTexture);
+    renderer.SetGrassEnabled(true);
+    renderer.SetRainEnabled(m_rainEnabled);
 }
 
 void SceneManager::BeginTransition(SceneType target) {
@@ -183,6 +198,7 @@ void SceneManager::BeginTransition(SceneType target) {
         ApplyEnvironment(*renderer);
         renderer->SetWater(GetWater());
         renderer->SetTerrainHeightmap(GetActiveHeightmap());
+        renderer->SetRainEnabled(m_rainEnabled);
         renderer->SetTransitionState(true, 0.0f);
     }
 }

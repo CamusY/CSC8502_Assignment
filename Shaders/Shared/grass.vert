@@ -1,6 +1,6 @@
 ﻿#version 460 core
 
-layout(location = 0) in vec4 inInstance; // xyz: world position, w: random seed
+layout(location = 0) in vec4 inInstance;
 
 out VS_OUT {
     vec3 worldPos;

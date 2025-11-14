@@ -605,9 +605,8 @@ namespace NCLGL_Impl {
         std::memcpy(samples.data(), data, pixelCount);
         stbi_image_free(data);
         std::vector<float> heightSamples(pixelCount);
-        const float inv255 = 1.0f / 255.0f;
         for (size_t i = 0; i < pixelCount; ++i) {
-            heightSamples[i] = static_cast<float>(samples[i]) * inv255;
+            heightSamples[i] = static_cast<float>(samples[i]);
         }
         try {
             auto* mesh = new HeightmapMesh(samples, dimension, scale);

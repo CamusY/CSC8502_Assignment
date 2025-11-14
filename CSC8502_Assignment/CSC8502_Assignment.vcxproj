@@ -156,6 +156,7 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Renderer\GrassField.cpp" />
     <ClCompile Include="Renderer\PostProcessing.cpp" />
+    <ClCompile Include="Renderer\RainSystem.cpp" />
     <ClCompile Include="Renderer\Renderer.cpp" />
     <ClCompile Include="Renderer\ShadowMap.cpp" />
     <ClCompile Include="Renderer\Water.cpp" />
@@ -194,6 +195,7 @@
     <ClInclude Include="Game\Scenes\Scene_T2_War.h" />
     <ClInclude Include="Renderer\GrassField.h" />
     <ClInclude Include="Renderer\PostProcessing.h" />
+    <ClInclude Include="Renderer\RainSystem.h" />
     <ClInclude Include="Renderer\Renderer.h" />
     <ClInclude Include="Renderer\ShadowMap.h" />
     <ClInclude Include="Renderer\Water.h" />
@@ -211,6 +213,8 @@
     <Content Include="..\Shaders\Shared\postprocess.frag" />
     <Content Include="..\Shaders\Shared\postprocess.vert" />
     <Content Include="..\Shaders\Shared\post_transition.frag" />
+    <Content Include="..\Shaders\Shared\rain.frag" />
+    <Content Include="..\Shaders\Shared\rain.vert" />
     <Content Include="..\Shaders\Shared\shadow.frag" />
     <Content Include="..\Shaders\Shared\shadow.vert" />
     <Content Include="..\Shaders\Shared\skinning.frag" />

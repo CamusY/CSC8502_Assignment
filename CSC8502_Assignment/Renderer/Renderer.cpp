@@ -12,6 +12,7 @@
 #include "PostProcessing.h"
 #include "Water.h"
 #include "GrassField.h"
+#include "RainSystem.h"
 #include "../Core/Camera.h"
 #include "../Engine/IAL/I_FrameBuffer.h"
 #include "../Engine/IAL/I_Mesh.h"
@@ -66,7 +67,11 @@ Renderer::Renderer(const std::shared_ptr<Engine::IAL::I_ResourceFactory>& factor
     , m_environmentMaxLod(5.0f)
     , m_activeHeightmap(nullptr)
     , m_grassField(nullptr)
-    , m_timeAccumulator(0.0f) {
+    , m_rainSystem(nullptr)
+    , m_grassBaseTextureOverride(nullptr)
+    , m_timeAccumulator(0.0f)
+    , m_grassEnabled(true)
+    , m_rainEnabled(false) {
     if (m_factory) {
         m_sceneShader = m_factory->CreateShader("Shared/basic.vert", "Shared/basic.frag");
         m_terrainShader = m_factory->CreateShader("Shared/terrain.vert", "Shared/terrain.frag");
@@ -77,6 +82,9 @@ Renderer::Renderer(const std::shared_ptr<Engine::IAL::I_ResourceFactory>& factor
         m_skyboxMesh = m_factory->LoadMesh("../Meshes/cube.gltf");
         m_postProcessing = std::make_shared<PostProcessing>(m_factory, width, height);
         m_shadowMap = std::make_shared<ShadowMap>(m_factory, 2048, 2048);
+    }
+    if (m_factory) {
+        m_rainSystem = std::make_unique<RainSystem>(m_factory, 2000, 240.0f, 160.0f);
     }
 
     m_shadowMatrix.ToIdentity();
@@ -101,13 +109,24 @@ void Renderer::Render(float deltaTime) {
     glEnable(GL_DEPTH_TEST);
     glDisable(GL_CLIP_DISTANCE0);
 
-    UpdateAnimatedMeshes(deltaTime);
-    m_timeAccumulator += deltaTime;
 
     const Vector3 defaultCameraPos(0.0f, 0.0f, 10.5f);
     const Vector3 cameraPosition = m_camera ? m_camera->GetPosition() : defaultCameraPos;
     const float cameraYaw = m_camera ? m_camera->GetYaw() : 0.0f;
     const float cameraPitch = m_camera ? m_camera->GetPitch() : 0.0f;
+
+    UpdateAnimatedMeshes(deltaTime);
+    m_timeAccumulator += deltaTime;
+
+    if (m_rainSystem) {
+        float waterLevel = m_water ? m_water->GetHeight() : 0.0f;
+        m_rainSystem->Update(deltaTime,
+                             cameraPosition,
+                             cameraYaw,
+                             cameraPitch,
+                             m_activeHeightmap,
+                             waterLevel);
+    }
 
     Matrix4 view = m_camera
         ? m_camera->BuildViewMatrix()
@@ -163,6 +182,7 @@ void Renderer::Render(float deltaTime) {
     RenderScenePass(view, projection, cameraPosition, true);
     RenderGrass(view, projection, cameraPosition);
     RenderWaterSurface(view, projection, cameraPosition);
+    RenderRain(view, projection, cameraPosition, cameraYaw, cameraPitch);
 
     if (m_postProcessing) {
         m_postProcessing->EndCapture();
@@ -209,12 +229,44 @@ void Renderer::SetTransitionState(bool enabled, float progress) {
 
 void Renderer::SetTerrainHeightmap(const std::shared_ptr<Engine::IAL::I_Heightmap>& heightmap) {
     m_activeHeightmap = heightmap;
-    if (!m_factory || !m_activeHeightmap) {
+    if (!m_factory || !m_activeHeightmap || !m_grassEnabled) {
         m_grassField.reset();
         return;
     }
     const float waterHeight = m_water ? m_water->GetHeight() : 0.0f;
     m_grassField = std::make_unique<GrassField>(m_factory, m_activeHeightmap, waterHeight);
+    if (m_grassField) {
+        m_grassField->SetBaseColorTexture(m_grassBaseTextureOverride);
+    }
+}
+
+void Renderer::SetGrassEnabled(bool enabled) {
+    if (m_grassEnabled == enabled) {
+        return;
+    }
+    m_grassEnabled = enabled;
+    if (!m_grassEnabled) {
+        m_grassField.reset();
+        return;
+    }
+    if (m_factory && m_activeHeightmap) {
+        const float waterHeight = m_water ? m_water->GetHeight() : 0.0f;
+        m_grassField = std::make_unique<GrassField>(m_factory, m_activeHeightmap, waterHeight);
+        if (m_grassField) {
+            m_grassField->SetBaseColorTexture(m_grassBaseTextureOverride);
+        }
+    }
+}
+
+void Renderer::SetGrassBaseTexture(const std::shared_ptr<Engine::IAL::I_Texture>& texture) {
+    m_grassBaseTextureOverride = texture;
+    if (m_grassField) {
+        m_grassField->SetBaseColorTexture(m_grassBaseTextureOverride);
+    }
+}
+
+void Renderer::SetRainEnabled(bool enabled) {
+    m_rainEnabled = enabled;
 }
 
 void Renderer::UpdateAnimatedMeshes(float deltaTime) {
@@ -344,7 +396,7 @@ void Renderer::RenderScenePass(const Matrix4& view,
         }
         auto shadowTexture = m_shadowMap ? m_shadowMap->GetDepthTexture() : nullptr;
         const bool hasShadow = static_cast<bool>(shadowTexture);
-        
+
         std::shared_ptr<Engine::IAL::I_Shader> shader;
         if (animatedMesh) {
             shader = m_skinnedShader;
@@ -477,10 +529,11 @@ void Renderer::RenderScenePass(const Matrix4& view,
     glDisable(GL_CLIP_DISTANCE0);
     UnbindBonePalette();
 }
+
 void Renderer::RenderGrass(const Matrix4& view,
                            const Matrix4& projection,
                            const Vector3& cameraPosition) {
-    if (!m_grassField) {
+    if (!m_grassEnabled || !m_grassField) {
         return;
     }
     m_grassField->Render(view, projection, cameraPosition, m_timeAccumulator);
@@ -641,6 +694,19 @@ void Renderer::RenderRefractionPass(const Matrix4& view,
     m_waterRefractionFBO->Unbind();
 }
 
+void Renderer::RenderRain(const Matrix4& view,
+                          const Matrix4& projection,
+                          const Vector3& cameraPosition,
+                          float cameraYaw,
+                          float cameraPitch) {
+    if (!m_rainSystem) {
+        return;
+    }
+    const float fogDensity = 0.0018f;
+    Vector3 fogColor = m_directionalLight.ambient * 0.4f + Vector3(0.25f, 0.30f, 0.40f) * 0.6f;
+    m_rainSystem->Render(view, projection, cameraPosition, cameraYaw, cameraPitch, fogColor, fogDensity);
+}
+
 void Renderer::RenderDebugUI() {
     if (!m_debugUI) {
         return;
@@ -680,9 +746,7 @@ Engine::IAL::PBRMaterial Renderer::ResolveMaterial(const std::shared_ptr<SceneNo
     if (!material.baseColorFactor.x && !material.baseColorFactor.y && !material.baseColorFactor.z) {
         material.baseColorFactor = Vector4(m_sceneColour.x, m_sceneColour.y, m_sceneColour.z, 1.0f);
     }
-    if (material.metallicFactor < 0.0f) {
-        material.metallicFactor = 0.0f;
-    }
+    material.metallicFactor = std::max(material.metallicFactor, 0.0f);
     if (material.roughnessFactor <= 0.0f) {
         material.roughnessFactor = 1.0f;
     }

@@ -14,6 +14,7 @@
 
 struct SceneEnvironment {
     std::shared_ptr<Engine::IAL::I_Texture> skyboxTexture;
+    std::shared_ptr<Engine::IAL::I_Texture> grassBaseColorTexture;
     Light directionalLight;
     Vector3 sceneColour;
 };

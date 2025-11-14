@@ -41,6 +41,7 @@ class GrassField;
 class PostProcessing;
 class Camera;
 class Water;
+class RainSystem;
 
 class Renderer {
 public:
@@ -60,6 +61,11 @@ public:
     void SetDirectionalLight(const Light& light);
     void SetTransitionState(bool enabled, float progress);
     void SetTerrainHeightmap(const std::shared_ptr<Engine::IAL::I_Heightmap>& heightmap);
+    void SetGrassEnabled(bool enabled);
+    void SetGrassBaseTexture(const std::shared_ptr<Engine::IAL::I_Texture>& texture);
+    bool IsGrassEnabled() const { return m_grassEnabled; }
+    void SetRainEnabled(bool enabled);
+    bool IsRainEnabled() const { return m_rainEnabled; }
 
 private:
     void RenderSceneForShadowMap(const Matrix4& lightViewProjection,
@@ -71,8 +77,8 @@ private:
                          bool skipWaterNode,
                          const Vector4* clipPlane = nullptr);
     void RenderWaterSurface(const Matrix4& view,
-                             const Matrix4& projection,
-                             const Vector3& cameraPosition);
+                            const Matrix4& projection,
+                            const Vector3& cameraPosition);
     void RenderReflectionPass(const Matrix4& projection,
                                const Vector3& cameraPosition,
                                float cameraYaw,
@@ -80,6 +86,11 @@ private:
     void RenderRefractionPass(const Matrix4& view,
                                const Matrix4& projection,
                                const Vector3& cameraPosition);
+    void RenderRain(const Matrix4& view,
+                    const Matrix4& projection,
+                    const Vector3& cameraPosition,
+                    float cameraYaw,
+                    float cameraPitch);
     void RenderDebugUI();
     void RenderGrass(const Matrix4& view,
                      const Matrix4& projection,
@@ -130,5 +141,9 @@ private:
     float m_environmentMaxLod;
     std::shared_ptr<Engine::IAL::I_Heightmap> m_activeHeightmap;
     std::unique_ptr<GrassField> m_grassField;
+    std::unique_ptr<RainSystem> m_rainSystem;
     float m_timeAccumulator;
+    std::shared_ptr<Engine::IAL::I_Texture> m_grassBaseTextureOverride;
+    bool m_grassEnabled;
+    bool m_rainEnabled;
 };

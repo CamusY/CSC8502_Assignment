@@ -16,6 +16,7 @@ namespace Engine::IAL {
     class I_ResourceFactory;
     class I_Heightmap;
     class I_Shader;
+    class I_Texture;
 }
 
 class GrassField {
@@ -31,6 +32,7 @@ public:
                 float timeSeconds);
 
     void SetColor(const Vector3& color);
+    void SetBaseColorTexture(const std::shared_ptr<Engine::IAL::I_Texture>& texture);
 
 private:
     void GenerateInstances(const std::shared_ptr<Engine::IAL::I_Heightmap>& heightmap,
@@ -41,4 +43,8 @@ private:
     unsigned int m_vbo;
     int m_instanceCount;
     Vector3 m_color;
+    std::shared_ptr<Engine::IAL::I_Texture> m_defaultBaseColorTexture;
+    std::shared_ptr<Engine::IAL::I_Texture> m_baseColorTexture;
+    std::shared_ptr<Engine::IAL::I_Texture> m_alphaShapeTexture;
+    float m_fallbackAlpha;
 };

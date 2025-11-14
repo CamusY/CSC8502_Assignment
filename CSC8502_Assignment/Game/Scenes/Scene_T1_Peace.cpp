@@ -68,7 +68,7 @@ void Scene_T1_Peace::Init() {
             "../Textures/skybox_peace/posy.png",
             "../Textures/skybox_peace/negz.png",
             "../Textures/skybox_peace/posz.png");
-
+        m_environment.grassBaseColorTexture = m_factory->LoadTexture("../Textures/grass/grass.png", false);
         m_characterMesh = m_factory->LoadAnimatedMesh("../Meshes/moving.gltf");
         if (m_characterMesh) {
             m_characterNode = std::make_shared<SceneNode>();

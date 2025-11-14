@@ -70,12 +70,13 @@ void Scene_T2_War::Init() {
 
     if (m_factory) {
         m_environment.skyboxTexture = m_factory->LoadCubemap(
-            "../Textures/skybox_war/negx.png",
-            "../Textures/skybox_war/posx.png",
-            "../Textures/skybox_war/negy.png",
-            "../Textures/skybox_war/posy.png",
-            "../Textures/skybox_war/negz.png",
-            "../Textures/skybox_war/posz.png");
+            "../Textures/skybox_war/negx.jpg",
+            "../Textures/skybox_war/posx.jpg",
+            "../Textures/skybox_war/negy.jpg",
+            "../Textures/skybox_war/posy.jpg",
+            "../Textures/skybox_war/negz.jpg",
+            "../Textures/skybox_war/posz.jpg");
+        m_environment.grassBaseColorTexture = m_factory->LoadTexture("../Textures/grass/brownGrass.png", false);
     }
     m_environment.directionalLight.position = Vector3(150.0f, 300.0f, 150.0f);
     m_environment.directionalLight.color = Vector3(1.0f, 0.84f, 0.95f);

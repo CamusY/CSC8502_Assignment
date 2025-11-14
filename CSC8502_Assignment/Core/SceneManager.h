@@ -56,6 +56,7 @@ private:
     std::unique_ptr<Scene_T2_War> m_sceneWar;
     SceneType m_activeType;
     bool m_transitionActive;
+    bool m_rainEnabled;
     float m_transitionElapsed;
     float m_transitionDuration;
 };
