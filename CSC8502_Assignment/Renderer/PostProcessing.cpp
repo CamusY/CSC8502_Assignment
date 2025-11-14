@@ -166,6 +166,12 @@ void PostProcessing::ProcessBloom() {
         return;
     }
 
+    GLboolean depthWasEnabled = GL_FALSE;
+    glGetBooleanv(GL_DEPTH_TEST, &depthWasEnabled);
+    if (depthWasEnabled == GL_TRUE) {
+        glDisable(GL_DEPTH_TEST);
+    }
+    
     m_brightFrameBuffer->Bind();
     glViewport(0, 0, m_width, m_height);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -211,5 +217,8 @@ void PostProcessing::ProcessBloom() {
     }
     if (!m_cachedBloomTexture && m_brightFrameBuffer) {
         m_cachedBloomTexture = m_brightFrameBuffer->GetColorTexture();
+    }
+    if (depthWasEnabled == GL_TRUE) {
+        glEnable(GL_DEPTH_TEST);
     }
 }

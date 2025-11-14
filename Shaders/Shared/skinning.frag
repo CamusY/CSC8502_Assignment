@@ -210,7 +210,7 @@ void main() {
     float fogFactor = clamp(exp(-pow(fogDistance * uFogDensity, 2.0)), 0.0, 1.0);
     vec3 foggedColor = mix(uFogColor, color, fogFactor);
 
-    vec3 finalColor = LinearToSRGB(foggedColor);
+    vec3 finalColor = foggedColor;
     float finalAlpha = (uAlphaMode == 2) ? clamp(alpha, 0.0, 1.0) : 1.0;
     fragColor = vec4(finalColor, finalAlpha);
 }

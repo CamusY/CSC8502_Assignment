@@ -17,7 +17,7 @@ namespace NCLGL_Impl {
         m_colorTexture(nullptr),
         m_depthTexture(nullptr),
         m_hasColorAttachment(enableColorAttachment),
-        m_colorFormat(enableColorAttachment ? AttachmentFormat::Color8 : AttachmentFormat::None),
+        m_colorFormat(enableColorAttachment ? AttachmentFormat::Color16F : AttachmentFormat::None),
         m_depthFormat(AttachmentFormat::Depth24) {
         glGenFramebuffers(1, &m_fboID);
         glBindFramebuffer(GL_FRAMEBUFFER, m_fboID);
@@ -26,7 +26,7 @@ namespace NCLGL_Impl {
             unsigned int colorID = 0;
             glGenTextures(1, &colorID);
             glBindTexture(GL_TEXTURE_2D, colorID);
-            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);

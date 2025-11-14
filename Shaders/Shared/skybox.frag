@@ -5,6 +5,11 @@ uniform samplerCube uSkybox;
 
 out vec4 fragColor;
 
+vec3 SRGBToLinear(vec3 c) {
+    return pow(c, vec3(2.2));
+}
+
 void main() {
-    fragColor = texture(uSkybox, normalize(vDirection));
+    vec3 sampled = texture(uSkybox, normalize(vDirection)).rgb;
+    fragColor = vec4(SRGBToLinear(sampled), 1.0);
 }
