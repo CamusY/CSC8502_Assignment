@@ -366,7 +366,6 @@ void Renderer::RenderScenePass(const Matrix4& view,
         shader->Bind();
         shader->SetUniform("uViewProj", viewProj);
         shader->SetUniform("uModel", modelMatrix);
-        m_skinnedShader->SetUniform("uModel", modelMatrix);
         shader->SetUniform("uClipPlane", clip);
         shader->SetUniform("uLightPosition", m_directionalLight.position);
         shader->SetUniform("uLightColor", m_directionalLight.color);

@@ -75,6 +75,7 @@ void Scene_T1_Peace::Init() {
             m_characterNode->SetMesh(m_characterMesh);
             m_characterNode->SetScale(Vector3(40.0f, 40.0f, 40.0f));
             m_characterNode->SetPosition(Vector3(520.0f, 15.0f, 500.0f));
+            m_characterNode->SetRotation(Vector3(-90.0f, 0.0f, 0.0f));
             if (root) {
                 root->AddChild(m_characterNode);
             }
