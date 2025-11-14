@@ -419,16 +419,22 @@ void Renderer::RenderWaterSurface(const Matrix4& view,
     }
 
     Matrix4 viewProj = projection * view;
+    Matrix4 modelMatrix = waterNode->GetWorldTransform();
+    const float fogDensity = 0.0018f;
+    Vector3 fogColor = m_directionalLight.ambient * 0.4f + Vector3(0.25f, 0.30f, 0.40f) * 0.6f;
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glDepthMask(GL_FALSE);
 
     m_waterShader->Bind();
+    m_waterShader->SetUniform("uModel", modelMatrix);
     m_waterShader->SetUniform("uReflectionViewProj", m_reflectionViewProj);
     m_waterShader->SetUniform("uViewProj", viewProj);
     m_waterShader->SetUniform("uCameraPos", cameraPosition);
     m_waterShader->SetUniform("uLightColor", m_directionalLight.color);
     m_waterShader->SetUniform("uAmbientColor", m_directionalLight.ambient);
+    m_waterShader->SetUniform("uFogColor", fogColor);
+    m_waterShader->SetUniform("uFogDensity", fogDensity);
     auto shadowTexture = m_shadowMap ? m_shadowMap->GetDepthTexture() : nullptr;
     const bool hasShadow = static_cast<bool>(shadowTexture);
     m_waterShader->SetUniform("uShadowMatrix", m_shadowMatrix);
