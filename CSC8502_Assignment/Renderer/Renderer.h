@@ -11,6 +11,7 @@
  */
 #pragma once
 
+#include <cstddef>
 #include <memory>
 #include <vector>
 
@@ -21,6 +22,7 @@
 #include "../Engine/IAL/I_AnimatedMesh.h"
 #include "ShadowMap.h"
 
+#include "nclgl/Matrix4.h"
 #include "nclgl/Vector3.h"
 #include "nclgl/Vector4.h"
 
@@ -43,6 +45,8 @@ public:
              const std::shared_ptr<Engine::IAL::I_DebugUI>& debugUI,
              int width,
              int height);
+
+    ~Renderer();
 
     void Render(float deltaTime);
     void SetWater(const std::shared_ptr<Water>& water);
@@ -73,6 +77,9 @@ private:
     void RenderDebugUI();
     void UpdateAnimatedMeshes(float deltaTime);
     float GetTerrainExtent() const;
+    void BindBonePalette(const std::vector<Matrix4>& bones, int boneCount);
+    void UnbindBonePalette();
+    void EnsureBoneBufferCapacity(std::size_t requiredCount);
 
     std::shared_ptr<Engine::IAL::I_ResourceFactory> m_factory;
     std::shared_ptr<SceneGraph> m_sceneGraph;
@@ -105,4 +112,6 @@ private:
     Matrix4 m_shadowMatrix;
     Matrix4 m_reflectionViewProj;
     float m_shadowStrength;
+    unsigned int m_bonePaletteBuffer;
+    std::size_t m_boneCapacity;
 };

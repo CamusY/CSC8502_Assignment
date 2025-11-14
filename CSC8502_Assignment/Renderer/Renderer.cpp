@@ -23,11 +23,6 @@
 #include <iostream>
 #include <vector>
 
-namespace {
-    constexpr int kMaxBones = 128;
-}
-
-
 Renderer::Renderer(const std::shared_ptr<Engine::IAL::I_ResourceFactory>& factory,
                    const std::shared_ptr<SceneGraph>& sceneGraph,
                    const std::shared_ptr<Camera>& camera,
@@ -62,7 +57,9 @@ Renderer::Renderer(const std::shared_ptr<Engine::IAL::I_ResourceFactory>& factor
     , m_transitionProgress(0.0f)
     , m_shadowMatrix()
     , m_reflectionViewProj()
-    , m_shadowStrength(0.65f) {
+    , m_shadowStrength(0.65f)
+    , m_bonePaletteBuffer(0)
+    , m_boneCapacity(0) {
     if (m_factory) {
         m_sceneShader = m_factory->CreateShader("Shared/basic.vert", "Shared/basic.frag");
         m_terrainShader = m_factory->CreateShader("Shared/terrain.vert", "Shared/terrain.frag");
@@ -78,6 +75,14 @@ Renderer::Renderer(const std::shared_ptr<Engine::IAL::I_ResourceFactory>& factor
     m_shadowMatrix.ToIdentity();
     m_reflectionViewProj.ToIdentity();
     glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
+}
+
+Renderer::~Renderer() {
+    if (m_bonePaletteBuffer != 0) {
+        glDeleteBuffers(1, &m_bonePaletteBuffer);
+        m_bonePaletteBuffer = 0;
+        m_boneCapacity = 0;
+    }
 }
 
 void Renderer::Render(float deltaTime) {
@@ -230,10 +235,11 @@ void Renderer::RenderSceneForShadowMap(const Matrix4& lightViewProjection,
         int boneCount = 0;
         if (animatedMesh) {
             const auto& bones = animatedMesh->GetBoneTransforms();
-            boneCount = static_cast<int>(std::min<size_t>(bones.size(), static_cast<size_t>(kMaxBones)));
-            if (boneCount > 0) {
-                m_shadowShader->SetUniformMatrix4Array("uBoneMatrices", bones.data(), static_cast<size_t>(boneCount));
-            }
+            boneCount = static_cast<int>(bones.size());
+            BindBonePalette(bones, boneCount);
+        }
+        else {
+            UnbindBonePalette();
         }
         m_shadowShader->SetUniform("uBoneCount", boneCount);
         Matrix4 modelMatrix = node->GetWorldTransform();
@@ -243,6 +249,7 @@ void Renderer::RenderSceneForShadowMap(const Matrix4& lightViewProjection,
         m_shadowShader->SetUniform("uModel", modelMatrix);
         mesh->Draw();
     }
+    UnbindBonePalette();
     m_shadowShader->Unbind();
 }
 
@@ -278,10 +285,10 @@ void Renderer::RenderScenePass(const Matrix4& view,
     }
     m_renderQueue.clear();
     m_sceneGraph->CollectRenderableNodes(m_renderQueue);
-    
+
     const float fogDensity = 0.0018f;
     Vector3 fogColor = m_directionalLight.ambient * 0.4f + Vector3(0.25f, 0.30f, 0.40f) * 0.6f;
-    
+
     Matrix4 viewProj = projection * view;
     Vector4 clip(0.0f, 0.0f, 0.0f, 0.0f);
     if (clipPlane) {
@@ -312,10 +319,10 @@ void Renderer::RenderScenePass(const Matrix4& view,
         const bool hasShadow = static_cast<bool>(shadowTexture);
         if (animatedMesh && m_skinnedShader) {
             const auto& bones = animatedMesh->GetBoneTransforms();
-            const int boneCount = static_cast<int>(std::min<size_t>(bones.size(), static_cast<size_t>(kMaxBones)));
+            const int boneCount = static_cast<int>(bones.size());
             m_skinnedShader->Bind();
             m_skinnedShader->SetUniform("uViewProj", viewProj);
-            m_skinnedShader->SetUniform("uModel", node->GetWorldTransform());
+            m_skinnedShader->SetUniform("uModel", modelMatrix);
             m_skinnedShader->SetUniform("uClipPlane", clip);
             m_skinnedShader->SetUniform("uLightPosition", m_directionalLight.position);
             m_skinnedShader->SetUniform("uLightColor", m_directionalLight.color);
@@ -325,9 +332,7 @@ void Renderer::RenderScenePass(const Matrix4& view,
             m_skinnedShader->SetUniform("uShadowMatrix", m_shadowMatrix);
             m_skinnedShader->SetUniform("uShadowStrength", hasShadow ? m_shadowStrength : 0.0f);
             m_skinnedShader->SetUniform("uBoneCount", boneCount);
-            if (boneCount > 0) {
-                m_skinnedShader->SetUniformMatrix4Array("uBoneMatrices", bones.data(), static_cast<size_t>(boneCount));
-            }
+            BindBonePalette(bones, boneCount);
             if (hasShadow) {
                 shadowTexture->Bind(2);
                 m_skinnedShader->SetUniform("uShadowMap", 2);
@@ -349,6 +354,7 @@ void Renderer::RenderScenePass(const Matrix4& view,
             m_skinnedShader->Unbind();
             continue;
         }
+        UnbindBonePalette();
         auto texture = node->GetTexture();
         if (!texture) {
             texture = mesh->GetDefaultTexture();
@@ -364,10 +370,10 @@ void Renderer::RenderScenePass(const Matrix4& view,
         shader->SetUniform("uClipPlane", clip);
         shader->SetUniform("uLightPosition", m_directionalLight.position);
         shader->SetUniform("uLightColor", m_directionalLight.color);
-        
+
         shader->SetUniform("uFogColor", fogColor);
         shader->SetUniform("uFogDensity", fogDensity);
-        
+
         shader->SetUniform("uAmbientColor", m_directionalLight.ambient);
         shader->SetUniform("uShadowMatrix", m_shadowMatrix);
         shader->SetUniform("uShadowStrength", hasShadow ? m_shadowStrength : 0.0f);
@@ -390,6 +396,7 @@ void Renderer::RenderScenePass(const Matrix4& view,
         shader->Unbind();
     }
     glDisable(GL_CLIP_DISTANCE0);
+    UnbindBonePalette();
 }
 
 void Renderer::RenderWaterSurface(const Matrix4& view,
@@ -472,6 +479,54 @@ void Renderer::RenderReflectionPass(const Matrix4& projection,
     RenderScenePass(reflectionView, projection, reflectionCamera.GetPosition(), true, &reflectionClip);
 
     m_waterReflectionFBO->Unbind();
+}
+
+void Renderer::BindBonePalette(const std::vector<Matrix4>& bones, int boneCount) {
+    if (boneCount <= 0 || bones.empty()) {
+        UnbindBonePalette();
+        return;
+    }
+
+    EnsureBoneBufferCapacity(static_cast<std::size_t>(boneCount));
+
+    if (m_bonePaletteBuffer == 0) {
+        return;
+    }
+
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_bonePaletteBuffer);
+    glBufferSubData(GL_SHADER_STORAGE_BUFFER,
+                    0,
+                    static_cast<GLsizeiptr>(boneCount * sizeof(Matrix4)),
+                    bones.data());
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, m_bonePaletteBuffer);
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+}
+
+void Renderer::UnbindBonePalette() {
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, 0);
+}
+
+void Renderer::EnsureBoneBufferCapacity(std::size_t requiredCount) {
+    if (requiredCount == 0) {
+        return;
+    }
+
+    if (m_bonePaletteBuffer == 0) {
+        glGenBuffers(1, &m_bonePaletteBuffer);
+    }
+
+    if (requiredCount <= m_boneCapacity) {
+        return;
+    }
+
+    const std::size_t newCapacity = std::max<std::size_t>(requiredCount, std::max<std::size_t>(m_boneCapacity * 2, 64));
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_bonePaletteBuffer);
+    glBufferData(GL_SHADER_STORAGE_BUFFER,
+                 static_cast<GLsizeiptr>(newCapacity * sizeof(Matrix4)),
+                 nullptr,
+                 GL_DYNAMIC_DRAW);
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+    m_boneCapacity = newCapacity;
 }
 
 void Renderer::RenderRefractionPass(const Matrix4& view,

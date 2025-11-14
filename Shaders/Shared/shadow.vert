@@ -5,7 +5,9 @@ layout(location = 6) in ivec4 joints;
 
 uniform mat4 uModel;
 uniform mat4 uLightViewProj;
-uniform mat4 uBoneMatrices[128];
+layout(std430, binding = 0) readonly buffer BonePalette {
+    mat4 uBoneMatrices[];
+};
 uniform int uBoneCount;
 
 mat4 ComputeSkinMatrix() {
