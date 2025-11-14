@@ -167,6 +167,7 @@ void SceneManager::ApplyEnvironment(Renderer& renderer) {
         Light fallback{};
         renderer.SetSkyboxTexture(nullptr);
         renderer.SetDirectionalLight(fallback);
+        renderer.SetPointLights({});
         renderer.SetSceneColour(Vector3(0.0f, 0.0f, 0.0f));
         renderer.SetGrassEnabled(false);
         renderer.SetGrassBaseTexture(nullptr);
@@ -176,6 +177,7 @@ void SceneManager::ApplyEnvironment(Renderer& renderer) {
 
     renderer.SetSkyboxTexture(environment->skyboxTexture);
     renderer.SetDirectionalLight(environment->directionalLight);
+    renderer.SetPointLights(environment->pointLights);
     renderer.SetSceneColour(environment->sceneColour);
     renderer.SetGrassBaseTexture(environment->grassBaseColorTexture);
     renderer.SetGrassEnabled(true);

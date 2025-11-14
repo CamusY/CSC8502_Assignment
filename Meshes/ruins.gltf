@@ -1,6 +1,6 @@
 {
 	"asset":{
-		"generator":"Khronos glTF Blender I/O v4.5.48",
+		"generator":"Khronos glTF Blender I/O v4.5.49",
 		"version":"2.0"
 	},
 	"scene":0,
@@ -15,9 +15,9 @@
 	"nodes":[
 		{
 			"mesh":0,
-			"name":"Arch_01",
+			"name":"Arch_07",
 			"translation":[
-				18,
+				-30,
 				0,
 				18
 			]
@@ -26,7 +26,7 @@
 	"materials":[
 		{
 			"doubleSided":true,
-			"name":"Stone_Arch",
+			"name":"Stone_Arch.001",
 			"normalTexture":{
 				"index":0
 			},
@@ -42,7 +42,7 @@
 	],
 	"meshes":[
 		{
-			"name":"Cube_dmg.009",
+			"name":"Cube_dmg.001",
 			"primitives":[
 				{
 					"attributes":{
@@ -91,61 +91,61 @@
 		{
 			"bufferView":0,
 			"componentType":5126,
-			"count":1045,
+			"count":1094,
 			"max":[
-				5.003580570220947,
-				4.934654235839844,
-				0.41935932636260986
+				5.0046539306640625,
+				4.49077844619751,
+				0.41939646005630493
 			],
 			"min":[
-				-0.0033301126677542925,
-				-0.006554936990141869,
-				-0.4174686074256897
+				-0.0021611058618873358,
+				-0.008089826442301273,
+				-0.41728317737579346
 			],
 			"type":"VEC3"
 		},
 		{
 			"bufferView":1,
 			"componentType":5126,
-			"count":1045,
+			"count":1094,
 			"type":"VEC3"
 		},
 		{
 			"bufferView":2,
 			"componentType":5126,
-			"count":1045,
+			"count":1094,
 			"type":"VEC2"
 		},
 		{
 			"bufferView":3,
 			"componentType":5123,
-			"count":3138,
+			"count":3210,
 			"type":"SCALAR"
 		}
 	],
 	"bufferViews":[
 		{
 			"buffer":0,
-			"byteLength":12540,
+			"byteLength":13128,
 			"byteOffset":0,
 			"target":34962
 		},
 		{
 			"buffer":0,
-			"byteLength":12540,
-			"byteOffset":12540,
+			"byteLength":13128,
+			"byteOffset":13128,
 			"target":34962
 		},
 		{
 			"buffer":0,
-			"byteLength":8360,
-			"byteOffset":25080,
+			"byteLength":8752,
+			"byteOffset":26256,
 			"target":34962
 		},
 		{
 			"buffer":0,
-			"byteLength":6276,
-			"byteOffset":33440,
+			"byteLength":6420,
+			"byteOffset":35008,
 			"target":34963
 		}
 	],
@@ -157,7 +157,7 @@
 	],
 	"buffers":[
 		{
-			"byteLength":39716,
+			"byteLength":41428,
 			"uri":"ruins.bin"
 		}
 	]

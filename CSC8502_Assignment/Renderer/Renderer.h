@@ -73,6 +73,7 @@ public:
     void SetSkyboxTexture(const std::shared_ptr<Engine::IAL::I_Texture>& texture);
     void SetSceneColour(const Vector3& colour);
     void SetDirectionalLight(const Light& light);
+    void SetPointLights(const std::vector<Light>& lights);
     void SetTransitionState(bool enabled, float progress);
     void SetTerrainHeightmap(const std::shared_ptr<Engine::IAL::I_Heightmap>& heightmap);
     void SetGrassEnabled(bool enabled);
@@ -164,6 +165,7 @@ private:
     std::shared_ptr<Engine::IAL::I_FrameBuffer> m_waterRefractionFBO;
     std::shared_ptr<ShadowMap> m_shadowMap;
     std::shared_ptr<Water> m_water;
+    std::vector<Light> m_pointLights;
     Light m_directionalLight;
     Vector3 m_sceneColour;
     float m_specularPower;

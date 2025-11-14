@@ -8,6 +8,7 @@
 #pragma once
 
 #include <memory>
+#include <vector>
 
 #include "../Core/Light.h"
 #include "../Engine/IAL/I_Texture.h"
@@ -16,5 +17,6 @@ struct SceneEnvironment {
     std::shared_ptr<Engine::IAL::I_Texture> skyboxTexture;
     std::shared_ptr<Engine::IAL::I_Texture> grassBaseColorTexture;
     Light directionalLight;
+    std::vector<Light> pointLights;
     Vector3 sceneColour;
 };

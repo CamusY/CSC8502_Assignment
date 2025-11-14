@@ -12,6 +12,13 @@ out vec4 fragColor;
 uniform vec3 uLightPosition;
 uniform vec3 uLightColor;
 uniform vec3 uAmbientColor;
+
+const int MAX_POINT_LIGHTS = 4;
+uniform int uPointLightCount;
+uniform vec3 uPointLightPositions[MAX_POINT_LIGHTS];
+uniform vec3 uPointLightColors[MAX_POINT_LIGHTS];
+uniform vec3 uPointLightAmbient[MAX_POINT_LIGHTS];
+
 uniform vec3 uCameraPos;
 uniform mat4 uShadowMatrix;
 uniform sampler2DShadow uShadowMap;
@@ -136,6 +143,31 @@ vec3 GetNormal(vec3 defaultNormal) {
     return normalize(defaultNormal);
 }
 
+vec3 EvaluatePBRLighting(vec3 normal,
+vec3 viewDir,
+vec3 lightDir,
+vec3 radiance,
+vec3 baseColor,
+float metallic,
+float roughness,
+vec3 F0) {
+    vec3 halfDir = normalize(lightDir + viewDir);
+    float NDF = DistributionGGX(normal, halfDir, roughness);
+    float G = GeometrySmith(normal, viewDir, lightDir, roughness);
+    vec3 F = FresnelSchlick(max(dot(halfDir, viewDir), 0.0), F0);
+
+    vec3 numerator = NDF * G * F;
+    float denominator = max(4.0 * max(dot(normal, viewDir), 0.0) * max(dot(normal, lightDir), 0.0), 1e-4);
+    vec3 specular = numerator / denominator;
+
+    vec3 kS = F;
+    vec3 kD = (vec3(1.0) - kS) * (1.0 - metallic);
+
+    float NdotL = max(dot(normal, lightDir), 0.0);
+    vec3 diffuse = (kD * baseColor / PI) * NdotL;
+    return (diffuse + specular) * radiance;
+}
+
 void main() {
     vec3 viewDir = normalize(uCameraPos - vWorldPos);
     vec3 normal = GetNormal(vNormal);
@@ -192,25 +224,23 @@ void main() {
     float distance = length(lightVector);
     vec3 lightDir = normalize(lightVector);
     vec3 radiance = uLightColor / max(distance * distance, 1e-4);
-
-    vec3 halfDir = normalize(lightDir + viewDir);
-    float NDF = DistributionGGX(normal, halfDir, roughness);
-    float G = GeometrySmith(normal, viewDir, lightDir, roughness);
-    vec3 F = FresnelSchlick(max(dot(halfDir, viewDir), 0.0), F0);
-
-    vec3 numerator = NDF * G * F;
-    float denominator = max(4.0 * max(dot(normal, viewDir), 0.0) * max(dot(normal, lightDir), 0.0), 1e-4);
-    vec3 specular = numerator / denominator;
-
-    vec3 kS = F;
-    vec3 kD = (vec3(1.0) - kS) * (1.0 - metallic);
-
-    float NdotL = max(dot(normal, lightDir), 0.0);
-    vec3 diffuse = (kD * baseColor / PI) * NdotL;
-    vec3 directLighting = (diffuse + specular) * radiance;
+    vec3 directionalLighting = EvaluatePBRLighting(normal, viewDir, lightDir, radiance, baseColor, metallic, roughness, F0);
     float shadow = EvaluateShadow(vWorldPos, normal);
 
+    vec3 pointLighting = vec3(0.0);
     vec3 ambient = uAmbientColor * baseColor * ao;
+    for (int i = 0; i < uPointLightCount && i < MAX_POINT_LIGHTS; ++i) {
+        vec3 pointVector = uPointLightPositions[i] - vWorldPos;
+        float pointDistance = length(pointVector);
+        if (pointDistance > 1e-4) {
+            vec3 pointDir = normalize(pointVector);
+            vec3 pointRadiance = uPointLightColors[i] / max(pointDistance * pointDistance, 1e-4);
+            pointLighting += EvaluatePBRLighting(normal, viewDir, pointDir, pointRadiance, baseColor, metallic, roughness, F0);
+        }
+        ambient += uPointLightAmbient[i] * baseColor * ao;
+    }
+
+    vec3 directLighting = shadow * directionalLighting + pointLighting;
     if (uUseEnvironment == 1) {
         vec3 R = reflect(-viewDir, normal);
         float mip = roughness * uEnvironmentMaxLod;
@@ -222,7 +252,7 @@ void main() {
         ambient = (envDiffuse * (1.0 - metallic) + envSpecular) * ao * uEnvironmentIntensity;
     }
 
-    vec3 color = ambient + shadow * directLighting + emissive;
+    vec3 color = ambient + directLighting + emissive;
 
     vec3 toCamera = uCameraPos - vWorldPos;
     float fogFactor = ComputeCurvedFogFactor(toCamera, uFogDensity, uFarPlane);

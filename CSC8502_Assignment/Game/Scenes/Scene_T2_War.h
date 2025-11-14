@@ -36,6 +36,7 @@ private:
     std::shared_ptr<Engine::IAL::I_Heightmap> m_heightmap;
     std::shared_ptr<SceneNode> m_terrainNode;
     std::shared_ptr<SceneNode> m_ruinsNode;
+    std::shared_ptr<SceneNode> m_lightFixtureNode;
     std::shared_ptr<Engine::IAL::I_Texture> m_terrainTexture;
     std::shared_ptr<Engine::IAL::I_AnimatedMesh> m_characterMesh;
     std::shared_ptr<Water> m_water;

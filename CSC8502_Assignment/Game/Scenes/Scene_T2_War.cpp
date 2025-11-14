@@ -18,6 +18,7 @@ Scene_T2_War::Scene_T2_War(const std::shared_ptr<Engine::IAL::I_ResourceFactory>
     , m_sceneGraph(sceneGraph)
     , m_terrainNode(nullptr)
     , m_ruinsNode(nullptr)
+, m_lightFixtureNode(nullptr)
     , m_terrainTexture(nullptr)
     , m_environment{} {
 }
@@ -28,6 +29,7 @@ void Scene_T2_War::Init() {
     if (!m_factory || !m_sceneGraph) {
         return;
     }
+    m_environment.pointLights.clear();
 
     m_heightmap = m_factory->LoadHeightmap("../Heightmaps/terrain.png", Vector3(2.0f, 0.4f, 2.0f));
     if (!m_heightmap) {
@@ -67,7 +69,22 @@ void Scene_T2_War::Init() {
             root->AddChild(m_ruinsNode);
         }
     }
-
+    auto lightMesh = m_factory->LoadMesh("../Meshes/light.gltf");
+    if (lightMesh) {
+        m_lightFixtureNode = std::make_shared<SceneNode>();
+        m_lightFixtureNode->SetMesh(lightMesh);
+        m_lightFixtureNode->SetScale(Vector3(8.0f, 8.0f, 8.0f));
+        Vector3 fixturePosition(360.0f, 15.0f, 512.0f);
+        m_lightFixtureNode->SetPosition(fixturePosition);
+        if (root) {
+            root->AddChild(m_lightFixtureNode);
+        }
+        Light pointLight{};
+        pointLight.position = fixturePosition + Vector3(0.0f, 1.0f, 0.0f);
+        pointLight.color = Vector3(5.5f, 4.2f, 2.6f);
+        pointLight.ambient = Vector3(0.25f, 0.18f, 0.12f);
+        m_environment.pointLights.push_back(pointLight);
+    }
     if (m_factory) {
         m_environment.skyboxTexture = m_factory->LoadCubemap(
             "../Textures/skybox_war/negx.jpg",
@@ -112,5 +129,8 @@ void Scene_T2_War::SetActive(bool active) {
     }
     if (m_ruinsNode) {
         m_ruinsNode->SetActive(active);
+    }
+    if (m_lightFixtureNode) {
+        m_lightFixtureNode->SetActive(active);
     }
 }

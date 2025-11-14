@@ -19,9 +19,9 @@ Scene_T1_Peace::Scene_T1_Peace(const std::shared_ptr<Engine::IAL::I_ResourceFact
     , m_terrainNode(nullptr)
     , m_terrainTexture(nullptr)
     , m_characterNode(nullptr)
+    , m_buildingNode(nullptr)
     , m_characterMesh(nullptr)
-    , m_environment{} {
-}
+    , m_environment{} {}
 
 Scene_T1_Peace::~Scene_T1_Peace() = default;
 
@@ -29,6 +29,7 @@ void Scene_T1_Peace::Init() {
     if (!m_factory || !m_sceneGraph) {
         return;
     }
+    m_environment.pointLights.clear();
 
     m_heightmap = m_factory->LoadHeightmap("../Heightmaps/terrain.png", Vector3(2.0f, 0.4f, 2.0f));
     if (!m_heightmap) {
@@ -69,12 +70,22 @@ void Scene_T1_Peace::Init() {
             "../Textures/skybox_peace/negz.png",
             "../Textures/skybox_peace/posz.png");
         m_environment.grassBaseColorTexture = m_factory->LoadTexture("../Textures/grass/grass.png", false);
+        auto buildingMesh = m_factory->LoadMesh("../Meshes/building.gltf");
+        if (buildingMesh) {
+            m_buildingNode = std::make_shared<SceneNode>();
+            m_buildingNode->SetMesh(buildingMesh);
+            m_buildingNode->SetScale(Vector3(55.0f, 80.0f, 55.0f));
+            m_buildingNode->SetPosition(Vector3(512.0f, 15.0f, 512.0f));
+            if (root) {
+                root->AddChild(m_buildingNode);
+            }
+        }
         m_characterMesh = m_factory->LoadAnimatedMesh("../Meshes/moving.gltf");
         if (m_characterMesh) {
             m_characterNode = std::make_shared<SceneNode>();
             m_characterNode->SetMesh(m_characterMesh);
             m_characterNode->SetScale(Vector3(40.0f, 40.0f, 40.0f));
-            m_characterNode->SetPosition(Vector3(520.0f, 15.0f, 500.0f));
+            m_characterNode->SetPosition(Vector3(320.0f, 65.0f, 500.0f));
             m_characterNode->SetRotation(Vector3(-90.0f, 0.0f, 0.0f));
             if (root) {
                 root->AddChild(m_characterNode);
@@ -115,5 +126,8 @@ void Scene_T1_Peace::SetActive(bool active) {
     }
     if (m_characterNode) {
         m_characterNode->SetActive(active);
+    }
+    if (m_buildingNode) {
+        m_buildingNode->SetActive(active);
     }
 }

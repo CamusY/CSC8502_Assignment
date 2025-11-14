@@ -27,6 +27,7 @@
 #include <cmath>
 #include <iostream>
 #include <vector>
+#include <string>
 #include "nclgl/Vector2.h"
 
 Renderer::Renderer(const std::shared_ptr<Engine::IAL::I_ResourceFactory>& factory,
@@ -220,6 +221,10 @@ void Renderer::SetSceneColour(const Vector3& colour) {
 
 void Renderer::SetDirectionalLight(const Light& light) {
     m_directionalLight = light;
+}
+
+void Renderer::SetPointLights(const std::vector<Light>& lights) {
+    m_pointLights = lights;
 }
 
 void Renderer::SetTransitionState(bool enabled, float progress) {
@@ -622,6 +627,23 @@ void Renderer::RenderScenePass(const Matrix4& view,
         shader->SetUniform("uDebugMode", ToShaderDebugMode(mode));
         shader->SetUniform("uNearPlane", m_nearPlane);
         shader->SetUniform("uFarPlane", m_farPlane);
+        constexpr int kMaxPointLights = 4;
+        const int pointCount = std::min(static_cast<int>(m_pointLights.size()), kMaxPointLights);
+        shader->SetUniform("uPointLightCount", pointCount);
+        for (int i = 0; i < kMaxPointLights; ++i) {
+            const std::string index = std::to_string(i);
+            Vector3 position{};
+            Vector3 color{};
+            Vector3 ambient{};
+            if (i < pointCount) {
+                position = m_pointLights[i].position;
+                color = m_pointLights[i].color;
+                ambient = m_pointLights[i].ambient;
+            }
+            shader->SetUniform("uPointLightPositions[" + index + "]", position);
+            shader->SetUniform("uPointLightColors[" + index + "]", color);
+            shader->SetUniform("uPointLightAmbient[" + index + "]", ambient);
+        }
 
         Engine::IAL::PBRMaterial material = ResolveMaterial(node, mesh);
         shader->SetUniform("uBaseColorFactor", material.baseColorFactor);
@@ -1005,7 +1027,7 @@ Vector3 Renderer::GetFogColor() const {
 }
 
 float Renderer::GetFogDensity() const {
-    const float targetFactor = 0.08f;
+    const float targetFactor = 0.8f;
     const float effectiveFar = std::max(m_farPlane * 0.9f, 1.0f);
     const float exponent = -std::log(std::max(targetFactor, 1e-3f));
     return std::sqrt(exponent) / effectiveFar;
