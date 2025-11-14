@@ -86,6 +86,7 @@ namespace NCLGL_Impl {
         }
 
         m_boneTransforms.resize(jointCount);
+        
         const Matrix4* jointData = m_anim->GetJointData(m_currentFrame);
         if (!jointData) {
             for (unsigned int i = 0; i < jointCount; ++i) {
@@ -93,9 +94,27 @@ namespace NCLGL_Impl {
             }
             return;
         }
+        
+        const Matrix4* inverseBindPose = nullptr;
+        
+        unsigned int inverseBindPoseCount = 0;
+
+        if (m_mesh) {
+            inverseBindPose = m_mesh->GetInverseBindPose();
+            inverseBindPoseCount = m_mesh->GetJointCount();
+
+            if (!inverseBindPose || inverseBindPoseCount != jointCount) {
+                inverseBindPose = nullptr;
+            }
+        }
 
         for (unsigned int i = 0; i < jointCount; ++i) {
-            m_boneTransforms[i] = jointData[i];
+            if (inverseBindPose) {
+                m_boneTransforms[i] = jointData[i] * inverseBindPose[i];
+            }
+            else {
+                m_boneTransforms[i] = jointData[i];
+            }
         }
     }
 
