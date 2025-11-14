@@ -22,7 +22,10 @@ namespace NCLGL_Impl {
         , m_anim(std::move(anim))
         , m_boneTransforms()
         , m_timeAccumulator(0.0f)
-        , m_currentFrame(0) {
+        , m_currentFrame(0)
+        , m_rootTransform()
+        , m_defaultTexture(nullptr) {
+        m_rootTransform.ToIdentity();
         CacheBoneTransforms();
     }
 
@@ -73,6 +76,22 @@ namespace NCLGL_Impl {
         return m_boneTransforms;
     }
 
+    Matrix4 B_AnimatedMesh::GetRootTransform() const {
+        return m_rootTransform;
+    }
+
+    std::shared_ptr<Engine::IAL::I_Texture> B_AnimatedMesh::GetDefaultTexture() const {
+        return m_defaultTexture;
+    }
+
+    void B_AnimatedMesh::SetRootTransform(const Matrix4& transform) {
+        m_rootTransform = transform;
+    }
+
+    void B_AnimatedMesh::SetDefaultTexture(const std::shared_ptr<Engine::IAL::I_Texture>& texture) {
+        m_defaultTexture = texture;
+    }
+
     void B_AnimatedMesh::CacheBoneTransforms() {
         if (!m_anim) {
             m_boneTransforms.clear();
@@ -86,7 +105,7 @@ namespace NCLGL_Impl {
         }
 
         m_boneTransforms.resize(jointCount);
-        
+
         const Matrix4* jointData = m_anim->GetJointData(m_currentFrame);
         if (!jointData) {
             for (unsigned int i = 0; i < jointCount; ++i) {
@@ -94,9 +113,9 @@ namespace NCLGL_Impl {
             }
             return;
         }
-        
+
         const Matrix4* inverseBindPose = nullptr;
-        
+
         unsigned int inverseBindPoseCount = 0;
 
         if (m_mesh) {

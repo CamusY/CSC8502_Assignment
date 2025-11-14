@@ -236,7 +236,11 @@ void Renderer::RenderSceneForShadowMap(const Matrix4& lightViewProjection,
             }
         }
         m_shadowShader->SetUniform("uBoneCount", boneCount);
-        m_shadowShader->SetUniform("uModel", node->GetWorldTransform());
+        Matrix4 modelMatrix = node->GetWorldTransform();
+        if (animatedMesh) {
+            modelMatrix = modelMatrix * animatedMesh->GetRootTransform();
+        }
+        m_shadowShader->SetUniform("uModel", modelMatrix);
         mesh->Draw();
     }
     m_shadowShader->Unbind();
@@ -300,6 +304,10 @@ void Renderer::RenderScenePass(const Matrix4& view,
             continue;
         }
         auto animatedMesh = std::dynamic_pointer_cast<Engine::IAL::I_AnimatedMesh>(mesh);
+        Matrix4 modelMatrix = node->GetWorldTransform();
+        if (animatedMesh) {
+            modelMatrix = modelMatrix * animatedMesh->GetRootTransform();
+        }
         auto shadowTexture = m_shadowMap ? m_shadowMap->GetDepthTexture() : nullptr;
         const bool hasShadow = static_cast<bool>(shadowTexture);
         if (animatedMesh && m_skinnedShader) {
@@ -325,6 +333,9 @@ void Renderer::RenderScenePass(const Matrix4& view,
                 m_skinnedShader->SetUniform("uShadowMap", 2);
             }
             auto texture = node->GetTexture();
+            if (!texture) {
+                texture = mesh->GetDefaultTexture();
+            }
             if (texture) {
                 texture->Bind(0);
                 m_skinnedShader->SetUniform("uDiffuse", 0);
@@ -339,12 +350,16 @@ void Renderer::RenderScenePass(const Matrix4& view,
             continue;
         }
         auto texture = node->GetTexture();
+        if (!texture) {
+            texture = mesh->GetDefaultTexture();
+        }
         std::shared_ptr<Engine::IAL::I_Shader> shader = texture ? m_terrainShader : m_sceneShader;
         if (!shader) {
             continue;
         }
         shader->Bind();
         shader->SetUniform("uViewProj", viewProj);
+        shader->SetUniform("uModel", modelMatrix);
         shader->SetUniform("uModel", node->GetWorldTransform());
         shader->SetUniform("uClipPlane", clip);
         shader->SetUniform("uLightPosition", m_directionalLight.position);

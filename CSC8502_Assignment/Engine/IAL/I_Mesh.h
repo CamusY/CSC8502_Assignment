@@ -26,11 +26,19 @@
 
 #pragma once
 
+#include <memory>
+
 namespace Engine::IAL {
+    class I_Texture;
+
     class I_Mesh {
     public:
         virtual ~I_Mesh() {}
         virtual void Draw() = 0;
+
+        virtual std::shared_ptr<I_Texture> GetDefaultTexture() const {
+            return nullptr;
+        }
     };
 
 }

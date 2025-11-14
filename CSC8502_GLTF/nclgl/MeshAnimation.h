@@ -4,33 +4,31 @@
 
 #include "Matrix4.h"
 
-class MeshAnimation
-{
+class MeshAnimation {
 public:
-	MeshAnimation();
-	MeshAnimation(size_t jointCount, size_t frameCount, float frameRate, std::vector<Matrix4>& frames);
-	MeshAnimation(const std::string& filename);
-	~MeshAnimation();
+    MeshAnimation();
+    MeshAnimation(size_t jointCount, size_t frameCount, float frameRate, std::vector<Matrix4>& frames);
+    MeshAnimation(const std::string& filename);
+    ~MeshAnimation();
 
-	unsigned int GetJointCount() const {
-		return jointCount;
-	}
+    unsigned int GetJointCount() const {
+        return jointCount;
+    }
 
-	unsigned int GetFrameCount() const {
-		return frameCount;
-	}
+    unsigned int GetFrameCount() const {
+        return frameCount;
+    }
 
-	float GetFrameRate() const {
-		return frameRate;
-	}
+    float GetFrameRate() const {
+        return frameRate;
+    }
 
-	const Matrix4* GetJointData(unsigned int frame) const;
+    const Matrix4* GetJointData(unsigned int frame) const;
 
 protected:
-	unsigned int	jointCount;
-	unsigned int	frameCount;
-	float			frameRate;
+    unsigned int jointCount;
+    unsigned int frameCount;
+    float frameRate;
 
-	std::vector<Matrix4>		allJoints;
+    std::vector<Matrix4> allJoints;
 };
-

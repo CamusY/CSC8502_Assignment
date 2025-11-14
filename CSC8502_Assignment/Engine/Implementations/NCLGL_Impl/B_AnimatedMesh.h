@@ -45,6 +45,7 @@
  */
 #pragma once
 #include "IAL/I_AnimatedMesh.h"
+#include "IAL/I_Texture.h"
 #include <memory>
 #include <vector>
 
@@ -62,6 +63,11 @@ namespace NCLGL_Impl {
         void Draw() override;
         void UpdateAnimation(float dt) override;
         const std::vector<Matrix4>& GetBoneTransforms() const override;
+        Matrix4 GetRootTransform() const override;
+        std::shared_ptr<Engine::IAL::I_Texture> GetDefaultTexture() const override;
+
+        void SetRootTransform(const Matrix4& transform);
+        void SetDefaultTexture(const std::shared_ptr<Engine::IAL::I_Texture>& texture);
 
     private:
         void CacheBoneTransforms();
@@ -71,6 +77,8 @@ namespace NCLGL_Impl {
         std::vector<Matrix4> m_boneTransforms;
         float m_timeAccumulator;
         unsigned int m_currentFrame;
+        Matrix4 m_rootTransform;
+        std::shared_ptr<Engine::IAL::I_Texture> m_defaultTexture;
     };
 
 }

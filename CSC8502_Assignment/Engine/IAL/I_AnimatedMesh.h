@@ -64,6 +64,12 @@ namespace Engine::IAL {
         virtual void UpdateAnimation(float dt) = 0;
 
         virtual const std::vector<Matrix4>& GetBoneTransforms() const = 0;
+        
+        virtual Matrix4 GetRootTransform() const {
+            Matrix4 identity;
+            identity.ToIdentity();
+            return identity;
+        }
     };
 
 }

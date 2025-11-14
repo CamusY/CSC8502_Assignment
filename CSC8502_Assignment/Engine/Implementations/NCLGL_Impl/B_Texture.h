@@ -47,6 +47,7 @@ namespace NCLGL_Impl {
     public:
         B_Texture(unsigned int id, Engine::IAL::TextureType type, unsigned int overrideTarget = 0);
         B_Texture(UniqueOGLTexture texture, Engine::IAL::TextureType type, unsigned int overrideTarget = 0);
+        B_Texture(SharedOGLTexture texture, Engine::IAL::TextureType type, unsigned int overrideTarget = 0);
         ~B_Texture() override;
 
         unsigned int GetID() override;
@@ -58,6 +59,7 @@ namespace NCLGL_Impl {
         unsigned int m_glTarget;
         Engine::IAL::TextureType m_type;
         UniqueOGLTexture m_ownedTexture;
+        SharedOGLTexture m_sharedTexture;
         bool m_manageRawHandle;
     };
 

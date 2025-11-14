@@ -19,6 +19,7 @@
 #include "nclgl/MeshAnimation.h"
 #include "nclgl/Vector2.h"
 #include "nclgl/Vector3.h"
+#include "nclgl/Matrix4.h"
 #include "nclgl/Extra/GLTFLoader.h"
 #include "nclgl/Extra/OGLTexture.h"
 
@@ -77,6 +78,44 @@ namespace {
             return std::string();
         }
         return ToLowerCopy(path.substr(dot));
+    }
+
+    Matrix4 ExtractMeshRootTransform(const GLTFScene& scene, const SharedMesh& mesh) {
+        Matrix4 transform;
+        transform.ToIdentity();
+        if (!mesh) {
+            return transform;
+        }
+        for (const auto& node : scene.sceneNodes) {
+            if (node.mesh == mesh.get()) {
+                transform = node.worldMatrix;
+                break;
+            }
+        }
+        return transform;
+    }
+
+    std::shared_ptr<Engine::IAL::I_Texture> BuildTextureFromLayer(const GLTFMaterialLayer& layer) {
+        if (layer.albedo) {
+            return std::make_shared<NCLGL_Impl::B_Texture>(layer.albedo, Engine::IAL::TextureType::Texture2D);
+        }
+        return nullptr;
+    }
+
+    std::shared_ptr<Engine::IAL::I_Texture> ExtractPrimaryTexture(const GLTFScene& scene) {
+        for (const auto& material : scene.materials) {
+            for (const auto& layer : material.allLayers) {
+                if (auto texture = BuildTextureFromLayer(layer)) {
+                    return texture;
+                }
+            }
+        }
+        for (const auto& layer : scene.materialLayers) {
+            if (auto texture = BuildTextureFromLayer(layer)) {
+                return texture;
+            }
+        }
+        return nullptr;
     }
 
     bool IsDigits(const std::string& value) {
@@ -634,8 +673,15 @@ namespace NCLGL_Impl {
                     return nullptr;
                 }
 
+                auto animatedMesh = std::make_shared<B_AnimatedMesh>(mesh, selectedAnimation);
+                if (animatedMesh) {
+                    animatedMesh->SetRootTransform(ExtractMeshRootTransform(scene, mesh));
+                    if (auto texture = ExtractPrimaryTexture(scene)) {
+                        animatedMesh->SetDefaultTexture(texture);
+                    }
+                }
                 logAnimatedMesh(path, selectedAnimation);
-                return std::make_shared<B_AnimatedMesh>(mesh, selectedAnimation);
+                return animatedMesh;
             }
 
             std::shared_ptr<::Mesh> mesh(::Mesh::LoadFromMeshFile(path));

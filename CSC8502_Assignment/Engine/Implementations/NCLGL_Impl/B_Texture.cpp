@@ -25,6 +25,7 @@ namespace {
     }
 }
 
+
 namespace NCLGL_Impl {
 
     B_Texture::B_Texture(unsigned int id, Engine::IAL::TextureType type, unsigned int overrideTarget)
@@ -32,6 +33,7 @@ namespace NCLGL_Impl {
         , m_glTarget(overrideTarget)
         , m_type(type)
         , m_ownedTexture(nullptr)
+        , m_sharedTexture(nullptr)
         , m_manageRawHandle(true) {
         if (m_glTarget == 0) {
             m_glTarget = ResolveDefaultTarget(type);
@@ -43,6 +45,19 @@ namespace NCLGL_Impl {
         , m_glTarget(overrideTarget)
         , m_type(type)
         , m_ownedTexture(std::move(texture))
+        , m_sharedTexture(nullptr)
+        , m_manageRawHandle(false) {
+        if (m_glTarget == 0) {
+            m_glTarget = ResolveDefaultTarget(type);
+        }
+    }
+
+    B_Texture::B_Texture(SharedOGLTexture texture, Engine::IAL::TextureType type, unsigned int overrideTarget)
+        : m_id(texture ? texture->GetObjectID() : 0)
+        , m_glTarget(overrideTarget)
+        , m_type(type)
+        , m_ownedTexture(nullptr)
+        , m_sharedTexture(std::move(texture))
         , m_manageRawHandle(false) {
         if (m_glTarget == 0) {
             m_glTarget = ResolveDefaultTarget(type);
@@ -53,6 +68,9 @@ namespace NCLGL_Impl {
         if (m_ownedTexture) {
             return;
         }
+        if (m_sharedTexture) {
+            return;
+        }
         if (m_manageRawHandle && m_id != 0) {
             glDeleteTextures(1, &m_id);
             m_id = 0;
@@ -60,6 +78,12 @@ namespace NCLGL_Impl {
     }
 
     unsigned int B_Texture::GetID() {
+        if (m_sharedTexture) {
+            return m_sharedTexture->GetObjectID();
+        }
+        if (m_ownedTexture) {
+            return m_ownedTexture->GetObjectID();
+        }
         return m_id;
     }
 
@@ -69,7 +93,7 @@ namespace NCLGL_Impl {
 
     void B_Texture::Bind(int slot) {
         glActiveTexture(GL_TEXTURE0 + slot);
-        glBindTexture(m_glTarget, m_id);
+        glBindTexture(m_glTarget, GetID());
     }
 
 }
