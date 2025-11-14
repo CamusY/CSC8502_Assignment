@@ -118,7 +118,7 @@ void Renderer::Render(float deltaTime) {
     UpdateAnimatedMeshes(deltaTime);
     m_timeAccumulator += deltaTime;
 
-    if (m_rainSystem) {
+    if (m_rainSystem && m_rainEnabled) {
         float waterLevel = m_water ? m_water->GetHeight() : 0.0f;
         m_rainSystem->Update(deltaTime,
                              cameraPosition,
@@ -699,7 +699,7 @@ void Renderer::RenderRain(const Matrix4& view,
                           const Vector3& cameraPosition,
                           float cameraYaw,
                           float cameraPitch) {
-    if (!m_rainSystem) {
+    if (!m_rainSystem || !m_rainEnabled) {
         return;
     }
     const float fogDensity = 0.0018f;
