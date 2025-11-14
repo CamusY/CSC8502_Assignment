@@ -8,6 +8,9 @@ uniform sampler2D uBloom;
 uniform float uTimer;
 uniform int uDisplayMode;
 uniform float uExposure;
+uniform float uViewportAspect;
+uniform float uCircleEdge;
+
 
 float hash(vec2 p) {
     return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453);
@@ -33,6 +36,19 @@ vec3 ComposeScene() {
     return ToneMap(sceneColor + bloomColor);
 }
 
+float CircularMask(vec2 uv) {
+    vec2 centered = uv * 2.0 - 1.0;
+    if (uViewportAspect > 1.0) {
+        centered.x /= uViewportAspect;
+    }
+    else {
+        centered.y /= max(uViewportAspect, 1e-4);
+    }
+    float radius = length(centered);
+    float edge = clamp(uCircleEdge, 0.0, 0.5);
+    return 1.0 - smoothstep(1.0 - edge, 1.0, radius);
+}
+
 void main() {
     float progress = clamp(uTimer, 0.0, 1.0);
     vec3 sceneColor = ComposeScene();
@@ -42,5 +58,6 @@ void main() {
     float dissolve = smoothstep(progress - 0.2, progress + 0.05, noise + (1.0 - ring) * 0.4);
     vec3 fadeColor = mix(vec3(0.05, 0.05, 0.08), vec3(0.9, 0.85, 0.8), progress);
     vec3 finalColor = mix(fadeColor, sceneColor, dissolve);
-    fragColor = vec4(LinearToSRGB(finalColor), 1.0);
+    float mask = CircularMask(vUV);
+    fragColor = vec4(LinearToSRGB(finalColor) * mask, 1.0);
 }
