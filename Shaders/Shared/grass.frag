@@ -15,6 +15,10 @@ uniform bool uHasBaseColorMap;
 uniform bool uHasAlphaShapeMap;
 uniform float uFallbackAlpha;
 
+uniform int uDebugMode;
+uniform float uNearPlane;
+uniform float uFarPlane;
+
 void main() {
     vec2 uv = clamp(fsIn.texCoord, 0.0, 1.0);
     vec3 sampledColor = texture(uBaseColorMap, uv).rgb;
@@ -30,5 +34,18 @@ void main() {
     float fogFactor = clamp(exp(-0.0006 * distanceToCamera * distanceToCamera), 0.0, 1.0);
     vec3 fogColor = vec3(0.25, 0.32, 0.38);
     vec3 finalColor = mix(fogColor, baseColor, fogFactor);
+    if (uDebugMode == 1) {
+        vec3 normal = vec3(0.0, 1.0, 0.0);
+        fragColor = vec4(normal * 0.5 + 0.5, 1.0);
+        return;
+    }
+
+    if (uDebugMode == 2) {
+        float depth = gl_FragCoord.z;
+        float linearDepth = (2.0 * uNearPlane) / (uFarPlane + uNearPlane - depth * (uFarPlane - uNearPlane));
+        float normalized = clamp(linearDepth / uFarPlane, 0.0, 1.0);
+        fragColor = vec4(vec3(normalized), 1.0);
+        return;
+    }
     fragColor = vec4(finalColor, sampledAlpha);
 }

@@ -23,6 +23,7 @@
 */
 #pragma once
 #include "IAL/I_WindowSystem.h"
+#include <windows.h>
 
 
 class Window;
@@ -53,7 +54,11 @@ namespace NCLGL_Impl {
         Engine::IAL::I_GameTimer* GetTimer() const override;
         Engine::IAL::I_Keyboard* GetKeyboard() const override;
         Engine::IAL::I_Mouse* GetMouse() const override;
-        
+
+        bool SetFullScreen(bool enabled) override;
+        bool IsFullScreen() const override;
+        void GetWindowSize(int& width, int& height) const override;
+
     private:
 
         ::Window* m_window = nullptr;
@@ -62,6 +67,9 @@ namespace NCLGL_Impl {
         B_GameTimer* m_timer = nullptr;
         B_Keyboard* m_keyboard = nullptr;
         B_Mouse* m_mouse = nullptr;
+
+        bool m_isFullscreen = false;
+        RECT m_windowedRect{};
     };
     
 

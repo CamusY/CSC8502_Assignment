@@ -33,6 +33,10 @@ uniform int uHasAOMap;
 uniform int uHasEmissiveMap;
 uniform int uUseEnvironment;
 
+uniform int uDebugMode;
+uniform float uNearPlane;
+uniform float uFarPlane;
+
 uniform vec4 uBaseColorFactor;
 uniform float uMetallicFactor;
 uniform float uRoughnessFactor;
@@ -121,6 +125,19 @@ void main() {
     vec3 normal = GetNormal(vNormal);
     if (uDoubleSided == 1 && dot(normal, viewDir) < 0.0) {
         normal = -normal;
+    }
+    if (uDebugMode == 1) {
+        vec3 debugNormal = normalize(normal) * 0.5 + 0.5;
+        fragColor = vec4(debugNormal, 1.0);
+        return;
+    }
+
+    if (uDebugMode == 2) {
+        float depth = gl_FragCoord.z;
+        float linearDepth = (2.0 * uNearPlane) / (uFarPlane + uNearPlane - depth * (uFarPlane - uNearPlane));
+        float normalized = clamp(linearDepth / uFarPlane, 0.0, 1.0);
+        fragColor = vec4(vec3(normalized), 1.0);
+        return;
     }
 
     vec4 baseSample = vec4(1.0);

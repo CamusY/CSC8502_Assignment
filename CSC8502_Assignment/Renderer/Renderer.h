@@ -14,6 +14,7 @@
 #include <cstddef>
 #include <memory>
 #include <vector>
+#include <array>
 
 #include "../Core/SceneGraph.h"
 #include "../Core/Light.h"
@@ -43,8 +44,21 @@ class Camera;
 class Water;
 class RainSystem;
 
+
 class Renderer {
 public:
+    enum class RenderDebugMode {
+        Standard,
+        Wireframe,
+        Normal,
+        Depth,
+        Bloom
+    };
+
+    enum class ViewLayoutMode {
+        Single,
+        Quad
+    };
     Renderer(const std::shared_ptr<Engine::IAL::I_ResourceFactory>& factory,
              const std::shared_ptr<SceneGraph>& sceneGraph,
              const std::shared_ptr<Camera>& camera,
@@ -67,6 +81,12 @@ public:
     void SetRainEnabled(bool enabled);
     bool IsRainEnabled() const { return m_rainEnabled; }
 
+    void SetDefaultViewMode(RenderDebugMode mode);
+    RenderDebugMode GetDefaultViewMode() const { return m_defaultViewMode; }
+    void ToggleMultiViewLayout();
+    void OnSurfaceResized(int width, int height);
+    ViewLayoutMode GetViewLayout() const { return m_viewLayout; }
+
 private:
     void RenderSceneForShadowMap(const Matrix4& lightViewProjection,
                                  bool skipWaterNode);
@@ -75,10 +95,12 @@ private:
                          const Matrix4& projection,
                          const Vector3& cameraPosition,
                          bool skipWaterNode,
+                         RenderDebugMode mode,
                          const Vector4* clipPlane = nullptr);
     void RenderWaterSurface(const Matrix4& view,
                             const Matrix4& projection,
-                            const Vector3& cameraPosition);
+                            const Vector3& cameraPosition,
+                            RenderDebugMode mode);
     void RenderReflectionPass(const Matrix4& projection,
                                const Vector3& cameraPosition,
                                float cameraYaw,
@@ -90,11 +112,13 @@ private:
                     const Matrix4& projection,
                     const Vector3& cameraPosition,
                     float cameraYaw,
-                    float cameraPitch);
+                    float cameraPitch,
+                    RenderDebugMode mode);
     void RenderDebugUI();
     void RenderGrass(const Matrix4& view,
                      const Matrix4& projection,
-                     const Vector3& cameraPosition);
+                     const Vector3& cameraPosition,
+                     RenderDebugMode mode);
     void UpdateAnimatedMeshes(float deltaTime);
     float GetTerrainExtent() const;
     void BindBonePalette(const std::vector<Matrix4>& bones, int boneCount);
@@ -103,6 +127,20 @@ private:
     Engine::IAL::PBRMaterial ResolveMaterial(const std::shared_ptr<SceneNode>& node,
                                              const std::shared_ptr<Engine::IAL::I_Mesh>& mesh) const;
     static int ToAlphaModeValue(Engine::IAL::AlphaMode mode);
+    void RenderSingleView(float deltaTime);
+    void RenderQuadView(float deltaTime);
+    void RenderViewInternal(const std::shared_ptr<Camera>& camera,
+                            RenderDebugMode mode,
+                            int viewportX,
+                            int viewportY,
+                            int viewportWidth,
+                            int viewportHeight,
+                            bool allowTransition);
+    int ToShaderDebugMode(RenderDebugMode mode) const;
+    void ApplyPolygonMode(RenderDebugMode mode, int& previousFront, int& previousBack) const;
+    void RestorePolygonMode(RenderDebugMode mode, int previousFront, int previousBack) const;
+    void UpdateSplitViewCameras();
+    Vector3 GetSceneFocusPoint() const;
 
     std::shared_ptr<Engine::IAL::I_ResourceFactory> m_factory;
     std::shared_ptr<SceneGraph> m_sceneGraph;
@@ -146,4 +184,7 @@ private:
     std::shared_ptr<Engine::IAL::I_Texture> m_grassBaseTextureOverride;
     bool m_grassEnabled;
     bool m_rainEnabled;
+    ViewLayoutMode m_viewLayout;
+    RenderDebugMode m_defaultViewMode;
+    std::array<std::shared_ptr<Camera>, 3> m_splitCameras;
 };

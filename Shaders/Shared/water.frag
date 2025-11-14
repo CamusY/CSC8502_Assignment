@@ -18,6 +18,10 @@ uniform float          uShadowStrength;
 uniform vec3  uFogColor;
 uniform float uFogDensity;
 
+uniform int   uDebugMode;
+uniform float uNearPlane;
+uniform float uFarPlane;
+
 out vec4 fragColor;
 
 
@@ -110,5 +114,19 @@ void main() {
     float reflectBoost = 0.5 * dNorm;
     float k = clamp(fresnel * 0.7 + 0.2 + reflectBoost, 0.0, 1.0);
     vec3  outCol = mix(uFogColor, color, k);
+
+    if (uDebugMode == 1) {
+        vec3 normal = vec3(0.0, 1.0, 0.0);
+        fragColor = vec4(normal * 0.5 + 0.5, 1.0);
+        return;
+    }
+    if (uDebugMode == 2) {
+        float depth = gl_FragCoord.z;
+        float linearDepth = (2.0 * uNearPlane) / (uFarPlane + uNearPlane - depth * (uFarPlane - uNearPlane));
+        float normalized = clamp(linearDepth / uFarPlane, 0.0, 1.0);
+        fragColor = vec4(vec3(normalized), 1.0);
+        return;
+    }
+    
     fragColor = vec4(outCol,0.75);
 }

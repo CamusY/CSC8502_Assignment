@@ -25,6 +25,7 @@
 #include <algorithm>
 #include <iostream>
 #include <vector>
+#include "nclgl/Vector2.h"
 
 Renderer::Renderer(const std::shared_ptr<Engine::IAL::I_ResourceFactory>& factory,
                    const std::shared_ptr<SceneGraph>& sceneGraph,
@@ -71,7 +72,10 @@ Renderer::Renderer(const std::shared_ptr<Engine::IAL::I_ResourceFactory>& factor
     , m_grassBaseTextureOverride(nullptr)
     , m_timeAccumulator(0.0f)
     , m_grassEnabled(true)
-    , m_rainEnabled(false) {
+    , m_rainEnabled(false)
+    , m_viewLayout(ViewLayoutMode::Single)
+    , m_defaultViewMode(RenderDebugMode::Standard)
+    , m_splitCameras() {
     if (m_factory) {
         m_sceneShader = m_factory->CreateShader("Shared/basic.vert", "Shared/basic.frag");
         m_terrainShader = m_factory->CreateShader("Shared/terrain.vert", "Shared/terrain.frag");
@@ -86,6 +90,14 @@ Renderer::Renderer(const std::shared_ptr<Engine::IAL::I_ResourceFactory>& factor
     if (m_factory) {
         m_rainSystem = std::make_unique<RainSystem>(m_factory, 2000, 240.0f, 160.0f);
     }
+    for (auto& cam : m_splitCameras) {
+        cam = std::make_shared<Camera>();
+        if (cam) {
+            cam->SetMode(Camera::Mode::Free);
+        }
+    }
+
+    UpdateSplitViewCameras();
 
     m_shadowMatrix.ToIdentity();
     m_reflectionViewProj.ToIdentity();
@@ -128,18 +140,11 @@ void Renderer::Render(float deltaTime) {
                              waterLevel);
     }
 
-    Matrix4 view = m_camera
-        ? m_camera->BuildViewMatrix()
-        : Matrix4::BuildViewMatrix(defaultCameraPos, Vector3(0.0f, 0.0f, 0.0f));
-    const float aspect = m_surfaceHeight > 0
-        ? static_cast<float>(m_surfaceWidth) / static_cast<float>(m_surfaceHeight)
-        : 1.0f;
-    Matrix4 projection = Matrix4::Perspective(m_nearPlane, m_farPlane, aspect, 35.0f);
 
     Matrix4 lightMatrix;
     lightMatrix.ToIdentity();
     if (m_shadowMap && m_shadowShader) {
-        const Vector3 focusPoint(512.0f, 0.0f, 512.0f);
+        const Vector3 focusPoint = GetSceneFocusPoint();
         const float shadowNear = 1.0f;
         const float shadowFar = 1000.0f;
         const float orthoSize = 512.0f;
@@ -169,24 +174,16 @@ void Renderer::Render(float deltaTime) {
     }
     m_shadowMatrix = lightMatrix;
 
-    if (m_water && m_waterReflectionFBO && m_waterRefractionFBO) {
-        RenderReflectionPass(projection, cameraPosition, cameraYaw, cameraPitch);
-        RenderRefractionPass(view, projection, cameraPosition);
+
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glViewport(0, 0, m_surfaceWidth, m_surfaceHeight);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    if (m_viewLayout == ViewLayoutMode::Single) {
+        RenderSingleView(deltaTime);
     }
-
-    if (m_postProcessing) {
-        m_postProcessing->BeginCapture();
-    }
-
-    RenderSkybox(view, projection);
-    RenderScenePass(view, projection, cameraPosition, true);
-    RenderGrass(view, projection, cameraPosition);
-    RenderWaterSurface(view, projection, cameraPosition);
-    RenderRain(view, projection, cameraPosition, cameraYaw, cameraPitch);
-
-    if (m_postProcessing) {
-        m_postProcessing->EndCapture();
-        m_postProcessing->Present(m_transitionEnabled, m_transitionProgress);
+    else {
+        RenderQuadView(deltaTime);
     }
     RenderDebugUI();
 }
@@ -208,6 +205,7 @@ void Renderer::SetWater(const std::shared_ptr<Water>& water) {
     m_waterReflectionFBO = m_factory->CreatePostProcessFBO(m_surfaceWidth, m_surfaceHeight);
     m_waterRefractionFBO = m_factory->CreatePostProcessFBO(m_surfaceWidth, m_surfaceHeight);
     SetTerrainHeightmap(m_activeHeightmap);
+    UpdateSplitViewCameras();
 }
 
 void Renderer::SetSkyboxTexture(const std::shared_ptr<Engine::IAL::I_Texture>& texture) {
@@ -238,6 +236,7 @@ void Renderer::SetTerrainHeightmap(const std::shared_ptr<Engine::IAL::I_Heightma
     if (m_grassField) {
         m_grassField->SetBaseColorTexture(m_grassBaseTextureOverride);
     }
+    UpdateSplitViewCameras();
 }
 
 void Renderer::SetGrassEnabled(bool enabled) {
@@ -267,6 +266,32 @@ void Renderer::SetGrassBaseTexture(const std::shared_ptr<Engine::IAL::I_Texture>
 
 void Renderer::SetRainEnabled(bool enabled) {
     m_rainEnabled = enabled;
+}
+
+void Renderer::SetDefaultViewMode(RenderDebugMode mode) {
+    m_defaultViewMode = mode;
+}
+
+void Renderer::ToggleMultiViewLayout() {
+    m_viewLayout = (m_viewLayout == ViewLayoutMode::Single) ? ViewLayoutMode::Quad : ViewLayoutMode::Single;
+    UpdateSplitViewCameras();
+}
+
+void Renderer::OnSurfaceResized(int width, int height) {
+    if (width <= 0 || height <= 0) {
+        return;
+    }
+    m_surfaceWidth = width;
+    m_surfaceHeight = height;
+    if (m_postProcessing) {
+        m_postProcessing->Resize(width, height);
+    }
+    if (m_shadowMap) {
+        glViewport(0, 0, m_surfaceWidth, m_surfaceHeight);
+    }
+    if (m_water) {
+        SetWater(m_water);
+    }
 }
 
 void Renderer::UpdateAnimatedMeshes(float deltaTime) {
@@ -332,6 +357,169 @@ void Renderer::RenderSceneForShadowMap(const Matrix4& lightViewProjection,
     m_shadowShader->Unbind();
 }
 
+void Renderer::RenderSingleView(float /*deltaTime*/) {
+    std::shared_ptr<Camera> cameraToUse = m_camera;
+    if (!cameraToUse) {
+        cameraToUse = std::make_shared<Camera>();
+        cameraToUse->SetPosition(Vector3(0.0f, 0.0f, 10.5f));
+        cameraToUse->SetYaw(0.0f);
+        cameraToUse->SetPitch(0.0f);
+    }
+    RenderViewInternal(cameraToUse, m_defaultViewMode, 0, 0, m_surfaceWidth, m_surfaceHeight, true);
+}
+
+void Renderer::RenderQuadView(float /*deltaTime*/) {
+    UpdateSplitViewCameras();
+    const int halfWidth = std::max(1, m_surfaceWidth / 2);
+    const int halfHeight = std::max(1, m_surfaceHeight / 2);
+    const int topHeight = m_surfaceHeight - halfHeight;
+    const int rightWidth = m_surfaceWidth - halfWidth;
+
+    std::shared_ptr<Camera> primary = m_camera;
+    if (!primary) {
+        primary = std::make_shared<Camera>();
+        primary->SetPosition(Vector3(0.0f, 0.0f, 10.5f));
+        primary->SetYaw(0.0f);
+        primary->SetPitch(0.0f);
+    }
+
+    RenderViewInternal(primary, m_defaultViewMode, 0, halfHeight, halfWidth, topHeight, true);
+    RenderViewInternal(m_splitCameras[0], RenderDebugMode::Wireframe, halfWidth, halfHeight, std::max(1, rightWidth),
+                       topHeight, false);
+    RenderViewInternal(m_splitCameras[1], RenderDebugMode::Normal, 0, 0, halfWidth, halfHeight, false);
+    RenderViewInternal(m_splitCameras[2], RenderDebugMode::Bloom, halfWidth, 0, std::max(1, rightWidth), halfHeight,
+                       false);
+}
+
+void Renderer::RenderViewInternal(const std::shared_ptr<Camera>& camera,
+                                  RenderDebugMode mode,
+                                  int viewportX,
+                                  int viewportY,
+                                  int viewportWidth,
+                                  int viewportHeight,
+                                  bool allowTransition) {
+    if (!camera || !m_postProcessing) {
+        return;
+    }
+    const int width = std::max(1, viewportWidth);
+    const int height = std::max(1, viewportHeight);
+    const float aspect = static_cast<float>(width) / static_cast<float>(height);
+    Matrix4 view = camera->BuildViewMatrix();
+    Matrix4 projection = Matrix4::Perspective(m_nearPlane, m_farPlane, aspect, 35.0f);
+    const Vector3 cameraPosition = camera->GetPosition();
+    const float cameraYaw = camera->GetYaw();
+    const float cameraPitch = camera->GetPitch();
+
+    if (m_water && m_waterReflectionFBO && m_waterRefractionFBO) {
+        RenderReflectionPass(projection, cameraPosition, cameraYaw, cameraPitch);
+        RenderRefractionPass(view, projection, cameraPosition);
+    }
+
+    if (m_postProcessing) {
+        m_postProcessing->BeginCapture();
+    }
+
+    int prevFront = GL_FILL;
+    int prevBack = GL_FILL;
+    ApplyPolygonMode(mode, prevFront, prevBack);
+
+    const bool skipSkybox = (mode == RenderDebugMode::Normal || mode == RenderDebugMode::Depth);
+    if (!skipSkybox) {
+        RenderSkybox(view, projection);
+    }
+
+    RenderScenePass(view, projection, cameraPosition, true, mode);
+    RenderGrass(view, projection, cameraPosition, mode);
+    RenderWaterSurface(view, projection, cameraPosition, mode);
+    RenderRain(view, projection, cameraPosition, cameraYaw, cameraPitch, mode);
+
+    RestorePolygonMode(mode, prevFront, prevBack);
+
+    if (m_postProcessing) {
+        m_postProcessing->EndCapture();
+        PostProcessing::OutputMode outputMode = PostProcessing::OutputMode::ToneMapped;
+        if (mode == RenderDebugMode::Bloom) {
+            outputMode = PostProcessing::OutputMode::BloomOnly;
+        }
+        else if (mode != RenderDebugMode::Standard) {
+            outputMode = PostProcessing::OutputMode::RawScene;
+        }
+        const bool transition = allowTransition && m_transitionEnabled && mode == RenderDebugMode::Standard;
+        m_postProcessing->PresentToViewport(outputMode,
+                                            transition,
+                                            m_transitionProgress,
+                                            viewportX,
+                                            viewportY,
+                                            width,
+                                            height);
+    }
+}
+
+int Renderer::ToShaderDebugMode(RenderDebugMode mode) const {
+    switch (mode) {
+    case RenderDebugMode::Normal:
+        return 1;
+    case RenderDebugMode::Depth:
+        return 2;
+    default:
+        return 0;
+    }
+}
+
+void Renderer::ApplyPolygonMode(RenderDebugMode mode, int& previousFront, int& previousBack) const {
+    GLint polygonModes[2] = {GL_FILL, GL_FILL};
+    glGetIntegerv(GL_POLYGON_MODE, polygonModes);
+    previousFront = polygonModes[0];
+    previousBack = polygonModes[1];
+    if (mode == RenderDebugMode::Wireframe) {
+        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    }
+    else {
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    }
+}
+
+void Renderer::RestorePolygonMode(RenderDebugMode /*mode*/, int previousFront, int previousBack) const {
+    glPolygonMode(GL_FRONT, previousFront);
+    glPolygonMode(GL_BACK, previousBack);
+}
+
+void Renderer::UpdateSplitViewCameras() {
+    const Vector3 focus = GetSceneFocusPoint();
+    const float waterLevel = m_water ? m_water->GetHeight() : focus.y;
+    if (m_splitCameras[0]) {
+        m_splitCameras[0]->SetPosition(focus + Vector3(-320.0f, 180.0f, -260.0f));
+        m_splitCameras[0]->SetYaw(45.0f);
+        m_splitCameras[0]->SetPitch(-20.0f);
+    }
+    if (m_splitCameras[1]) {
+        m_splitCameras[1]->SetPosition(Vector3(focus.x, waterLevel + 420.0f, focus.z));
+        m_splitCameras[1]->SetYaw(0.0f);
+        m_splitCameras[1]->SetPitch(-89.0f);
+    }
+    if (m_splitCameras[2]) {
+        m_splitCameras[2]->SetPosition(focus + Vector3(320.0f, 150.0f, 240.0f));
+        m_splitCameras[2]->SetYaw(-135.0f);
+        m_splitCameras[2]->SetPitch(-18.0f);
+    }
+}
+
+Vector3 Renderer::GetSceneFocusPoint() const {
+    Vector3 focus(512.0f, 0.0f, 512.0f);
+    if (m_activeHeightmap) {
+        const Vector2 resolution = m_activeHeightmap->GetResolution();
+        const Vector3 scale = m_activeHeightmap->GetWorldScale();
+        focus.x = (resolution.x > 1.0f) ? (resolution.x - 1.0f) * scale.x * 0.5f : 0.0f;
+        focus.z = (resolution.y > 1.0f) ? (resolution.y - 1.0f) * scale.z * 0.5f : 0.0f;
+        focus.y = m_activeHeightmap->SampleHeight(focus.x, focus.z);
+    }
+    if (m_water) {
+        focus.y = m_water->GetHeight();
+    }
+    return focus;
+}
+
+
 void Renderer::RenderSkybox(const Matrix4& view, const Matrix4& projection) {
     if (!m_skyboxShader || !m_skyboxTexture || !m_skyboxMesh) {
         return;
@@ -358,6 +546,7 @@ void Renderer::RenderScenePass(const Matrix4& view,
                                const Matrix4& projection,
                                const Vector3& cameraPosition,
                                bool skipWaterNode,
+                               RenderDebugMode mode,
                                const Vector4* clipPlane) {
     if (!m_sceneGraph) {
         return;
@@ -424,6 +613,9 @@ void Renderer::RenderScenePass(const Matrix4& view,
         shader->SetUniform("uEnvironmentIntensity", m_environmentIntensity);
         shader->SetUniform("uEnvironmentMaxLod", m_environmentMaxLod);
         shader->SetUniform("uUseEnvironment", m_skyboxTexture ? 1 : 0);
+        shader->SetUniform("uDebugMode", ToShaderDebugMode(mode));
+        shader->SetUniform("uNearPlane", m_nearPlane);
+        shader->SetUniform("uFarPlane", m_farPlane);
 
         Engine::IAL::PBRMaterial material = ResolveMaterial(node, mesh);
         shader->SetUniform("uBaseColorFactor", material.baseColorFactor);
@@ -532,16 +724,19 @@ void Renderer::RenderScenePass(const Matrix4& view,
 
 void Renderer::RenderGrass(const Matrix4& view,
                            const Matrix4& projection,
-                           const Vector3& cameraPosition) {
+                           const Vector3& cameraPosition,
+                           RenderDebugMode mode) {
     if (!m_grassEnabled || !m_grassField) {
         return;
     }
-    m_grassField->Render(view, projection, cameraPosition, m_timeAccumulator);
+    const int debugMode = ToShaderDebugMode(mode);
+    m_grassField->Render(view, projection, cameraPosition, m_timeAccumulator, debugMode, m_nearPlane, m_farPlane);
 }
 
 void Renderer::RenderWaterSurface(const Matrix4& view,
                                   const Matrix4& projection,
-                                  const Vector3& cameraPosition) {
+                                  const Vector3& cameraPosition,
+                                  RenderDebugMode mode) {
     if (!m_water || !m_waterShader) {
         return;
     }
@@ -576,6 +771,10 @@ void Renderer::RenderWaterSurface(const Matrix4& view,
     m_waterShader->SetUniform("uAmbientColor", m_directionalLight.ambient);
     m_waterShader->SetUniform("uFogColor", fogColor);
     m_waterShader->SetUniform("uFogDensity", fogDensity);
+    m_waterShader->SetUniform("uDebugMode", ToShaderDebugMode(mode));
+    m_waterShader->SetUniform("uNearPlane", m_nearPlane);
+    m_waterShader->SetUniform("uFarPlane", m_farPlane);
+
     auto shadowTexture = m_shadowMap ? m_shadowMap->GetDepthTexture() : nullptr;
     const bool hasShadow = static_cast<bool>(shadowTexture);
     m_waterShader->SetUniform("uShadowMatrix", m_shadowMatrix);
@@ -622,7 +821,8 @@ void Renderer::RenderReflectionPass(const Matrix4& projection,
     const float waterHeight = m_water->GetHeight();
     constexpr float clipBias = 0.5f;
     Vector4 reflectionClip(0.0f, 1.0f, 0.0f, -(waterHeight - clipBias));
-    RenderScenePass(reflectionView, projection, reflectionCamera.GetPosition(), true, &reflectionClip);
+    RenderScenePass(reflectionView, projection, reflectionCamera.GetPosition(), true, RenderDebugMode::Standard,
+                    &reflectionClip);
 
     m_waterReflectionFBO->Unbind();
 }
@@ -689,7 +889,7 @@ void Renderer::RenderRefractionPass(const Matrix4& view,
     const float waterHeight = m_water->GetHeight();
     constexpr float clipBias = 0.5f;
     Vector4 refractionClip(0.0f, -1.0f, 0.0f, waterHeight + clipBias);
-    RenderScenePass(view, projection, cameraPosition, true, &refractionClip);
+    RenderScenePass(view, projection, cameraPosition, true, RenderDebugMode::Standard, &refractionClip);
 
     m_waterRefractionFBO->Unbind();
 }
@@ -698,8 +898,9 @@ void Renderer::RenderRain(const Matrix4& view,
                           const Matrix4& projection,
                           const Vector3& cameraPosition,
                           float cameraYaw,
-                          float cameraPitch) {
-    if (!m_rainSystem || !m_rainEnabled) {
+                          float cameraPitch,
+                          RenderDebugMode mode) {
+    if (!m_rainSystem || !m_rainEnabled || mode != RenderDebugMode::Standard) {
         return;
     }
     const float fogDensity = 0.0018f;

@@ -27,9 +27,12 @@ public:
     ~GrassField();
 
     void Render(const Matrix4& view,
-                const Matrix4& projection,
-                const Vector3& cameraPosition,
-                float timeSeconds);
+                    const Matrix4& projection,
+                    const Vector3& cameraPosition,
+                    float timeSeconds,
+                    int debugMode,
+                    float nearPlane,
+                    float farPlane);
 
     void SetColor(const Vector3& color);
     void SetBaseColorTexture(const std::shared_ptr<Engine::IAL::I_Texture>& texture);

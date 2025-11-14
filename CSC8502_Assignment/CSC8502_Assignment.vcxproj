@@ -212,6 +212,8 @@
     <Content Include="..\Shaders\Shared\grass.vert" />
     <Content Include="..\Shaders\Shared\postprocess.frag" />
     <Content Include="..\Shaders\Shared\postprocess.vert" />
+    <Content Include="..\Shaders\Shared\post_bloom_blur.frag" />
+    <Content Include="..\Shaders\Shared\post_bloom_blur.vert" />
     <Content Include="..\Shaders\Shared\post_transition.frag" />
     <Content Include="..\Shaders\Shared\rain.frag" />
     <Content Include="..\Shaders\Shared\rain.vert" />

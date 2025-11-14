@@ -70,10 +70,64 @@ void Application::Run() {
         frameCount++;
         timeAccum += deltaTime;
 
+        if (m_window) {
+            int width = m_surfaceWidth;
+            int height = m_surfaceHeight;
+            m_window->GetWindowSize(width, height);
+            if (width <= 0) {
+                width = m_surfaceWidth;
+            }
+            if (height <= 0) {
+                height = m_surfaceHeight;
+            }
+            if ((width != m_surfaceWidth || height != m_surfaceHeight) && m_renderer) {
+                m_surfaceWidth = width;
+                m_surfaceHeight = height;
+                m_renderer->OnSurfaceResized(width, height);
+            }
+            else {
+                m_surfaceWidth = width;
+                m_surfaceHeight = height;
+            }
+        }
+
         if (timeAccum >= 1.0f) {
             std::cout << "FPS: " << static_cast<float>(frameCount) / timeAccum << '\n';
             frameCount = 0;
             timeAccum = 0.0f;
+        }
+        if (m_keyboard && m_window && m_keyboard->KeyTriggered(Engine::IAL::KeyCode::F11)) {
+            const bool target = !m_window->IsFullScreen();
+            if (m_window->SetFullScreen(target)) {
+                int width = m_surfaceWidth;
+                int height = m_surfaceHeight;
+                m_window->GetWindowSize(width, height);
+                if (width > 0 && height > 0 && m_renderer) {
+                    m_surfaceWidth = width;
+                    m_surfaceHeight = height;
+                    m_renderer->OnSurfaceResized(width, height);
+                }
+            }
+        }
+        if (m_keyboard && m_renderer && m_keyboard->KeyTriggered(Engine::IAL::KeyCode::M)) {
+            m_renderer->ToggleMultiViewLayout();
+        }
+        if (m_keyboard && m_renderer) {
+            if (m_keyboard->KeyTriggered(Engine::IAL::KeyCode::K0)) {
+                m_renderer->SetDefaultViewMode(Renderer::RenderDebugMode::Standard);
+            }
+            else if (m_keyboard->KeyTriggered(Engine::IAL::KeyCode::K1)) {
+                m_renderer->SetDefaultViewMode(Renderer::RenderDebugMode::Wireframe);
+            }
+            else if (m_keyboard->KeyTriggered(Engine::IAL::KeyCode::K2)) {
+                m_renderer->SetDefaultViewMode(Renderer::RenderDebugMode::Normal);
+            }
+            else if (m_keyboard->KeyTriggered(Engine::IAL::KeyCode::K3)) {
+                m_renderer->SetDefaultViewMode(Renderer::RenderDebugMode::Depth);
+            }
+            else if (m_keyboard->KeyTriggered(Engine::IAL::KeyCode::K4)) {
+                m_renderer->SetDefaultViewMode(Renderer::RenderDebugMode::Bloom);
+            }
         }
         if (m_camera && m_keyboard && m_keyboard->KeyTriggered(Engine::IAL::KeyCode::F)) {
             const auto currentMode = m_camera->GetMode();

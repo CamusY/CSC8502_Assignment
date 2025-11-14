@@ -123,6 +123,10 @@ namespace Engine::IAL {
         virtual I_GameTimer* GetTimer() const = 0;
         virtual I_Keyboard* GetKeyboard() const = 0;
         virtual I_Mouse* GetMouse() const = 0;
+        
+        virtual bool SetFullScreen(bool enabled) = 0;
+        virtual bool IsFullScreen() const = 0;
+        virtual void GetWindowSize(int& width, int& height) const = 0;
 
     protected:
         I_WindowSystem() {}

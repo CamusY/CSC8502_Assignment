@@ -25,6 +25,12 @@ namespace Engine::IAL {
 
 class PostProcessing {
 public:
+    enum class OutputMode {
+        ToneMapped,
+        RawScene,
+        BloomOnly
+    };
+
     PostProcessing(const std::shared_ptr<Engine::IAL::I_ResourceFactory>& factory,
                    int width,
                    int height);
@@ -33,18 +39,34 @@ public:
 
     void BeginCapture();
     void EndCapture();
-    void Present(bool transitionEnabled, float timer);
+    void PresentToViewport(OutputMode mode,
+                           bool transitionEnabled,
+                           float timer,
+                           int viewportX,
+                           int viewportY,
+                           int viewportWidth,
+                           int viewportHeight);
 
     std::shared_ptr<Engine::IAL::I_Texture> GetSceneTexture() const;
+    std::shared_ptr<Engine::IAL::I_Texture> GetBloomTexture() const;
+    void SetExposure(float exposure);
 
 private:
     void RecreateResources(int width, int height);
+    void ProcessBloom();
 
     std::shared_ptr<Engine::IAL::I_ResourceFactory> m_factory;
     std::shared_ptr<Engine::IAL::I_FrameBuffer> m_frameBuffer;
+    std::shared_ptr<Engine::IAL::I_FrameBuffer> m_brightFrameBuffer;
+    std::shared_ptr<Engine::IAL::I_FrameBuffer> m_pingPongBuffers[2];
     std::shared_ptr<Engine::IAL::I_Mesh> m_fullscreenQuad;
     std::shared_ptr<Engine::IAL::I_Shader> m_passthroughShader;
     std::shared_ptr<Engine::IAL::I_Shader> m_transitionShader;
+    std::shared_ptr<Engine::IAL::I_Shader> m_brightShader;
+    std::shared_ptr<Engine::IAL::I_Shader> m_blurShader;
     int m_width;
     int m_height;
+    bool m_bloomDirty;
+    float m_exposure;
+    std::shared_ptr<Engine::IAL::I_Texture> m_cachedBloomTexture;
 };

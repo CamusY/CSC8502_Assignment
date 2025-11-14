@@ -117,7 +117,10 @@ void GrassField::GenerateInstances(const std::shared_ptr<Engine::IAL::I_Heightma
 void GrassField::Render(const Matrix4& view,
                         const Matrix4& projection,
                         const Vector3& cameraPosition,
-                        float timeSeconds) {
+                        float timeSeconds,
+                        int debugMode,
+                        float nearPlane,
+                        float farPlane) {
     if (!m_shader || m_instanceCount <= 0 || m_vao == 0) {
         return;
     }
@@ -128,6 +131,9 @@ void GrassField::Render(const Matrix4& view,
     m_shader->SetUniform("uCameraPos", cameraPosition);
     m_shader->SetUniform("uTime", timeSeconds);
     m_shader->SetUniform("uColor", m_color);
+    m_shader->SetUniform("uDebugMode", debugMode);
+    m_shader->SetUniform("uNearPlane", nearPlane);
+    m_shader->SetUniform("uFarPlane", farPlane);
     
     const bool hasBaseTexture = static_cast<bool>(m_baseColorTexture);
     const bool hasAlphaTexture = static_cast<bool>(m_alphaShapeTexture);
