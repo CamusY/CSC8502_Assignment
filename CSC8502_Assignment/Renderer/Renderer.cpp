@@ -360,7 +360,7 @@ void Renderer::RenderScenePass(const Matrix4& view,
         shader->Bind();
         shader->SetUniform("uViewProj", viewProj);
         shader->SetUniform("uModel", modelMatrix);
-        shader->SetUniform("uModel", node->GetWorldTransform());
+        m_skinnedShader->SetUniform("uModel", modelMatrix);
         shader->SetUniform("uClipPlane", clip);
         shader->SetUniform("uLightPosition", m_directionalLight.position);
         shader->SetUniform("uLightColor", m_directionalLight.color);
@@ -420,7 +420,6 @@ void Renderer::RenderWaterSurface(const Matrix4& view,
     m_waterShader->Bind();
     m_waterShader->SetUniform("uReflectionViewProj", m_reflectionViewProj);
     m_waterShader->SetUniform("uViewProj", viewProj);
-    m_waterShader->SetUniform("uModel", waterNode->GetWorldTransform());
     m_waterShader->SetUniform("uCameraPos", cameraPosition);
     m_waterShader->SetUniform("uLightColor", m_directionalLight.color);
     m_waterShader->SetUniform("uAmbientColor", m_directionalLight.ambient);
