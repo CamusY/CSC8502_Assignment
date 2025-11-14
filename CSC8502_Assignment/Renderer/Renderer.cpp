@@ -467,10 +467,10 @@ int Renderer::ToShaderDebugMode(RenderDebugMode mode) const {
 }
 
 void Renderer::ApplyPolygonMode(RenderDebugMode mode, int& previousFront, int& previousBack) const {
-    GLint polygonModes[2] = {GL_FILL, GL_FILL};
-    glGetIntegerv(GL_POLYGON_MODE, polygonModes);
-    previousFront = polygonModes[0];
-    previousBack = polygonModes[1];
+    GLint polygonMode = GL_FILL;
+    glGetIntegerv(GL_POLYGON_MODE, &polygonMode);
+    previousFront = polygonMode;
+    previousBack = polygonMode;
     if (mode == RenderDebugMode::Wireframe) {
         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     }
@@ -479,9 +479,8 @@ void Renderer::ApplyPolygonMode(RenderDebugMode mode, int& previousFront, int& p
     }
 }
 
-void Renderer::RestorePolygonMode(RenderDebugMode /*mode*/, int previousFront, int previousBack) const {
-    glPolygonMode(GL_FRONT, previousFront);
-    glPolygonMode(GL_BACK, previousBack);
+void Renderer::RestorePolygonMode(RenderDebugMode /*mode*/, int previousFront, int /*previousBack*/) const {
+    glPolygonMode(GL_FRONT_AND_BACK, previousFront);
 }
 
 void Renderer::UpdateSplitViewCameras() {

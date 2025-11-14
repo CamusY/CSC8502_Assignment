@@ -71,12 +71,6 @@ void SceneManager::Update(float deltaTime, Engine::IAL::I_Keyboard* keyboard) {
             SceneType target = m_activeType == SceneType::Peace ? SceneType::War : SceneType::Peace;
             BeginTransition(target);
         }
-        if (keyboard->KeyTriggered(Engine::IAL::KeyCode::K1)) {
-            BeginTransition(SceneType::Peace);
-        }
-        else if (keyboard->KeyTriggered(Engine::IAL::KeyCode::K2)) {
-            BeginTransition(SceneType::War);
-        }
     }
 
     if (m_transitionActive) {
