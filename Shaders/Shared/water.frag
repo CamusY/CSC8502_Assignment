@@ -122,8 +122,9 @@ void main() {
     }
     if (uDebugMode == 2) {
         float depth = gl_FragCoord.z;
-        float linearDepth = (2.0 * uNearPlane) / (uFarPlane + uNearPlane - depth * (uFarPlane - uNearPlane));
-        float normalized = clamp(linearDepth / uFarPlane, 0.0, 1.0);
+        float linearDepth = (2.0 * uNearPlane * uFarPlane)
+        / (uFarPlane + uNearPlane - depth * (uFarPlane - uNearPlane));
+        float normalized = clamp((linearDepth - uNearPlane) / (uFarPlane - uNearPlane), 0.0, 1.0);
         fragColor = vec4(vec3(normalized), 1.0);
         return;
     }

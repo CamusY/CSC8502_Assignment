@@ -177,7 +177,9 @@ void PostProcessing::ProcessBloom() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     m_brightShader->Bind();
     sceneTexture->Bind(0);
+    constexpr float kBloomThreshold = 0.7f;
     m_brightShader->SetUniform("uScene", 0);
+    m_brightShader->SetUniform("uThreshold", kBloomThreshold);
     m_brightShader->SetUniform("uThreshold", 1.0f);
     m_fullscreenQuad->Draw();
     m_brightShader->Unbind();
