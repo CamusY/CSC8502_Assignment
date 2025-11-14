@@ -46,6 +46,7 @@
 #pragma once
 
 #include "nclgl/Vector3.h"
+#include "nclgl/Vector2.h"
 
 #include "IAL/I_Mesh.h"
 
@@ -54,6 +55,17 @@ namespace Engine::IAL {
     public:
         virtual ~I_Heightmap() {}
 
+        virtual float SampleHeight(float, float) const {
+            return 0.0f;
+        }
+
+        virtual Vector3 GetWorldScale() const {
+            return Vector3(1.0f, 1.0f, 1.0f);
+        }
+
+        virtual Vector2 GetResolution() const {
+            return Vector2(0.0f, 0.0f);
+        }
     };
 
 }

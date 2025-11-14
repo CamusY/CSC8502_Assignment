@@ -50,6 +50,7 @@ void SceneManager::BindRenderer(const std::shared_ptr<Renderer>& renderer) {
     if (renderer) {
         ApplyEnvironment(*renderer);
         renderer->SetWater(GetWater());
+        renderer->SetTerrainHeightmap(GetActiveHeightmap());
     }
 }
 
@@ -108,6 +109,16 @@ std::shared_ptr<Water> SceneManager::GetWater() const {
     }
     if (m_activeType == SceneType::War && m_sceneWar) {
         return m_sceneWar->GetWater();
+    }
+    return nullptr;
+}
+
+std::shared_ptr<Engine::IAL::I_Heightmap> SceneManager::GetActiveHeightmap() const {
+    if (m_activeType == SceneType::Peace && m_scenePeace) {
+        return m_scenePeace->GetHeightmap();
+    }
+    if (m_activeType == SceneType::War && m_sceneWar) {
+        return m_sceneWar->GetHeightmap();
     }
     return nullptr;
 }
@@ -171,6 +182,7 @@ void SceneManager::BeginTransition(SceneType target) {
     if (auto renderer = m_renderer.lock()) {
         ApplyEnvironment(*renderer);
         renderer->SetWater(GetWater());
+        renderer->SetTerrainHeightmap(GetActiveHeightmap());
         renderer->SetTransitionState(true, 0.0f);
     }
 }

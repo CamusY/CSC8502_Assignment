@@ -28,8 +28,33 @@
 
 #include <memory>
 
+#include "nclgl/Vector3.h"
+#include "nclgl/Vector4.h"
+
 namespace Engine::IAL {
     class I_Texture;
+
+    enum class AlphaMode {
+        Opaque,
+        Mask,
+        Blend
+    };
+
+    struct PBRMaterial {
+        std::shared_ptr<I_Texture> baseColor;
+        std::shared_ptr<I_Texture> normal;
+        std::shared_ptr<I_Texture> metallicRoughness;
+        std::shared_ptr<I_Texture> ambientOcclusion;
+        std::shared_ptr<I_Texture> emissive;
+
+        Vector4 baseColorFactor = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
+        Vector3 emissiveFactor = Vector3(0.0f, 0.0f, 0.0f);
+        float metallicFactor = 0.0f;
+        float roughnessFactor = 1.0f;
+        float alphaCutoff = 0.5f;
+        AlphaMode alphaMode = AlphaMode::Opaque;
+        bool doubleSided = false;
+    };
 
     class I_Mesh {
     public:
@@ -37,6 +62,10 @@ namespace Engine::IAL {
         virtual void Draw() = 0;
 
         virtual std::shared_ptr<I_Texture> GetDefaultTexture() const {
+            return nullptr;
+        }
+
+        virtual const PBRMaterial* GetPBRMaterial() const {
             return nullptr;
         }
     };

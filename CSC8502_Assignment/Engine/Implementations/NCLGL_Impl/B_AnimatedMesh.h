@@ -66,8 +66,11 @@ namespace NCLGL_Impl {
         Matrix4 GetRootTransform() const override;
         std::shared_ptr<Engine::IAL::I_Texture> GetDefaultTexture() const override;
 
+        const Engine::IAL::PBRMaterial* GetPBRMaterial() const override;
+
         void SetRootTransform(const Matrix4& transform);
         void SetDefaultTexture(const std::shared_ptr<Engine::IAL::I_Texture>& texture);
+        void SetPBRMaterial(const Engine::IAL::PBRMaterial& material);
 
     private:
         void CacheBoneTransforms();
@@ -79,6 +82,8 @@ namespace NCLGL_Impl {
         unsigned int m_currentFrame;
         Matrix4 m_rootTransform;
         std::shared_ptr<Engine::IAL::I_Texture> m_defaultTexture;
+        bool m_hasPBR = false;
+        Engine::IAL::PBRMaterial m_pbrMaterial;
     };
 
 }

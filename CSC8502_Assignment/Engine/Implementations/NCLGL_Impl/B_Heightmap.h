@@ -25,6 +25,8 @@
  */
 #pragma once
 #include "IAL/I_Heightmap.h"
+#include "nclgl/Vector3.h"
+#include <vector>
 
 class Mesh;
 
@@ -32,13 +34,27 @@ namespace NCLGL_Impl {
 
     class B_Heightmap : public virtual Engine::IAL::I_Heightmap {
     public:
-        explicit B_Heightmap(::Mesh* mesh);
+        B_Heightmap(::Mesh* mesh,
+                    std::vector<float> samples,
+                    size_t dimension,
+                    const Vector3& scale);
         ~B_Heightmap() override;
 
         void Draw() override;
 
+        float SampleHeight(float x, float z) const override;
+        Vector3 GetWorldScale() const override;
+        Vector2 GetResolution() const override;
+        const Engine::IAL::PBRMaterial* GetPBRMaterial() const override;
+        void SetPBRMaterial(const Engine::IAL::PBRMaterial& material);
+
     private:
         ::Mesh* m_mesh;
+        std::vector<float> m_samples;
+        size_t m_dimension;
+        Vector3 m_scale;
+        bool m_hasMaterial;
+        Engine::IAL::PBRMaterial m_pbrMaterial;
     };
 
 }

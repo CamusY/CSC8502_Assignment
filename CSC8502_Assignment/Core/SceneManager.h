@@ -13,6 +13,7 @@
 #include "SceneGraph.h"
 
 #include "IAL/I_ResourceFactory.h"
+#include "IAL/I_Heightmap.h"
 
 namespace Engine::IAL {
     class I_Keyboard;
@@ -36,9 +37,10 @@ public:
     std::shared_ptr<SceneGraph> GetSceneGraph() const;
 
     void BindRenderer(const std::shared_ptr<Renderer>& renderer);
-    void Update(float deltaTime,Engine::IAL::I_Keyboard* keyboard);
+    void Update(float deltaTime, Engine::IAL::I_Keyboard* keyboard);
 
     std::shared_ptr<Water> GetWater() const;
+    std::shared_ptr<Engine::IAL::I_Heightmap> GetActiveHeightmap() const;
     SceneType GetActiveScene() const;
     bool SetActiveScene(SceneType type);
     void ApplyEnvironment(Renderer& renderer);

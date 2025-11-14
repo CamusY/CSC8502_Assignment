@@ -29,8 +29,8 @@ void Scene_T2_War::Init() {
         return;
     }
 
-    auto heightmap = m_factory->LoadHeightmap("../Heightmaps/terrain.png", Vector3(2.0f, 0.4f, 2.0f));
-    if (!heightmap) {
+    m_heightmap = m_factory->LoadHeightmap("../Heightmaps/terrain.png", Vector3(2.0f, 0.4f, 2.0f));
+    if (!m_heightmap) {
         return;
     }
 
@@ -41,7 +41,7 @@ void Scene_T2_War::Init() {
     }
     m_water = std::make_shared<Water>(m_factory, 30.0f, Vector2(1024.0f, 1024.0f));
     m_terrainNode = std::make_shared<SceneNode>();
-    m_terrainNode->SetMesh(heightmap);
+    m_terrainNode->SetMesh(m_heightmap);
     if (m_terrainTexture) {
         m_terrainNode->SetTexture(m_terrainTexture);
     }
@@ -89,6 +89,10 @@ void Scene_T2_War::Update(float deltaTime) {
 
 std::shared_ptr<Water> Scene_T2_War::GetWater() const {
     return m_water;
+}
+
+std::shared_ptr<Engine::IAL::I_Heightmap> Scene_T2_War::GetHeightmap() const {
+    return m_heightmap;
 }
 
 const SceneEnvironment& Scene_T2_War::GetEnvironment() const {

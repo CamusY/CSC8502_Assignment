@@ -95,23 +95,58 @@ namespace {
         return transform;
     }
 
-    std::shared_ptr<Engine::IAL::I_Texture> BuildTextureFromLayer(const GLTFMaterialLayer& layer) {
-        if (layer.albedo) {
-            return std::make_shared<NCLGL_Impl::B_Texture>(layer.albedo, Engine::IAL::TextureType::Texture2D);
+    Engine::IAL::AlphaMode ConvertAlphaMode(GLTFAlphaMode mode) {
+        switch (mode) {
+        case GLTFAlphaMode::Mask:
+            return Engine::IAL::AlphaMode::Mask;
+        case GLTFAlphaMode::Cutoff:
+            return Engine::IAL::AlphaMode::Blend;
+        default:
+            return Engine::IAL::AlphaMode::Opaque;
         }
-        return nullptr;
+    }
+
+    Engine::IAL::PBRMaterial BuildPBRMaterial(const GLTFMaterialLayer& layer) {
+        Engine::IAL::PBRMaterial material;
+        if (layer.albedo) {
+            material.baseColor = std::make_shared<NCLGL_Impl::B_Texture>(
+                layer.albedo, Engine::IAL::TextureType::Texture2D);
+        }
+        if (layer.bump) {
+            material.normal = std::make_shared<NCLGL_Impl::B_Texture>(layer.bump, Engine::IAL::TextureType::Texture2D);
+        }
+        if (layer.metallic) {
+            material.metallicRoughness = std::make_shared<NCLGL_Impl::B_Texture>(
+                layer.metallic, Engine::IAL::TextureType::Texture2D);
+        }
+        if (layer.occlusion) {
+            material.ambientOcclusion = std::make_shared<NCLGL_Impl::B_Texture>(
+                layer.occlusion, Engine::IAL::TextureType::Texture2D);
+        }
+        if (layer.emission) {
+            material.emissive = std::make_shared<NCLGL_Impl::B_Texture>(
+                layer.emission, Engine::IAL::TextureType::Texture2D);
+        }
+        material.baseColorFactor = layer.albedoColour;
+        material.emissiveFactor = layer.emissionColour;
+        material.metallicFactor = layer.metallicFactor;
+        material.roughnessFactor = layer.roughnessFactor;
+        material.alphaCutoff = layer.alphaCutoff;
+        material.alphaMode = ConvertAlphaMode(layer.alphaMode);
+        material.doubleSided = layer.doubleSided;
+        return material;
     }
 
     std::shared_ptr<Engine::IAL::I_Texture> ExtractPrimaryTexture(const GLTFScene& scene) {
         for (const auto& material : scene.materials) {
             for (const auto& layer : material.allLayers) {
-                if (auto texture = BuildTextureFromLayer(layer)) {
+                if (auto texture = BuildPBRMaterial(layer).baseColor) {
                     return texture;
                 }
             }
         }
         for (const auto& layer : scene.materialLayers) {
-            if (auto texture = BuildTextureFromLayer(layer)) {
+            if (auto texture = BuildPBRMaterial(layer).baseColor) {
                 return texture;
             }
         }
@@ -282,6 +317,7 @@ namespace {
         glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+        glGenerateMipmap(GL_TEXTURE_CUBE_MAP);
         GLint minFilter = 0;
         GLint magFilter = 0;
         GLint wrapS = 0;
@@ -351,6 +387,7 @@ namespace {
             vertices = new Vector3[numVertices];
             normals = new Vector3[numVertices];
             textureCoords = new Vector2[numVertices];
+            tangents = new Vector4[numVertices];
             indices = new unsigned int[numIndices];
 
             auto sampleHeight = [&](int x, int z) {
@@ -373,6 +410,7 @@ namespace {
                         dimension > 1 ? static_cast<float>(x) / static_cast<float>(dimension - 1) : 0.0f,
                         dimension > 1 ? static_cast<float>(z) / static_cast<float>(dimension - 1) : 0.0f);
                     normals[index] = Vector3(0.0f, 1.0f, 0.0f);
+                    tangents[index] = Vector4(1.0f, 0.0f, 0.0f, 1.0f);
                 }
             }
 
@@ -390,6 +428,10 @@ namespace {
                     Vector3 normal = Vector3::Cross(tangentZ, tangentX);
                     normal.Normalise();
                     normals[index] = normal;
+
+                    Vector3 tangent = tangentX;
+                    tangent.Normalise();
+                    tangents[index] = Vector4(tangent.x, tangent.y, tangent.z, 1.0f);
                 }
             }
 
@@ -458,6 +500,27 @@ namespace NCLGL_Impl {
                 if (wrappedMesh) {
                     if (auto texture = ExtractPrimaryTexture(scene)) {
                         wrappedMesh->SetDefaultTexture(texture);
+                    }
+                    bool hasMaterial = false;
+                    Engine::IAL::PBRMaterial material;
+                    for (std::size_t i = 0; i < scene.meshes.size(); ++i) {
+                        if (scene.meshes[i] == mesh) {
+                            if (i < scene.materials.size() && !scene.materials[i].allLayers.empty()) {
+                                material = BuildPBRMaterial(scene.materials[i].allLayers.front());
+                                hasMaterial = true;
+                            }
+                            break;
+                        }
+                    }
+                    if (!hasMaterial && !scene.materialLayers.empty()) {
+                        material = BuildPBRMaterial(scene.materialLayers.front());
+                        hasMaterial = true;
+                    }
+                    if (hasMaterial) {
+                        wrappedMesh->SetPBRMaterial(material);
+                        if (!wrappedMesh->GetDefaultTexture() && material.baseColor) {
+                            wrappedMesh->SetDefaultTexture(material.baseColor);
+                        }
                     }
                 }
                 return wrappedMesh;
@@ -541,12 +604,27 @@ namespace NCLGL_Impl {
         std::vector<unsigned char> samples(pixelCount);
         std::memcpy(samples.data(), data, pixelCount);
         stbi_image_free(data);
+        std::vector<float> heightSamples(pixelCount);
+        const float inv255 = 1.0f / 255.0f;
+        for (size_t i = 0; i < pixelCount; ++i) {
+            heightSamples[i] = static_cast<float>(samples[i]) * inv255;
+        }
         try {
             auto* mesh = new HeightmapMesh(samples, dimension, scale);
             std::cerr << "[B_Factory] Heightmap loaded: " << path
                 << " (" << dimension << "x" << dimension << ") scale="
                 << scale.x << "," << scale.y << "," << scale.z << "\n";
-            return std::make_shared<B_Heightmap>(mesh);
+            auto heightmap = std::make_shared<B_Heightmap>(mesh, std::move(heightSamples), dimension, scale);
+            if (heightmap) {
+                Engine::IAL::PBRMaterial material;
+                material.baseColorFactor = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
+                material.metallicFactor = 0.0f;
+                material.roughnessFactor = 1.0f;
+                material.alphaMode = Engine::IAL::AlphaMode::Opaque;
+                material.doubleSided = false;
+                heightmap->SetPBRMaterial(material);
+            }
+            return heightmap;
         }
         catch (const std::exception& ex) {
             std::cerr << "[B_Factory] Exception constructing heightmap mesh for " << path
@@ -554,7 +632,6 @@ namespace NCLGL_Impl {
         }
         return nullptr;
     }
-
 
     namespace {
         class FullscreenQuadMesh final : public ::Mesh {
@@ -684,6 +761,27 @@ namespace NCLGL_Impl {
                     animatedMesh->SetRootTransform(ExtractMeshRootTransform(scene, mesh));
                     if (auto texture = ExtractPrimaryTexture(scene)) {
                         animatedMesh->SetDefaultTexture(texture);
+                    }
+                    bool hasMaterial = false;
+                    Engine::IAL::PBRMaterial material;
+                    for (std::size_t i = 0; i < scene.meshes.size(); ++i) {
+                        if (scene.meshes[i] == mesh) {
+                            if (i < scene.materials.size() && !scene.materials[i].allLayers.empty()) {
+                                material = BuildPBRMaterial(scene.materials[i].allLayers.front());
+                                hasMaterial = true;
+                            }
+                            break;
+                        }
+                    }
+                    if (!hasMaterial && !scene.materialLayers.empty()) {
+                        material = BuildPBRMaterial(scene.materialLayers.front());
+                        hasMaterial = true;
+                    }
+                    if (hasMaterial) {
+                        animatedMesh->SetPBRMaterial(material);
+                        if (!animatedMesh->GetDefaultTexture() && material.baseColor) {
+                            animatedMesh->SetDefaultTexture(material.baseColor);
+                        }
                     }
                 }
                 logAnimatedMesh(path, selectedAnimation);

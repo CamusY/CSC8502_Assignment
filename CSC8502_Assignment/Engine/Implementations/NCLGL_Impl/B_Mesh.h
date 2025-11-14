@@ -47,8 +47,14 @@ namespace NCLGL_Impl {
         std::shared_ptr<Engine::IAL::I_Texture> GetDefaultTexture() const override;
         void SetDefaultTexture(const std::shared_ptr<Engine::IAL::I_Texture>& texture);
 
+        void SetPBRMaterial(const Engine::IAL::PBRMaterial& material);
+
+        const Engine::IAL::PBRMaterial* GetPBRMaterial() const override;
+
     private:
         std::shared_ptr<::Mesh> m_mesh;
         std::shared_ptr<Engine::IAL::I_Texture> m_defaultTexture;
+        bool m_hasPBR = false;
+        Engine::IAL::PBRMaterial m_pbrMaterial;
     };
 }

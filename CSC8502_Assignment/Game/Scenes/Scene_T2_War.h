@@ -10,6 +10,8 @@
 
 #include "../../Core/SceneGraph.h"
 #include "../../Engine/IAL/I_ResourceFactory.h"
+#include "../../Engine/IAL/I_AnimatedMesh.h"
+#include "../../Engine/IAL/I_Heightmap.h"
 #include "../SceneEnvironment.h"
 
 class Water;
@@ -24,12 +26,14 @@ public:
     void Update(float deltaTime);
 
     std::shared_ptr<Water> GetWater() const;
+    std::shared_ptr<Engine::IAL::I_Heightmap> GetHeightmap() const;
     const SceneEnvironment& GetEnvironment() const;
     void SetActive(bool active);
 
 private:
     std::shared_ptr<Engine::IAL::I_ResourceFactory> m_factory;
     std::shared_ptr<SceneGraph> m_sceneGraph;
+    std::shared_ptr<Engine::IAL::I_Heightmap> m_heightmap;
     std::shared_ptr<SceneNode> m_terrainNode;
     std::shared_ptr<SceneNode> m_ruinsNode;
     std::shared_ptr<Engine::IAL::I_Texture> m_terrainTexture;

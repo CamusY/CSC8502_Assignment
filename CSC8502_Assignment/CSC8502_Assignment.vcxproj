@@ -107,7 +107,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard>stdcpp20</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
       <AdditionalIncludeDirectories>$(SolutionDir)CSC8502_GLTF</AdditionalIncludeDirectories>
     </ClCompile>
@@ -154,6 +154,7 @@
     <ClCompile Include="Game\Scenes\Scene_T1_Peace.cpp" />
     <ClCompile Include="Game\Scenes\Scene_T2_War.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="Renderer\GrassField.cpp" />
     <ClCompile Include="Renderer\PostProcessing.cpp" />
     <ClCompile Include="Renderer\Renderer.cpp" />
     <ClCompile Include="Renderer\ShadowMap.cpp" />
@@ -191,6 +192,7 @@
     <ClInclude Include="Game\SceneEnvironment.h" />
     <ClInclude Include="Game\Scenes\Scene_T1_Peace.h" />
     <ClInclude Include="Game\Scenes\Scene_T2_War.h" />
+    <ClInclude Include="Renderer\GrassField.h" />
     <ClInclude Include="Renderer\PostProcessing.h" />
     <ClInclude Include="Renderer\Renderer.h" />
     <ClInclude Include="Renderer\ShadowMap.h" />
@@ -203,6 +205,9 @@
   <ItemGroup>
     <Content Include="..\Shaders\Shared\basic.frag" />
     <Content Include="..\Shaders\Shared\basic.vert" />
+    <Content Include="..\Shaders\Shared\grass.frag" />
+    <Content Include="..\Shaders\Shared\grass.geom" />
+    <Content Include="..\Shaders\Shared\grass.vert" />
     <Content Include="..\Shaders\Shared\postprocess.frag" />
     <Content Include="..\Shaders\Shared\postprocess.vert" />
     <Content Include="..\Shaders\Shared\post_transition.frag" />

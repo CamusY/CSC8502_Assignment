@@ -31,7 +31,12 @@ namespace Engine::IAL {
     class I_Texture;
     class I_Mesh;
     class I_FrameBuffer;
+    struct PBRMaterial;
+    enum class AlphaMode;
+    class I_Heightmap;
 }
+
+class GrassField;
 
 class PostProcessing;
 class Camera;
@@ -54,6 +59,7 @@ public:
     void SetSceneColour(const Vector3& colour);
     void SetDirectionalLight(const Light& light);
     void SetTransitionState(bool enabled, float progress);
+    void SetTerrainHeightmap(const std::shared_ptr<Engine::IAL::I_Heightmap>& heightmap);
 
 private:
     void RenderSceneForShadowMap(const Matrix4& lightViewProjection,
@@ -75,11 +81,17 @@ private:
                                const Matrix4& projection,
                                const Vector3& cameraPosition);
     void RenderDebugUI();
+    void RenderGrass(const Matrix4& view,
+                     const Matrix4& projection,
+                     const Vector3& cameraPosition);
     void UpdateAnimatedMeshes(float deltaTime);
     float GetTerrainExtent() const;
     void BindBonePalette(const std::vector<Matrix4>& bones, int boneCount);
     void UnbindBonePalette();
     void EnsureBoneBufferCapacity(std::size_t requiredCount);
+    Engine::IAL::PBRMaterial ResolveMaterial(const std::shared_ptr<SceneNode>& node,
+                                             const std::shared_ptr<Engine::IAL::I_Mesh>& mesh) const;
+    static int ToAlphaModeValue(Engine::IAL::AlphaMode mode);
 
     std::shared_ptr<Engine::IAL::I_ResourceFactory> m_factory;
     std::shared_ptr<SceneGraph> m_sceneGraph;
@@ -114,4 +126,9 @@ private:
     float m_shadowStrength;
     unsigned int m_bonePaletteBuffer;
     std::size_t m_boneCapacity;
+    float m_environmentIntensity;
+    float m_environmentMaxLod;
+    std::shared_ptr<Engine::IAL::I_Heightmap> m_activeHeightmap;
+    std::unique_ptr<GrassField> m_grassField;
+    float m_timeAccumulator;
 };

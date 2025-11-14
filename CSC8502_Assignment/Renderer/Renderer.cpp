@@ -11,12 +11,14 @@
 
 #include "PostProcessing.h"
 #include "Water.h"
+#include "GrassField.h"
 #include "../Core/Camera.h"
 #include "../Engine/IAL/I_FrameBuffer.h"
 #include "../Engine/IAL/I_Mesh.h"
 #include "../Engine/IAL/I_Shader.h"
 #include "../Engine/IAL/I_Texture.h"
 #include "../Engine/IAL/I_AnimatedMesh.h"
+#include "../Engine/IAL/I_Heightmap.h"
 
 #include <glad/glad.h>
 #include <algorithm>
@@ -59,7 +61,12 @@ Renderer::Renderer(const std::shared_ptr<Engine::IAL::I_ResourceFactory>& factor
     , m_reflectionViewProj()
     , m_shadowStrength(0.65f)
     , m_bonePaletteBuffer(0)
-    , m_boneCapacity(0) {
+    , m_boneCapacity(0)
+    , m_environmentIntensity(1.0f)
+    , m_environmentMaxLod(5.0f)
+    , m_activeHeightmap(nullptr)
+    , m_grassField(nullptr)
+    , m_timeAccumulator(0.0f) {
     if (m_factory) {
         m_sceneShader = m_factory->CreateShader("Shared/basic.vert", "Shared/basic.frag");
         m_terrainShader = m_factory->CreateShader("Shared/terrain.vert", "Shared/terrain.frag");
@@ -95,6 +102,7 @@ void Renderer::Render(float deltaTime) {
     glDisable(GL_CLIP_DISTANCE0);
 
     UpdateAnimatedMeshes(deltaTime);
+    m_timeAccumulator += deltaTime;
 
     const Vector3 defaultCameraPos(0.0f, 0.0f, 10.5f);
     const Vector3 cameraPosition = m_camera ? m_camera->GetPosition() : defaultCameraPos;
@@ -153,6 +161,7 @@ void Renderer::Render(float deltaTime) {
 
     RenderSkybox(view, projection);
     RenderScenePass(view, projection, cameraPosition, true);
+    RenderGrass(view, projection, cameraPosition);
     RenderWaterSurface(view, projection, cameraPosition);
 
     if (m_postProcessing) {
@@ -164,13 +173,21 @@ void Renderer::Render(float deltaTime) {
 
 void Renderer::SetWater(const std::shared_ptr<Water>& water) {
     m_water = water;
-    if (!m_factory || !m_water) {
+    if (!m_factory) {
         m_waterReflectionFBO.reset();
         m_waterRefractionFBO.reset();
+        m_grassField.reset();
+        return;
+    }
+    if (!m_water) {
+        m_waterReflectionFBO.reset();
+        m_waterRefractionFBO.reset();
+        SetTerrainHeightmap(m_activeHeightmap);
         return;
     }
     m_waterReflectionFBO = m_factory->CreatePostProcessFBO(m_surfaceWidth, m_surfaceHeight);
     m_waterRefractionFBO = m_factory->CreatePostProcessFBO(m_surfaceWidth, m_surfaceHeight);
+    SetTerrainHeightmap(m_activeHeightmap);
 }
 
 void Renderer::SetSkyboxTexture(const std::shared_ptr<Engine::IAL::I_Texture>& texture) {
@@ -188,6 +205,16 @@ void Renderer::SetDirectionalLight(const Light& light) {
 void Renderer::SetTransitionState(bool enabled, float progress) {
     m_transitionEnabled = enabled;
     m_transitionProgress = std::clamp(progress, 0.0f, 1.0f);
+}
+
+void Renderer::SetTerrainHeightmap(const std::shared_ptr<Engine::IAL::I_Heightmap>& heightmap) {
+    m_activeHeightmap = heightmap;
+    if (!m_factory || !m_activeHeightmap) {
+        m_grassField.reset();
+        return;
+    }
+    const float waterHeight = m_water ? m_water->GetHeight() : 0.0f;
+    m_grassField = std::make_unique<GrassField>(m_factory, m_activeHeightmap, waterHeight);
 }
 
 void Renderer::UpdateAnimatedMeshes(float deltaTime) {
@@ -317,85 +344,146 @@ void Renderer::RenderScenePass(const Matrix4& view,
         }
         auto shadowTexture = m_shadowMap ? m_shadowMap->GetDepthTexture() : nullptr;
         const bool hasShadow = static_cast<bool>(shadowTexture);
-        if (animatedMesh && m_skinnedShader) {
-            const auto& bones = animatedMesh->GetBoneTransforms();
-            const int boneCount = static_cast<int>(bones.size());
-            m_skinnedShader->Bind();
-            m_skinnedShader->SetUniform("uViewProj", viewProj);
-            m_skinnedShader->SetUniform("uModel", modelMatrix);
-            m_skinnedShader->SetUniform("uClipPlane", clip);
-            m_skinnedShader->SetUniform("uLightPosition", m_directionalLight.position);
-            m_skinnedShader->SetUniform("uLightColor", m_directionalLight.color);
-            m_skinnedShader->SetUniform("uAmbientColor", m_directionalLight.ambient);
-            m_skinnedShader->SetUniform("uCameraPos", cameraPosition);
-            m_skinnedShader->SetUniform("uSpecularPower", m_specularPower);
-            m_skinnedShader->SetUniform("uShadowMatrix", m_shadowMatrix);
-            m_skinnedShader->SetUniform("uShadowStrength", hasShadow ? m_shadowStrength : 0.0f);
-            m_skinnedShader->SetUniform("uBoneCount", boneCount);
-            BindBonePalette(bones, boneCount);
-            if (hasShadow) {
-                shadowTexture->Bind(2);
-                m_skinnedShader->SetUniform("uShadowMap", 2);
-            }
-            auto texture = node->GetTexture();
-            if (!texture) {
-                texture = mesh->GetDefaultTexture();
-            }
-            if (texture) {
-                texture->Bind(0);
-                m_skinnedShader->SetUniform("uDiffuse", 0);
-                m_skinnedShader->SetUniform("uHasTexture", 1);
-            }
-            else {
-                m_skinnedShader->SetUniform("uHasTexture", 0);
-                m_skinnedShader->SetUniform("uBaseColor", m_sceneColour);
-            }
-            mesh->Draw();
-            m_skinnedShader->Unbind();
-            continue;
+        
+        std::shared_ptr<Engine::IAL::I_Shader> shader;
+        if (animatedMesh) {
+            shader = m_skinnedShader;
         }
-        UnbindBonePalette();
-        auto texture = node->GetTexture();
-        if (!texture) {
-            texture = mesh->GetDefaultTexture();
+        else {
+            shader = node->GetTexture() ? m_terrainShader : m_sceneShader;
         }
-        std::shared_ptr<Engine::IAL::I_Shader> shader = texture ? m_terrainShader : m_sceneShader;
         if (!shader) {
             continue;
         }
+
         shader->Bind();
         shader->SetUniform("uViewProj", viewProj);
+        shader->SetUniform("uView", view);
         shader->SetUniform("uModel", modelMatrix);
         shader->SetUniform("uClipPlane", clip);
         shader->SetUniform("uLightPosition", m_directionalLight.position);
         shader->SetUniform("uLightColor", m_directionalLight.color);
-
+        shader->SetUniform("uAmbientColor", m_directionalLight.ambient);
+        shader->SetUniform("uCameraPos", cameraPosition);
         shader->SetUniform("uFogColor", fogColor);
         shader->SetUniform("uFogDensity", fogDensity);
-
-        shader->SetUniform("uAmbientColor", m_directionalLight.ambient);
         shader->SetUniform("uShadowMatrix", m_shadowMatrix);
         shader->SetUniform("uShadowStrength", hasShadow ? m_shadowStrength : 0.0f);
-        if (hasShadow) {
-            shadowTexture->Bind(2);
-            shader->SetUniform("uShadowMap", 2);
+        shader->SetUniform("uEnvironmentIntensity", m_environmentIntensity);
+        shader->SetUniform("uEnvironmentMaxLod", m_environmentMaxLod);
+        shader->SetUniform("uUseEnvironment", m_skyboxTexture ? 1 : 0);
+
+        Engine::IAL::PBRMaterial material = ResolveMaterial(node, mesh);
+        shader->SetUniform("uBaseColorFactor", material.baseColorFactor);
+        shader->SetUniform("uMetallicFactor", material.metallicFactor);
+        shader->SetUniform("uRoughnessFactor", material.roughnessFactor);
+        shader->SetUniform("uEmissiveFactor", material.emissiveFactor);
+        shader->SetUniform("uAlphaCutoff", material.alphaCutoff);
+        shader->SetUniform("uAlphaMode", ToAlphaModeValue(material.alphaMode));
+        shader->SetUniform("uDoubleSided", material.doubleSided ? 1 : 0);
+
+        int hasBase = material.baseColor ? 1 : 0;
+        int hasNormal = material.normal ? 1 : 0;
+        int hasMetallic = material.metallicRoughness ? 1 : 0;
+        int hasAO = material.ambientOcclusion ? 1 : 0;
+        int hasEmissive = material.emissive ? 1 : 0;
+        shader->SetUniform("uHasBaseColorMap", hasBase);
+        shader->SetUniform("uHasNormalMap", hasNormal);
+        shader->SetUniform("uHasMetallicRoughnessMap", hasMetallic);
+        shader->SetUniform("uHasAOMap", hasAO);
+        shader->SetUniform("uHasEmissiveMap", hasEmissive);
+
+        if (hasBase) {
+            material.baseColor->Bind(0);
+            shader->SetUniform("uBaseColorMap", 0);
         }
-        if (texture) {
-            texture->Bind(0);
-            shader->SetUniform("uDiffuse", 0);
-            shader->SetUniform("uSpecularPower", m_specularPower);
-            shader->SetUniform("uCameraPos", cameraPosition);
+        if (hasNormal) {
+            material.normal->Bind(1);
+            shader->SetUniform("uNormalMap", 1);
+        }
+        if (hasMetallic) {
+            material.metallicRoughness->Bind(2);
+            shader->SetUniform("uMetallicRoughnessMap", 2);
+        }
+        if (hasAO) {
+            material.ambientOcclusion->Bind(3);
+            shader->SetUniform("uAOMap", 3);
+        }
+        if (hasEmissive) {
+            material.emissive->Bind(4);
+            shader->SetUniform("uEmissiveMap", 4);
+        }
+        if (m_skyboxTexture) {
+            m_skyboxTexture->Bind(5);
+            shader->SetUniform("uEnvironmentMap", 5);
+        }
+        if (hasShadow) {
+            shadowTexture->Bind(6);
+            shader->SetUniform("uShadowMap", 6);
+        }
+
+        GLboolean prevCull = glIsEnabled(GL_CULL_FACE);
+        if (material.doubleSided) {
+            glDisable(GL_CULL_FACE);
+        }
+        else if (!prevCull) {
+            glEnable(GL_CULL_FACE);
+        }
+
+        GLboolean prevBlend = glIsEnabled(GL_BLEND);
+        GLboolean prevDepthMask = GL_TRUE;
+        glGetBooleanv(GL_DEPTH_WRITEMASK, &prevDepthMask);
+        const int alphaMode = ToAlphaModeValue(material.alphaMode);
+        if (alphaMode == 2) {
+            glEnable(GL_BLEND);
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+            glDepthMask(GL_FALSE);
         }
         else {
-            shader->SetUniform("uColor", m_sceneColour);
-            shader->SetUniform("uSpecularPower", m_specularPower);
-            shader->SetUniform("uCameraPos", cameraPosition);
+            if (!prevBlend) {
+                glDisable(GL_BLEND);
+            }
+            glDepthMask(GL_TRUE);
         }
+
+        if (animatedMesh) {
+            const auto& bones = animatedMesh->GetBoneTransforms();
+            const int boneCount = static_cast<int>(bones.size());
+            shader->SetUniform("uBoneCount", boneCount);
+            BindBonePalette(bones, boneCount);
+        }
+        else {
+            UnbindBonePalette();
+        }
+
         mesh->Draw();
+
+        if (material.doubleSided && prevCull) {
+            glEnable(GL_CULL_FACE);
+        }
+        else if (!prevCull) {
+            glDisable(GL_CULL_FACE);
+        }
+
+        if (alphaMode == 2) {
+            if (!prevBlend) {
+                glDisable(GL_BLEND);
+            }
+            glDepthMask(prevDepthMask);
+        }
+
         shader->Unbind();
     }
     glDisable(GL_CLIP_DISTANCE0);
     UnbindBonePalette();
+}
+void Renderer::RenderGrass(const Matrix4& view,
+                           const Matrix4& projection,
+                           const Vector3& cameraPosition) {
+    if (!m_grassField) {
+        return;
+    }
+    m_grassField->Render(view, projection, cameraPosition, m_timeAccumulator);
 }
 
 void Renderer::RenderWaterSurface(const Matrix4& view,
@@ -579,4 +667,51 @@ void Renderer::RenderDebugUI() {
         }
     }
     m_debugUI->EndWindow();
+}
+
+Engine::IAL::PBRMaterial Renderer::ResolveMaterial(const std::shared_ptr<SceneNode>& node,
+                                                   const std::shared_ptr<Engine::IAL::I_Mesh>& mesh) const {
+    Engine::IAL::PBRMaterial material;
+    if (mesh) {
+        if (const auto* existing = mesh->GetPBRMaterial()) {
+            material = *existing;
+        }
+    }
+    if (!material.baseColorFactor.x && !material.baseColorFactor.y && !material.baseColorFactor.z) {
+        material.baseColorFactor = Vector4(m_sceneColour.x, m_sceneColour.y, m_sceneColour.z, 1.0f);
+    }
+    if (material.metallicFactor < 0.0f) {
+        material.metallicFactor = 0.0f;
+    }
+    if (material.roughnessFactor <= 0.0f) {
+        material.roughnessFactor = 1.0f;
+    }
+    if (node) {
+        if (auto texture = node->GetTexture()) {
+            material.baseColor = texture;
+        }
+    }
+    return material;
+}
+
+int Renderer::ToAlphaModeValue(Engine::IAL::AlphaMode mode) {
+    switch (mode) {
+    case Engine::IAL::AlphaMode::Mask:
+        return 1;
+    case Engine::IAL::AlphaMode::Blend:
+        return 2;
+    default:
+        return 0;
+    }
+}
+
+float Renderer::GetTerrainExtent() const {
+    if (!m_activeHeightmap) {
+        return 0.0f;
+    }
+    const Vector2 resolution = m_activeHeightmap->GetResolution();
+    const Vector3 scale = m_activeHeightmap->GetWorldScale();
+    const float extentX = resolution.x * scale.x;
+    const float extentZ = resolution.y * scale.z;
+    return std::max(extentX, extentZ);
 }

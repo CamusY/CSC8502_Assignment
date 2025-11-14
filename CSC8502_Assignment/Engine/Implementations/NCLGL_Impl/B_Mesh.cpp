@@ -34,5 +34,14 @@ namespace NCLGL_Impl {
     void B_Mesh::SetDefaultTexture(const std::shared_ptr<Engine::IAL::I_Texture>& texture) {
         m_defaultTexture = texture;
     }
+    void B_Mesh::SetPBRMaterial(const Engine::IAL::PBRMaterial& material) {
+        m_pbrMaterial = material;
+        m_hasPBR = true;
+    }
+
+    const Engine::IAL::PBRMaterial* B_Mesh::GetPBRMaterial() const {
+        return m_hasPBR ? &m_pbrMaterial : nullptr;
+    }
+
 
 }

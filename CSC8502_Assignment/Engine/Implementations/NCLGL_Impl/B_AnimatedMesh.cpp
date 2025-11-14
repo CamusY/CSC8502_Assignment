@@ -84,6 +84,10 @@ namespace NCLGL_Impl {
         return m_defaultTexture;
     }
 
+    const Engine::IAL::PBRMaterial* B_AnimatedMesh::GetPBRMaterial() const {
+        return m_hasPBR ? &m_pbrMaterial : nullptr;
+    }
+
     void B_AnimatedMesh::SetRootTransform(const Matrix4& transform) {
         m_rootTransform = transform;
     }
@@ -91,6 +95,12 @@ namespace NCLGL_Impl {
     void B_AnimatedMesh::SetDefaultTexture(const std::shared_ptr<Engine::IAL::I_Texture>& texture) {
         m_defaultTexture = texture;
     }
+
+    void B_AnimatedMesh::SetPBRMaterial(const Engine::IAL::PBRMaterial& material) {
+        m_pbrMaterial = material;
+        m_hasPBR = true;
+    }
+
 
     void B_AnimatedMesh::CacheBoneTransforms() {
         if (!m_anim) {
