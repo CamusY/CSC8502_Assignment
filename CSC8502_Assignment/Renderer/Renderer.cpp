@@ -510,7 +510,7 @@ void Renderer::UpdateSplitViewCameras() {
     }
     if (m_splitCameras[2]) {
         m_splitCameras[2]->SetPosition(focus + Vector3(320.0f, 150.0f, 240.0f));
-        m_splitCameras[2]->SetYaw(-135.0f);
+        m_splitCameras[2]->SetYaw(35.0f);
         m_splitCameras[2]->SetPitch(-18.0f);
     }
 }

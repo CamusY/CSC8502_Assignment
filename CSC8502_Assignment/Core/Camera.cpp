@@ -64,12 +64,12 @@ Camera::Camera() :
     , m_trackProgress(0.0f)
     , m_trackSpeed(0.18f) {
     m_trackPoints = {
-        Vector3(420.0f, 38.0f, 300.0f),
-        Vector3(560.0f, 40.0f, 520.0f),
-        Vector3(700.0f, 42.0f, 740.0f),
-        Vector3(520.0f, 38.0f, 900.0f),
-        Vector3(380.0f, 36.0f, 760.0f),
-        Vector3(340.0f, 35.0f, 520.0f)
+        Vector3(420.0f, 88.0f, 300.0f),
+        Vector3(560.0f, 90.0f, 520.0f),
+        Vector3(700.0f, 92.0f, 740.0f),
+        Vector3(520.0f, 88.0f, 900.0f),
+        Vector3(380.0f, 86.0f, 760.0f),
+        Vector3(340.0f, 85.0f, 520.0f)
     };
 
     ResetTrack();

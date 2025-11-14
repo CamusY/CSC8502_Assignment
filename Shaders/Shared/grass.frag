@@ -31,7 +31,9 @@ void main() {
     vec3 gradient = mix(vec3(0.85, 0.95, 0.8), vec3(1.0, 1.0, 1.0), heightBlend);
     vec3 baseColor = sampledColor * gradient;
     float distanceToCamera = length(uCameraPos - fsIn.worldPos);
-    float fogFactor = clamp(exp(-0.0006 * distanceToCamera * distanceToCamera), 0.0, 1.0);
+    float fogDensity = 0.00018;
+    float fogFactor = clamp(exp(-pow(distanceToCamera * fogDensity, 2.0)), 0.0, 1.0);
+    fogFactor = max(fogFactor, 0.35);
     vec3 fogColor = vec3(0.25, 0.32, 0.38);
     vec3 finalColor = mix(fogColor, baseColor, fogFactor);
     if (uDebugMode == 1) {

@@ -74,15 +74,15 @@ void Scene_T2_War::Init() {
         m_lightFixtureNode = std::make_shared<SceneNode>();
         m_lightFixtureNode->SetMesh(lightMesh);
         m_lightFixtureNode->SetScale(Vector3(8.0f, 8.0f, 8.0f));
-        Vector3 fixturePosition(360.0f, 15.0f, 512.0f);
+        Vector3 fixturePosition(360.0f, 65.0f, 512.0f);
         m_lightFixtureNode->SetPosition(fixturePosition);
         if (root) {
             root->AddChild(m_lightFixtureNode);
         }
         Light pointLight{};
-        pointLight.position = fixturePosition + Vector3(0.0f, 1.0f, 0.0f);
+        pointLight.position = fixturePosition + Vector3(0.0f, 10.0f, 0.0f);
         pointLight.color = Vector3(5.5f, 4.2f, 2.6f);
-        pointLight.ambient = Vector3(0.25f, 0.18f, 0.12f);
+        pointLight.ambient = Vector3(12.25f, 12.18f, 12.12f);
         m_environment.pointLights.push_back(pointLight);
     }
     if (m_factory) {
