@@ -109,11 +109,14 @@ void main() {
     // ----------------------
     color += lighting * 0.1;
 
-    float d   = length(uCameraPos - vWorldPos);
-    float dNorm = clamp(length(uCameraPos - vWorldPos) / 600.0, 0.0, 1.0);
-    float reflectBoost = 0.5 * dNorm;
-    float k = clamp(fresnel * 0.7 + 0.2 + reflectBoost, 0.0, 1.0);
-    vec3  outCol = mix(uFogColor, color, k);
+    float distanceToCamera = length(uCameraPos - vWorldPos);
+    float distanceNorm = clamp(distanceToCamera / 600.0, 0.0, 1.0);
+    float reflectBoost = 0.5 * distanceNorm;
+    float fresnelMix = clamp(fresnel * 0.7 + 0.2 + reflectBoost, 0.0, 1.0);
+    vec3  surfaceColor = mix(uFogColor, color, fresnelMix);
+
+    float fogFactor = clamp(exp(-pow(distanceToCamera * uFogDensity, 2.0)), 0.0, 1.0);
+    vec3  outCol = mix(uFogColor, surfaceColor, fogFactor);
 
     if (uDebugMode == 1) {
         vec3 normal = vec3(0.0, 1.0, 0.0);

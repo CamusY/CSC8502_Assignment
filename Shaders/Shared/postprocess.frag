@@ -23,8 +23,8 @@ vec3 ComposeScene() {
     vec3 bloomColor = max(texture(uBloom, vUV).rgb, vec3(0.0));
     if (uDisplayMode == 1) {
         vec3 base = ToneMap(sceneColor);
-        vec3 highlight = ToneMap(bloomColor * 3.0);
-        return clamp(base * 0.65 + highlight, 0.0, 1.0);
+        vec3 highlight = ToneMap(bloomColor * 1.8);
+        return clamp(base * 0.45 + highlight, 0.0, 1.0);
     }
     if (uDisplayMode == 2) {
         return ToneMap(sceneColor);
