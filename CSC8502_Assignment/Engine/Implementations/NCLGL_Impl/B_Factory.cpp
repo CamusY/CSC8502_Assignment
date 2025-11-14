@@ -454,7 +454,13 @@ namespace NCLGL_Impl {
                 }
                 auto mesh = scene.meshes.front();
                 std::cerr << "[B_Factory] GLTF mesh loaded: " << path << "\n";
-                return std::make_shared<B_Mesh>(mesh);
+                auto wrappedMesh = std::make_shared<B_Mesh>(mesh);
+                if (wrappedMesh) {
+                    if (auto texture = ExtractPrimaryTexture(scene)) {
+                        wrappedMesh->SetDefaultTexture(texture);
+                    }
+                }
+                return wrappedMesh;
             }
 
             std::shared_ptr<::Mesh> mesh(::Mesh::LoadFromMeshFile(path));

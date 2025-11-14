@@ -44,8 +44,11 @@ namespace NCLGL_Impl {
 
         void Draw() override;
 
+        std::shared_ptr<Engine::IAL::I_Texture> GetDefaultTexture() const override;
+        void SetDefaultTexture(const std::shared_ptr<Engine::IAL::I_Texture>& texture);
+
     private:
         std::shared_ptr<::Mesh> m_mesh;
+        std::shared_ptr<Engine::IAL::I_Texture> m_defaultTexture;
     };
-
 }

@@ -27,5 +27,12 @@ namespace NCLGL_Impl {
             m_mesh->Draw();
         }
     }
+    std::shared_ptr<Engine::IAL::I_Texture> B_Mesh::GetDefaultTexture() const {
+        return m_defaultTexture;
+    }
+
+    void B_Mesh::SetDefaultTexture(const std::shared_ptr<Engine::IAL::I_Texture>& texture) {
+        m_defaultTexture = texture;
+    }
 
 }
