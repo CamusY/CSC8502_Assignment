@@ -14,6 +14,7 @@
 #include "GrassField.h"
 #include "RainSystem.h"
 #include "../Core/Camera.h"
+#include "../Core/TerrainConfig.h"
 #include "../Engine/IAL/I_FrameBuffer.h"
 #include "../Engine/IAL/I_Mesh.h"
 #include "../Engine/IAL/I_Shader.h"
@@ -23,6 +24,7 @@
 
 #include <glad/glad.h>
 #include <algorithm>
+#include <cmath>
 #include <iostream>
 #include <vector>
 #include "nclgl/Vector2.h"
@@ -53,8 +55,8 @@ Renderer::Renderer(const std::shared_ptr<Engine::IAL::I_ResourceFactory>& factor
     , m_directionalLight{}
     , m_sceneColour(Vector3(0.0f, 0.0f, 0.0f))
     , m_specularPower(32.0f)
-    , m_nearPlane(0.1f)
-    , m_farPlane(900.0f)
+    , m_nearPlane(0.3f)
+    , m_farPlane(std::max(1500.0f, kTerrainExtent * 1.1f))
     , m_surfaceWidth(width)
     , m_surfaceHeight(height)
     , m_transitionEnabled(false)
@@ -227,7 +229,12 @@ void Renderer::SetTransitionState(bool enabled, float progress) {
 
 void Renderer::SetTerrainHeightmap(const std::shared_ptr<Engine::IAL::I_Heightmap>& heightmap) {
     m_activeHeightmap = heightmap;
-    if (!m_factory || !m_activeHeightmap || !m_grassEnabled) {
+    UpdateViewRangeFromTerrain();
+    if (!m_factory) {
+        m_grassField.reset();
+        return;
+    }
+    if (!m_activeHeightmap || !m_grassEnabled) {
         m_grassField.reset();
         return;
     }
@@ -553,8 +560,8 @@ void Renderer::RenderScenePass(const Matrix4& view,
     m_renderQueue.clear();
     m_sceneGraph->CollectRenderableNodes(m_renderQueue);
 
-    const float fogDensity = 0.0018f;
-    Vector3 fogColor = m_directionalLight.ambient * 0.4f + Vector3(0.25f, 0.30f, 0.40f) * 0.6f;
+    const float fogDensity = GetFogDensity();
+    Vector3 fogColor = GetFogColor();
 
     Matrix4 viewProj = projection * view;
     Vector4 clip(0.0f, 0.0f, 0.0f, 0.0f);
@@ -755,8 +762,8 @@ void Renderer::RenderWaterSurface(const Matrix4& view,
 
     Matrix4 viewProj = projection * view;
     Matrix4 modelMatrix = waterNode->GetWorldTransform();
-    const float fogDensity = 0.0018f;
-    Vector3 fogColor = m_directionalLight.ambient * 0.4f + Vector3(0.25f, 0.30f, 0.40f) * 0.6f;
+    const float fogDensity = GetFogDensity();
+    Vector3 fogColor = GetFogColor();
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glDepthMask(GL_FALSE);
@@ -902,8 +909,8 @@ void Renderer::RenderRain(const Matrix4& view,
     if (!m_rainSystem || !m_rainEnabled || mode != RenderDebugMode::Standard) {
         return;
     }
-    const float fogDensity = 0.0018f;
-    Vector3 fogColor = m_directionalLight.ambient * 0.4f + Vector3(0.25f, 0.30f, 0.40f) * 0.6f;
+    const float fogDensity = GetFogDensity();
+    Vector3 fogColor = GetFogColor();
     m_rainSystem->Render(view, projection, cameraPosition, cameraYaw, cameraPitch, fogColor, fogDensity);
 }
 
@@ -978,4 +985,33 @@ float Renderer::GetTerrainExtent() const {
     const float extentX = resolution.x * scale.x;
     const float extentZ = resolution.y * scale.z;
     return std::max(extentX, extentZ);
+}
+
+Vector3 Renderer::GetFogColor() const {
+    const Vector3 baseSkyColor(0.38f, 0.48f, 0.62f);
+    const Vector3 ambientContribution = m_directionalLight.ambient * 0.35f;
+    Vector3 color = baseSkyColor * 0.65f + ambientContribution;
+    color.x = std::clamp(color.x, 0.0f, 1.0f);
+    color.y = std::clamp(color.y, 0.0f, 1.0f);
+    color.z = std::clamp(color.z, 0.0f, 1.0f);
+    return color;
+}
+
+float Renderer::GetFogDensity() const {
+    const float targetFactor = 0.08f;
+    const float effectiveFar = std::max(m_farPlane * 0.9f, 1.0f);
+    const float exponent = -std::log(std::max(targetFactor, 1e-3f));
+    return std::sqrt(exponent) / effectiveFar;
+}
+
+void Renderer::UpdateViewRangeFromTerrain() {
+    const float extent = GetTerrainExtent();
+    if (extent <= 0.0f) {
+        m_farPlane = std::max(m_farPlane, 1500.0f);
+        return;
+    }
+    constexpr float kFarPadding = 1.15f;
+    constexpr float kMinFar = 1500.0f;
+    m_farPlane = std::max(extent * kFarPadding, kMinFar);
+    m_nearPlane = std::max(0.3f, std::min(0.8f, m_farPlane * 0.0002f));
 }

@@ -121,6 +121,9 @@ private:
                      RenderDebugMode mode);
     void UpdateAnimatedMeshes(float deltaTime);
     float GetTerrainExtent() const;
+    Vector3 GetFogColor() const;
+    float GetFogDensity() const;
+    void UpdateViewRangeFromTerrain();
     void BindBonePalette(const std::vector<Matrix4>& bones, int boneCount);
     void UnbindBonePalette();
     void EnsureBoneBufferCapacity(std::size_t requiredCount);

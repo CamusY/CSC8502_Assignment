@@ -103,6 +103,11 @@ void PostProcessing::PresentToViewport(OutputMode mode,
         const int displayMode = mode == OutputMode::BloomOnly ? 1 : (mode == OutputMode::RawScene ? 2 : 0);
         shader->SetUniform("uDisplayMode", displayMode);
         shader->SetUniform("uExposure", m_exposure);
+        const float aspect = (viewportHeight > 0)
+            ? static_cast<float>(viewportWidth) / static_cast<float>(viewportHeight)
+            : 1.0f;
+        shader->SetUniform("uViewportAspect", aspect);
+        shader->SetUniform("uCircleEdge", 0.0f);
         if (transitionEnabled && shader == m_transitionShader) {
             shader->SetUniform("uTimer", std::clamp(timer, 0.0f, 1.0f));
         }
