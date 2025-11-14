@@ -24,6 +24,21 @@ uniform float uFarPlane;
 
 out vec4 fragColor;
 
+float ComputeCurvedFogFactor(vec3 toCamera, float density, float farPlane) {
+    float distance = length(toCamera);
+    if (distance <= 1e-3) {
+        return 1.0;
+    }
+    vec3 direction = toCamera / distance;
+    float horizonFactor = 1.0 - abs(direction.y);
+    horizonFactor = horizonFactor * horizonFactor;
+    float safeFar = max(farPlane, 1e-3);
+    float curvatureDistance = distance + horizonFactor * (distance * distance) / safeFar;
+    float baseFog = clamp(exp(-pow(curvatureDistance * density, 2.0)), 0.0, 1.0);
+    float normalized = clamp(curvatureDistance / safeFar, 0.0, 1.0);
+    float clipFade = smoothstep(0.72, 0.98, normalized);
+    return clamp(baseFog * (1.0 - clipFade), 0.0, 1.0);
+}
 
 // =============== 影子计算 ===============
 float EvaluateShadow(vec3 worldPos) {
@@ -115,7 +130,7 @@ void main() {
     float fresnelMix = clamp(fresnel * 0.7 + 0.2 + reflectBoost, 0.0, 1.0);
     vec3  surfaceColor = mix(uFogColor, color, fresnelMix);
 
-    float fogFactor = clamp(exp(-pow(distanceToCamera * uFogDensity, 2.0)), 0.0, 1.0);
+    float fogFactor = ComputeCurvedFogFactor(uCameraPos - vWorldPos, uFogDensity, uFarPlane);
     vec3  outCol = mix(uFogColor, surfaceColor, fogFactor);
 
     if (uDebugMode == 1) {

@@ -15,7 +15,7 @@
 #include "nclgl/Vector4.h"
 
 namespace {
-    constexpr int kGrassInstanceCount = 8000;
+    constexpr int kGrassInstanceCount = 80000;
 }
 
 GrassField::GrassField(const std::shared_ptr<Engine::IAL::I_ResourceFactory>& factory,

@@ -210,7 +210,8 @@ void RainSystem::Render(const Matrix4& view,
                         float cameraYaw,
                         float cameraPitch,
                         const Vector3& fogColor,
-                        float fogDensity) {
+                        float fogDensity,
+                        float farPlane) {
     if (!m_resourcesReady || !m_shader || m_vao == 0) {
         return;
     }
@@ -242,6 +243,7 @@ void RainSystem::Render(const Matrix4& view,
     m_shader->SetUniform("uWidth", m_width);
     m_shader->SetUniform("uFogColor", fogColor);
     m_shader->SetUniform("uFogDensity", fogDensity);
+    m_shader->SetUniform("uFarPlane", farPlane);
     m_shader->SetUniform("uBaseColor", Vector3(0.66f, 0.76f, 0.92f));
 
     glBindVertexArray(m_vao);

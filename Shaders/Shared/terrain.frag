@@ -57,6 +57,22 @@ vec3 LinearToSRGB(vec3 c) {
     return pow(max(c, vec3(0.0)), vec3(1.0 / 2.2));
 }
 
+float ComputeCurvedFogFactor(vec3 toCamera, float density, float farPlane) {
+    float distance = length(toCamera);
+    if (distance <= 1e-3) {
+        return 1.0;
+    }
+    vec3 direction = toCamera / distance;
+    float horizonFactor = 1.0 - abs(direction.y);
+    horizonFactor = horizonFactor * horizonFactor;
+    float safeFar = max(farPlane, 1e-3);
+    float curvatureDistance = distance + horizonFactor * (distance * distance) / safeFar;
+    float baseFog = clamp(exp(-pow(curvatureDistance * density, 2.0)), 0.0, 1.0);
+    float normalized = clamp(curvatureDistance / safeFar, 0.0, 1.0);
+    float clipFade = smoothstep(0.72, 0.98, normalized);
+    return clamp(baseFog * (1.0 - clipFade), 0.0, 1.0);
+}
+
 float DistributionGGX(vec3 N, vec3 H, float roughness) {
     float a = roughness * roughness;
     float a2 = a * a;
@@ -208,8 +224,8 @@ void main() {
 
     vec3 color = ambient + shadow * directLighting + emissive;
 
-    float fogDistance = length(uCameraPos - vWorldPos);
-    float fogFactor = clamp(exp(-pow(fogDistance * uFogDensity, 2.0)), 0.0, 1.0);
+    vec3 toCamera = uCameraPos - vWorldPos;
+    float fogFactor = ComputeCurvedFogFactor(toCamera, uFogDensity, uFarPlane);
     vec3 foggedColor = mix(uFogColor, color, fogFactor);
 
     vec3 finalColor = foggedColor;

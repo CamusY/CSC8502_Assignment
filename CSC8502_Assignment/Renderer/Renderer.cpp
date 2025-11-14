@@ -911,7 +911,14 @@ void Renderer::RenderRain(const Matrix4& view,
     }
     const float fogDensity = GetFogDensity();
     Vector3 fogColor = GetFogColor();
-    m_rainSystem->Render(view, projection, cameraPosition, cameraYaw, cameraPitch, fogColor, fogDensity);
+    m_rainSystem->Render(view,
+                        projection,
+                        cameraPosition,
+                        cameraYaw,
+                        cameraPitch,
+                        fogColor,
+                        fogDensity,
+                        m_farPlane);
 }
 
 void Renderer::RenderDebugUI() {

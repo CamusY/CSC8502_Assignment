@@ -44,7 +44,8 @@ public:
                 float cameraYaw,
                 float cameraPitch,
                 const Vector3& fogColor,
-                float fogDensity);
+                float fogDensity,
+                float farPlane);
 
 private:
     struct Particle {
